@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Game Journey Map</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+
+</head>
+
+<body>
+
+    <div class="map-container">
+        <div class="top-fade"></div>
+        <div class="bottom-fade"></div>
+        <!-- FIXED BACKGROUND -->
+        <div class="map-inner">
+
+            <div class="map-bg"></div>
+
+            <!-- FLOATING PARTICLES -->
+            <div class="particles"></div>
+
+            <!-- DECORATIONS -->
+            <div class="decorations"></div>
+            <!-- =========================
+             SVG ROAD
+        ========================== -->
+
+            <svg class="road-svg" viewBox="0 0 400 2800" preserveAspectRatio="none">
+
+                <!-- BASE ROAD -->
+                <path id="road-base" d="
+M 200 160
+
+C 90 320, 320 500, 210 760
+
+C 100 980, 330 1180, 190 1450
+
+C 70 1700, 310 1950, 220 2200
+
+C 180 2400, 260 2700, 220 2950
+" />
+
+                <path id="road-progress" d="
+M 200 160
+
+C 90 320, 320 500, 210 760
+
+C 100 980, 330 1180, 190 1450
+
+C 70 1700, 310 1950, 220 2200
+
+C 180 2400, 260 2700, 220 2950
+" />
+            </svg>
+
+            <!-- =========================
+             LEVELS
+        ========================== -->
+
+            <div class="levels"></div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
