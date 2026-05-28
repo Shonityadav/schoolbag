@@ -503,6 +503,7 @@ body {
 @endpush
 
 @section('content')
+
 @php
     $requestedChapterId = request()->query('chapter_id');
     $currentChapterData = null;
@@ -552,6 +553,11 @@ body {
 
 @if($activeChapter)
 
+{{-- ── CHAPTER JOURNEY MAP (shows first on load, dismisses to reveal stage) ── --}}
+@if(count($chaptersData) > 0)
+@include('student.partials.chapter_map')
+@endif
+
 {{-- ── PAGE LOADER (shown while images are loading) ── --}}
 <div id="page-loader" class="page-loader">
     <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/logo.png'))) }}" class="loader-bag" alt="Loading...">
@@ -568,9 +574,15 @@ body {
     <img src="{{ asset('uploads/images/stage/banner 3.png') }}" class="cap-badge" alt="Chapter Crown">
 
     {{-- Navigation Buttons --}}
+    @if(count($chaptersData) > 0)
+    <button onclick="openCjm()" class="btn-back d-flex align-items-center justify-content-center text-decoration-none border-0" title="Back to Map">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
+    </button>
+    @else
     <a href="{{ route('student.courses.index') }}" class="btn-back d-flex align-items-center justify-content-center text-decoration-none" title="Back to Subjects">
         <svg viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
     </a>
+    @endif
     <button class="btn-book d-flex align-items-center justify-content-center border-0" onclick="openChapterList()" title="Select Chapter">
         <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19,2L14,7H9L4,2V14H9L14,19H19V2M17,16H15.5V14.5H14V13H15.5V11.5H17V13H18.5V14.5H17V16Z"/></svg>
     </button>

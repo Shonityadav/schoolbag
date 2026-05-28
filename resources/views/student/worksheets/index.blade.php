@@ -466,10 +466,14 @@
                 </div>
             </div>
             <div style="display: flex; gap: 8px;">
+                @if(in_array($ebook->id, $assignedEbookIds))
+                    <button type="button" class="btn-read" style="background: #9E9E9E; box-shadow: 0 4px 0 #757575; cursor: default;">Assigned</button>
+                @else
                 <form action="{{ route('student.ebooks.assign', $ebook->id) }}" method="POST" style="margin: 0;">
                     @csrf
                     <button type="submit" class="btn-read" style="background: linear-gradient(135deg, #FFB347, #FF7B00); box-shadow: 0 4px 0 #CC6200;">Assign</button>
                 </form>
+                @endif
                 <a class="btn-read" href="{{ route('student.ebooks.show', $ebook->id) }}">Open →</a>
             </div>
         </div>

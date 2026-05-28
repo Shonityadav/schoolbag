@@ -48,8 +48,14 @@ class EbookController extends Controller
             ->orderBy('name')
             ->get();
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $assignedEbookIds = \App\Models\Course::where('user_id', $user->id)
+            ->whereNotNull('ebook_id')
+            ->pluck('ebook_id')
+            ->toArray();
+
         return view('student.worksheets.index', compact(
-            'publications', 'standards', 'subjects', 'ebooks'
+            'publications', 'standards', 'subjects', 'ebooks', 'assignedEbookIds'
         ));
     }
 
@@ -71,11 +77,11 @@ class EbookController extends Controller
         }
 
         // 2. Fetch Index Pages (Pages 2-5, assuming cover is pos 1)
-        $indexPages = $ebook->pages->where('position', '>', 1)->take(4);
+        $indexPages = $ebook->pages->sortBy('position')->where('position', '>', 1)->take(4);
         
         $inlineData = [];
         foreach ($indexPages as $page) {
-            $path = public_path($page->url);
+            $path = public_path($page->url . '/' . $page->title);
             if (file_exists($path)) {
                 $imageData = base64_encode(file_get_contents($path));
                 // Infer mime type
@@ -96,9 +102,9 @@ class EbookController extends Controller
         }
 
         // 3. Call Gemini API
-        $prompt = "You are an expert document structure analyzer.\nThese images are consecutive pages from a book's Table of Contents.\n\nTASK:\n1. Read ALL entries in order.\n2. Extract every chapter / lesson / unit.\n3. Use the listed page number as start_page.\n\nOUTPUT RULES:\n- Return ONLY valid JSON\n- Return a JSON LIST\n- Each object MUST have:\n  {\"title\": string, \"start_page\": number, \"section\": string | null}\n- Page numbers MUST be integers\n- Do NOT include explanations\n\nExample:\n[{\"title\": \"Chapter 1\", \"start_page\": 5, \"section\": \"Part A\"}]";
+        $prompt = "You are an expert document structure analyzer.\nThese images are pages from a book's Table of Contents.\n\nTASK:\n1. Read ALL entries in order.\n2. Extract every chapter / lesson / unit.\n3. Use the listed page number as start_page.\n4. Identify the printed page number(s) on the Table of Contents pages themselves.\n\nOUTPUT RULES:\n- Return ONLY valid JSON\n- Return a JSON OBJECT with two keys: 'index_pages' (string, e.g., '3,4' or 'iii,iv') and 'chapters' (list of objects).\n- Each object in 'chapters' MUST have:\n  {\"title\": string, \"start_page\": number, \"section\": string | null}\n- 'start_page' MUST be an integer\n- Do NOT include explanations\n\nExample:\n{\n  \"index_pages\": \"3,4\",\n  \"chapters\": [\n    {\"title\": \"Chapter 1\", \"start_page\": 5, \"section\": \"Part A\"}\n  ]\n}";
 
-        $apiKey = 'AIzaSyDgT8PynSqvfI89_Dx8_y-ZzqfIZeTcWHc';
+        $apiKey = env('GEMINI_API_KEY');
         $response = \Illuminate\Support\Facades\Http::withHeaders([
             'Content-Type' => 'application/json'
         ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey, [
@@ -113,6 +119,7 @@ class EbookController extends Controller
         ]);
 
         if (!$response->successful()) {
+            \Illuminate\Support\Facades\Log::error('Gemini API Error: ' . $response->body());
             return response()->json(['error' => 'Failed to connect to AI service.'], 500);
         }
 
@@ -134,10 +141,16 @@ class EbookController extends Controller
         }
         $textResult = trim($textResult);
         
-        $chaptersData = json_decode($textResult, true);
-        if (!is_array($chaptersData)) {
+        $parsedData = json_decode($textResult, true);
+        if (!is_array($parsedData) || !isset($parsedData['chapters'])) {
             return response()->json(['error' => 'Invalid AI response format.'], 500);
         }
+
+        $chaptersData = $parsedData['chapters'];
+        $extractedIndexPages = $parsedData['index_pages'] ?? '';
+
+        // Save index pages to ebook table
+        $ebook->update(['index_page' => $extractedIndexPages]);
 
         // 4. Save to DB
         $savedChapters = [];
@@ -157,7 +170,6 @@ class EbookController extends Controller
                 'chapter_name' => $data['title'] ?? 'Untitled Chapter',
                 'start_page' => $startPage,
                 'end_page' => $endPage,
-                'index_page' => null,
                 'total_stages' => 5
             ]);
 
@@ -220,42 +232,88 @@ class EbookController extends Controller
             'is_active' => true,
         ]);
 
-        // Create 1 Chapter
-        $chapter = \App\Models\Chapter::create([
-            'course_id' => $course->id,
-            'title' => 'Read ' . $ebook->name,
-            'description' => 'Complete all stages to finish this book.',
-            'order' => 1,
-            'unlock_threshold' => 0,
-            'xp_reward' => 50,
-            'is_active' => true,
-        ]);
+        // Fetch Ebook Chapters
+        $ebookChapters = \App\Models\EbookChapter::where('ebook_id', $ebook->id)
+            ->orderBy('chapter_number')
+            ->get();
 
-        // Create 4 Lessons (Stages 1-4)
-        $stageNames = ['Reading Mission', 'Hard Words', 'Activity Mission', 'Exercise Mission'];
-        foreach ($stageNames as $index => $name) {
-            \App\Models\Lesson::create([
+        if ($ebookChapters->count() > 0) {
+            foreach ($ebookChapters as $index => $ebChapter) {
+                // Create Course Chapter
+                $chapter = \App\Models\Chapter::create([
+                    'course_id' => $course->id,
+                    'title' => $ebChapter->chapter_name ?? 'Chapter ' . ($index + 1),
+                    'description' => 'Pages ' . $ebChapter->start_page . ' to ' . $ebChapter->end_page,
+                    'order' => $index + 1,
+                    'unlock_threshold' => 0,
+                    'xp_reward' => 50,
+                    'is_active' => true,
+                ]);
+
+                // Create 4 Lessons (Stages 1-4)
+                $stageNames = ['Reading Mission', 'Hard Words', 'Activity Mission', 'Exercise Mission'];
+                foreach ($stageNames as $lessonIndex => $name) {
+                    \App\Models\Lesson::create([
+                        'chapter_id' => $chapter->id,
+                        'title' => $name,
+                        'type' => 'reading',
+                        'content' => 'Explore the pages of the ebook.',
+                        'order' => $lessonIndex, // 0 to 3
+                        'duration_minutes' => 10,
+                        'xp_reward' => 20,
+                        'is_active' => true,
+                    ]);
+                }
+
+                // Create 1 Quiz (Stage 5)
+                \App\Models\Quiz::create([
+                    'chapter_id' => $chapter->id,
+                    'title' => 'Challenge Mission',
+                    'description' => 'Test your knowledge on this ebook.',
+                    'time_limit_minutes' => 10,
+                    'passing_score' => 50,
+                    'xp_reward' => 30,
+                    'is_active' => true,
+                ]);
+            }
+        } else {
+            // Create 1 Fallback Chapter
+            $chapter = \App\Models\Chapter::create([
+                'course_id' => $course->id,
+                'title' => 'Read ' . $ebook->name,
+                'description' => 'Complete all stages to finish this book.',
+                'order' => 1,
+                'unlock_threshold' => 0,
+                'xp_reward' => 50,
+                'is_active' => true,
+            ]);
+
+            // Create 4 Lessons (Stages 1-4)
+            $stageNames = ['Reading Mission', 'Hard Words', 'Activity Mission', 'Exercise Mission'];
+            foreach ($stageNames as $index => $name) {
+                \App\Models\Lesson::create([
+                    'chapter_id' => $chapter->id,
+                    'title' => $name,
+                    'type' => 'reading',
+                    'content' => 'Explore the pages of the ebook.',
+                    'order' => $index, // 0 to 3
+                    'duration_minutes' => 10,
+                    'xp_reward' => 20,
+                    'is_active' => true,
+                ]);
+            }
+
+            // Create 1 Quiz (Stage 5)
+            \App\Models\Quiz::create([
                 'chapter_id' => $chapter->id,
-                'title' => $name,
-                'type' => 'reading',
-                'content' => 'Explore the pages of the ebook.',
-                'order' => $index, // 0 to 3
-                'duration_minutes' => 10,
-                'xp_reward' => 20,
+                'title' => 'Challenge Mission',
+                'description' => 'Test your knowledge on this ebook.',
+                'time_limit_minutes' => 10,
+                'passing_score' => 50,
+                'xp_reward' => 30,
                 'is_active' => true,
             ]);
         }
-
-        // Create 1 Quiz (Stage 5)
-        \App\Models\Quiz::create([
-            'chapter_id' => $chapter->id,
-            'title' => 'Challenge Mission',
-            'description' => 'Test your knowledge on this ebook.',
-            'time_limit_minutes' => 10,
-            'passing_score' => 50,
-            'xp_reward' => 30,
-            'is_active' => true,
-        ]);
 
         return redirect()->route('student.courses.index')
             ->with('success', 'Ebook assigned successfully! You can now view it here.');
