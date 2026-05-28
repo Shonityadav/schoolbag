@@ -103,15 +103,16 @@ class LessonController extends Controller
             'stage_attempt_number' => $previousAttempts + 1,
         ];
 
-        LessonProgress::create(array_merge([
-            'user_id'      => $user->id,
-            'lesson_id'    => $lesson->id,
-            'completed'    => true,
-            'completed_at' => now(),
-            'answers'      => $answersJson,
-            'score'        => $score,
-            'time_taken'   => $timeTaken,
-        ], $extraData));
+        LessonProgress::updateOrCreate(
+            ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+            array_merge([
+                'completed'    => true,
+                'completed_at' => now(),
+                'answers'      => $answersJson,
+                'score'        => $score,
+                'time_taken'   => $timeTaken,
+            ], $extraData)
+        );
 
         if ($previousAttempts === 0) {
             // Award XP only on the first attempt
