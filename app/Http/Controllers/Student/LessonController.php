@@ -137,13 +137,6 @@ class LessonController extends Controller
                              ->with('success', '+' . $lesson->xp_reward . ' XP earned! 🌟');
         }
 
-        // All lessons done → redirect to quiz
-        $quiz = $lesson->chapter->quiz;
-        if ($quiz) {
-            return redirect()->route('student.quizzes.show', $quiz->id)
-                             ->with('success', 'Chapter complete! Time for the quiz! 🎯');
-        }
-
         return redirect()->route('student.courses.show', $lesson->chapter->course_id)
                          ->with('success', 'Chapter complete! 🎉');
     }
