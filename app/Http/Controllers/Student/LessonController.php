@@ -63,7 +63,7 @@ class LessonController extends Controller
     {
         $user   = Auth::user();
         $lesson = Lesson::with('chapter.course')->findOrFail($id);
-        abort_unless($lesson->chapter->course->class_id === $user->class_id, 403);
+        abort_unless($lesson->chapter->course->class_id === $user->class_id || $lesson->chapter->course->user_id === $user->id, 403);
 
         $score = null;
         $answersJson = null;

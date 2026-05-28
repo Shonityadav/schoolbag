@@ -94,10 +94,25 @@ class CourseController extends Controller
             $matchPairs = \App\Models\Lesson::getActivityMatchPairs();
         } else {
             // Other Stages -> Ebook Pages
-            $ebookPages = \Illuminate\Support\Facades\DB::table('ebook_pages')
-                            ->where('ebook_id', $course->ebook_id ?? 2)
-                            ->orderBy('position')
-                            ->get();
+            $query = \Illuminate\Support\Facades\DB::table('ebook_pages')
+                            ->where('ebook_id', $course->ebook_id ?? 2);
+
+            if ($course->ebook_id) {
+                $ebookChapter = \App\Models\EbookChapter::where('ebook_id', $course->ebook_id)
+                                    ->where('chapter_number', $chapter->order)
+                                    ->first();
+
+                if ($ebookChapter && $ebookChapter->start_page) {
+                    $start = $ebookChapter->start_page;
+                    if ($ebookChapter->end_page) {
+                        $query->whereBetween('position', [$start, $ebookChapter->end_page]);
+                    } else {
+                        $query->where('position', '>=', $start);
+                    }
+                }
+            }
+
+            $ebookPages = $query->orderBy('position')->get();
         }
 
         // Pass course_id and stage for the next buttons
