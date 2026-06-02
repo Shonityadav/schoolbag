@@ -103,15 +103,16 @@ class LessonController extends Controller
             'stage_attempt_number' => $previousAttempts + 1,
         ];
 
-        LessonProgress::create(array_merge([
-            'user_id'      => $user->id,
-            'lesson_id'    => $lesson->id,
-            'completed'    => true,
-            'completed_at' => now(),
-            'answers'      => $answersJson,
-            'score'        => $score,
-            'time_taken'   => $timeTaken,
-        ], $extraData));
+        LessonProgress::updateOrCreate(
+            ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+            array_merge([
+                'completed'    => true,
+                'completed_at' => now(),
+                'answers'      => $answersJson,
+                'score'        => $score,
+                'time_taken'   => $timeTaken,
+            ], $extraData)
+        );
 
         if ($previousAttempts === 0) {
             // Award XP only on the first attempt
@@ -135,13 +136,6 @@ class LessonController extends Controller
             
             return redirect()->route('student.lessons.show', $nextLesson->id)
                              ->with('success', '+' . $lesson->xp_reward . ' XP earned! 🌟');
-        }
-
-        // All lessons done → redirect to quiz
-        $quiz = $lesson->chapter->quiz;
-        if ($quiz) {
-            return redirect()->route('student.quizzes.show', $quiz->id)
-                             ->with('success', 'Chapter complete! Time for the quiz! 🎯');
         }
 
         return redirect()->route('student.courses.show', $lesson->chapter->course_id)
