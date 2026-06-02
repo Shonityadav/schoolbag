@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\StudentClass;
+use App\Models\ClassModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -34,7 +34,7 @@ class AdminStudentController extends Controller
         }
 
         $students = $query->paginate(15)->withQueryString();
-        $classes  = StudentClass::orderBy('level')->get();
+        $classes  = ClassModel::orderBy('standard')->get();
 
         return view('admin.students.index', compact('students', 'classes'));
     }
@@ -44,7 +44,7 @@ class AdminStudentController extends Controller
      */
     public function create()
     {
-        $classes = StudentClass::orderBy('level')->get();
+        $classes = ClassModel::orderBy('standard')->get();
         return view('admin.students.form', [
             'student' => null,
             'classes' => $classes,
@@ -83,7 +83,7 @@ class AdminStudentController extends Controller
     public function edit(User $student)
     {
         abort_unless($student->role === 'student', 404);
-        $classes = StudentClass::orderBy('level')->get();
+        $classes = ClassModel::orderBy('standard')->get();
         return view('admin.students.form', compact('student', 'classes'));
     }
 
@@ -160,7 +160,7 @@ class AdminStudentController extends Controller
         $handle  = fopen($file->getPathname(), 'r');
         $headers = array_map(fn($h) => strtolower(trim($h)), fgetcsv($handle));
 
-        $classes = StudentClass::pluck('id', 'name')->all(); // name => id map
+        $classes = ClassModel::pluck('id', 'standard')->all(); // standard => id map
         $imported = 0;
         $skipped  = 0;
         $errors   = [];

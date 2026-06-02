@@ -25,7 +25,7 @@ class User extends Authenticatable
     ];
 
     // ── Relationships ──────────────────────────────────────────
-    public function studentClass()    { return $this->belongsTo(StudentClass::class, 'class_id'); }
+    public function studentClass()    { return $this->belongsTo(ClassModel::class, 'class_id'); }
 
     public function xpTransactions()  { return $this->hasMany(XpTransaction::class); }
     public function attendances()     { return $this->hasMany(Attendance::class); }

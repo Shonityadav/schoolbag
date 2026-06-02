@@ -175,7 +175,7 @@
                                 <option value="">— No class assigned —</option>
                                 @foreach($classes as $class)
                                     <option value="{{ $class->id }}" {{ old('class_id', $student?->class_id) == $class->id ? 'selected' : '' }}>
-                                        {{ $class->name }}
+                                        {{ $class->standard }} - {{ $class->section }}
                                     </option>
                                 @endforeach
                             </select>

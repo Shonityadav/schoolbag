@@ -56,7 +56,7 @@
                     <option value="">All Classes</option>
                     @foreach($classes as $class)
                         <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>
-                            {{ $class->name }}
+                            {{ $class->standard }} - {{ $class->section }}
                         </option>
                     @endforeach
                 </select>
@@ -113,7 +113,7 @@
                     <td>
                         @if($student->studentClass)
                             <span style="background:#EEF2FF;color:var(--sb-accent);padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;">
-                                {{ $student->studentClass->name }}
+                                {{ $student->studentClass->standard }} - {{ $student->studentClass->section }}
                             </span>
                         @else
                             <span style="color:var(--sb-muted);">—</span>
