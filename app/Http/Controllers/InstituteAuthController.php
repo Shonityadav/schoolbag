@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
-use App\Models\School;
+use App\Models\Institute;
 use App\Models\Staff;
 use App\Models\Student;
 use App\Models\Attendance;
+use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -46,7 +47,7 @@ class InstituteAuthController extends Controller
         'password'    => 'required|min:6|confirmed',
 
         // optional user fields
-        'mobile'      => 'nullable|string|max:20',
+        'phone'      => 'nullable|string|max:20',
         'dob'         => 'nullable|string|max:50',
         'state'       => 'nullable|string|max:100',
         'city'        => 'nullable|string|max:100',
@@ -57,7 +58,7 @@ class InstituteAuthController extends Controller
         'school_number'  => 'nullable|string|max:20',
     ], [
         'email.unique'  => 'Email already exists, please use another email',
-        'mobile.unique' => 'Mobile number already exists, please use another number',
+        'phone.unique' => 'phone number already exists, please use another number',
     ]);
    if ($validator->fails()) {
         return response()->json([
@@ -72,7 +73,7 @@ class InstituteAuthController extends Controller
         /* ======================
            CREATE SCHOOL
         ====================== */
-        $school = School::create([
+        $school = Institute::create([
             'name'    => $request->school_name,
             'address' => $request->school_address ?? null,
             'number'  => $request->school_number ?? null,
@@ -82,7 +83,7 @@ class InstituteAuthController extends Controller
            PREPARE USER DATA
         ====================== */
         $userData = $request->only([
-            'mobile',
+            'phone',
             'dob',
             'state',
             'city',
@@ -133,16 +134,16 @@ class InstituteAuthController extends Controller
 
     $login = $request->login;
 
-    // Detect email or mobile
+    // Detect email or phone
     if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
         $user = User::where('email', $login)->first();
     } else {
-        $user = User::where('mobile', $login)->first();
+        $user = User::where('phone', $login)->first();
     }
 
     if (!$user || !Hash::check($request->password, $user->password)) {
         return response()->json([
-            'message' => 'Invalid email/mobile or password'
+            'message' => 'Invalid email/phone or password'
         ], 401);
     }
 
@@ -160,7 +161,7 @@ class InstituteAuthController extends Controller
             'id'        => $user->id,
             'name'      => $user->name,
             'email'     => $user->email,
-            'mobile'    => $user->mobile,
+            'phone'    => $user->phone,
             'user_type' => $user->user_type,
         ]
     ], 200);
@@ -192,7 +193,7 @@ class InstituteAuthController extends Controller
     $validator = Validator::make($request->all(), [
         'name'     => 'required',
         'email'    => 'required|email|unique:users,email',
-        'mobile'   => 'required|digits:10|unique:users,mobile',
+        'phone'   => 'nullable|digits:10|unique:users,phone',
         'password' => 'required|min:6',
         'role'     => 'required|in:staff,student',
         'designation' => 'required_if:role,staff',
@@ -203,11 +204,11 @@ class InstituteAuthController extends Controller
         'fee_period' => 'required_if:role,student|in:MONTHLY,QUATERLY,HALF YEARLY,YEARLY',
     ], [
         'email.unique'  => 'Email already exists, please use another email',
-        'mobile.unique' => 'Mobile number already exists, please use another number',
+        'phone.unique' => 'phone number already exists, please use another number',
     ]);
    if ($validator->fails()) {
         return response()->json([
-            'message' => 'Validation failed, Duplicate email or mobile number found',
+            'message' => 'Validation failed, Duplicate email or phone number found',
             'errors'  => $validator->errors()
         ], 422);
     }
@@ -219,7 +220,7 @@ class InstituteAuthController extends Controller
             'institute_id' => $authUser->institute_id,
             'name'         => $request->name,
             'email'        => $request->email,
-            'mobile'       => $request->mobile,
+            'phone'       => $request->phone,
             'password'     => Hash::make($request->password),
             'user_type'    => $request->role === 'staff' ? 2 : 3,
             'created_by'   => $authUser->id,
@@ -256,11 +257,204 @@ class InstituteAuthController extends Controller
         DB::rollBack();
         return response()->json([
             'message' => 'Duplicate entry',
-            'error'   => 'Email or mobile already exists'
+            'error'   => 'Email or phone already exists'
         ], 409);
     }
 }
-   
+
+public function bulkStudents(Request $request)
+{
+    // ==========================
+    // AUTH CHECK
+    // ==========================
+    $token = $request->bearerToken();
+
+    if (!$token) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    $authUser = User::where(
+        'api_token',
+        hash('sha256', $token)
+    )->first();
+
+    if (!$authUser || $authUser->user_type != 1) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    // ==========================
+    // VALIDATE FILE
+    // ==========================
+    $request->validate([
+        'file' => 'required|mimes:csv,txt'
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+
+        $file = fopen($request->file('file')->getRealPath(), 'r');
+
+        // Skip header row
+        fgetcsv($file);
+
+        while (($row = fgetcsv($file)) !== false) {
+
+            // Skip empty rows
+            if (empty($row[0])) {
+                continue;
+            }
+
+            // Check duplicate email/phone
+            $exists = User::where('email', $row[1])
+                ->orWhere('phone', $row[2])
+                ->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            // ==========================
+            // CREATE USER
+            // ==========================
+            $user = User::create([
+                'institute_id' => $authUser->institute_id,
+                'name'         => $row[0],
+                'email'        => $row[1],
+                'phone'       => $row[2],
+                'password'     => Hash::make($row[3]),
+                'user_type'    => 3,
+                'created_by'   => $authUser->id,
+            ]);
+
+            // ==========================
+            // CREATE STUDENT
+            // ==========================
+            Student::create([
+                'created_for'   => $user->id,
+                'institute_id'  => $authUser->institute_id,
+                'class_id'      => $row[4],
+                'roll_no'       => $row[5],
+                'fee'           => $row[6],
+                'fee_period'    => $row[7],
+                'admission_date'=> now(),
+            ]);
+        }
+
+        fclose($file);
+
+        DB::commit();
+
+        return response()->json([
+            'message' => 'Students imported successfully'
+        ]);
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+
+        return response()->json([
+            'message' => 'Import failed',
+            'error'   => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function bulkStaff(Request $request)
+{
+    $token = $request->bearerToken();
+
+    if (!$token) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    $authUser = User::where(
+        'api_token',
+        hash('sha256', $token)
+    )->first();
+
+    if (!$authUser || $authUser->user_type != 1) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    $request->validate([
+        'file' => 'required|mimes:csv,txt'
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+
+        $file = fopen($request->file('file')->getRealPath(), 'r');
+
+        // Skip heading row
+        fgetcsv($file);
+
+        while (($row = fgetcsv($file)) !== false) {
+
+            if (empty($row[0])) {
+                continue;
+            }
+
+            $exists = User::where('email', $row[1])
+                ->orWhere('phone', $row[2])
+                ->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            // ==========================
+            // CREATE USER
+            // ==========================
+            $user = User::create([
+                'institute_id' => $authUser->institute_id,
+                'name'         => $row[0],
+                'email'        => $row[1],
+                'phone'       => $row[2],
+                'password'     => Hash::make($row[3]),
+                'user_type'    => 2,
+                'created_by'   => $authUser->id,
+            ]);
+
+            // ==========================
+            // CREATE STAFF
+            // ==========================
+            Staff::create([
+                'created_for' => $user->id,
+                'institute_id'=> $authUser->institute_id,
+                'designation' => $row[4],
+                'department'  => $row[5],
+                'joining_date'=> now(),
+            ]);
+        }
+
+        fclose($file);
+
+        DB::commit();
+
+        return response()->json([
+            'message' => 'Staff imported successfully'
+        ]);
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+
+        return response()->json([
+            'message' => 'Import failed',
+            'error'   => $e->getMessage()
+        ], 500);
+    }
+}   
 
     /* ==========================
        LOGOUT
@@ -655,11 +849,11 @@ public function forgotPassword(Request $request)
     $request->validate([
         'login' => 'required'
     ]);
-    // Find user by email or mobile
+    // Find user by email or phone
     if (filter_var($request->login, FILTER_VALIDATE_EMAIL)) {
         $user = User::where('email', $request->login)->first();
     } else {
-        $user = User::where('mobile', $request->login)->first();
+        $user = User::where('phone', $request->login)->first();
     }
      if (!$user) {
         return response()->json([
@@ -697,7 +891,7 @@ public function resetPassword(Request $request)
     if (filter_var($request->login, FILTER_VALIDATE_EMAIL)) {
         $user = User::where('email', $request->login)->first();
     } else {
-        $user = User::where('mobile', $request->login)->first();
+        $user = User::where('phone', $request->login)->first();
     }
 
     if (!$user) {
@@ -845,6 +1039,116 @@ public function AttendanceReport(Request $request)
             ],
         'total_users' => count($responseData),
         'data'        => $responseData
+    ]);
+}
+
+public function assignPermissions(Request $request)
+{
+    // ==========================
+    // AUTH
+    // ==========================
+    $token = $request->bearerToken();
+
+    if (!$token) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    $authUser = User::where(
+        'api_token',
+        hash('sha256', $token)
+    )->first();
+
+    if (!$authUser || $authUser->user_type != 1) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    // ==========================
+    // VALIDATION
+    // ==========================
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'permissions' => 'required|array'
+    ]);
+
+    $staff = User::find($request->user_id);
+
+    // Ensure user is staff
+    if ($staff->user_type != 2) {
+        return response()->json([
+            'message' => 'Selected user is not staff'
+        ], 400);
+    }
+
+    // Remove old permissions
+    $staff->permissions()->detach();
+
+    // Get permission ids
+    $permissionIds = Permission::whereIn(
+        'name',
+        $request->permissions
+    )->pluck('id');
+
+    // Assign permissions
+    $staff->permissions()->attach($permissionIds);
+
+    return response()->json([
+        'message' => 'Permissions assigned successfully'
+    ]);
+}
+
+public function assignClass(Request $request)
+{
+    // ==========================
+    // AUTH
+    // ==========================
+    $token = $request->bearerToken();
+
+    if (!$token) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    $authUser = User::where(
+        'api_token',
+        hash('sha256', $token)
+    )->first();
+
+    // Only institute admin
+    if (!$authUser || $authUser->user_type != 1) {
+        return response()->json([
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    // ==========================
+    // VALIDATION
+    // ==========================
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'class_ids' => 'required|array'
+    ]);
+
+    $staff = User::find($request->user_id);
+
+    // Ensure user is staff
+    if ($staff->user_type != 2) {
+        return response()->json([
+            'message' => 'Selected user is not staff'
+        ], 400);
+    }
+
+    // ==========================
+    // ASSIGN CLASSES
+    // ==========================
+    $staff->classes()->sync($request->class_ids);
+
+    return response()->json([
+        'message' => 'Classes assigned successfully'
     ]);
 }
 

@@ -13,9 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('lesson_progress', function (Blueprint $table) {
-            $table->integer('time_taken')->nullable()->after('score');
-        });
+        Schema::create('class_user', function (Blueprint $table) {
+
+    $table->id();
+
+    $table->foreignId('class_id')
+        ->constrained()
+        ->onDelete('cascade');
+
+    $table->foreignId('user_id')
+        ->constrained('users')
+        ->onDelete('cascade');
+
+    $table->timestamps();
+});
     }
 
     /**
@@ -25,8 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('lesson_progress', function (Blueprint $table) {
-            $table->dropColumn('time_taken');
-        });
+        Schema::dropIfExists('class_user');
     }
 };

@@ -14,6 +14,7 @@ class ClassModel extends Model
     protected $fillable = [
         'institute_id',
         'standard',
+        'section',
         'description',
         'created_by',
         'updated_by',
@@ -29,6 +30,16 @@ class ClassModel extends Model
     public function students()
     {
         return $this->hasMany(Student::class, 'class_id');
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'class_user',
+            'class_id',
+            'user_id'
+        );
     }
 }
 

@@ -13,11 +13,11 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password',
-        'class_id', 'role', 'avatar',
+        'class_id', 'role', 'user_type', 'institute_id', 'avatar',
         'total_xp', 'streak_count', 'last_streak_date', 'phone',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password', 'api_token'];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
@@ -84,5 +84,37 @@ class User extends Authenticatable
     public function getXpProgressPercentAttribute(): int
     {
         return (int) (($this->total_xp % 500) / 500 * 100);
+    }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(
+            Permission::class,
+            'user_permissions',
+            'user_id',
+            'permission_id'
+        );
+    }
+
+    public function hasPermission($permission)
+    {
+        // Institute admin has all permissions
+        if ($this->user_type == 1) {
+            return true;
+        }
+
+        return $this->permissions()
+            ->where('name', $permission)
+            ->exists();
+    }
+
+    public function classes()
+    {
+        return $this->belongsToMany(
+            ClassModel::class,
+            'class_user',
+            'user_id',
+            'class_id'
+        );
     }
 }
