@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\StudentClass;
+use App\Models\ClassModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class AdminClassController extends Controller
@@ -14,11 +15,14 @@ class AdminClassController extends Controller
      */
     public function index(Request $request)
     {
-        $query = StudentClass::withCount(['students', 'courses'])->latest();
+        $query = ClassModel::withCount(['students'])->latest();
 
         if ($request->filled('search')) {
             $s = $request->search;
-            $query->where('name', 'like', "%$s%");
+            $query->where(function ($q) use ($s) {
+                $q->where('standard', 'like', "%$s%")
+                  ->orWhere('section', 'like', "%$s%");
+            });
         }
 
         $classes = $query->paginate(15)->withQueryString();
@@ -40,17 +44,16 @@ class AdminClassController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'  => 'required|string|max:255|unique:classes,name',
-            'level' => 'required|integer|min:1|max:12',
-            'icon'  => 'nullable|string|max:255',
-            'color' => 'nullable|string|max:20',
+            'standard'    => 'required|string|max:100',
+            'section'     => 'required|string|max:50',
+            'description' => 'nullable|string',
         ]);
 
-        StudentClass::create([
-            'name'  => $data['name'],
-            'level' => $data['level'],
-            'icon'  => $data['icon'] ?? 'bi-building',
-            'color' => $data['color'] ?? '#4F46E5',
+        ClassModel::create([
+            'institute_id' => Auth::user()->institute_id ?? 1,
+            'standard'     => $data['standard'],
+            'section'      => $data['section'],
+            'description'  => $data['description'],
         ]);
 
         return redirect()->route('admin.classes.index')
@@ -60,7 +63,7 @@ class AdminClassController extends Controller
     /**
      * Show edit form.
      */
-    public function edit(StudentClass $class)
+    public function edit(ClassModel $class)
     {
         return view('admin.classes.form', compact('class'));
     }
@@ -68,20 +71,18 @@ class AdminClassController extends Controller
     /**
      * Update class.
      */
-    public function update(Request $request, StudentClass $class)
+    public function update(Request $request, ClassModel $class)
     {
         $data = $request->validate([
-            'name'  => ['required', 'string', 'max:255', Rule::unique('classes')->ignore($class->id)],
-            'level' => 'required|integer|min:1|max:12',
-            'icon'  => 'nullable|string|max:255',
-            'color' => 'nullable|string|max:20',
+            'standard'    => 'required|string|max:100',
+            'section'     => 'required|string|max:50',
+            'description' => 'nullable|string',
         ]);
 
         $class->update([
-            'name'  => $data['name'],
-            'level' => $data['level'],
-            'icon'  => $data['icon'] ?? 'bi-building',
-            'color' => $data['color'] ?? '#4F46E5',
+            'standard'    => $data['standard'],
+            'section'     => $data['section'],
+            'description' => $data['description'],
         ]);
 
         return redirect()->route('admin.classes.index')
@@ -91,7 +92,7 @@ class AdminClassController extends Controller
     /**
      * Delete class.
      */
-    public function destroy(StudentClass $class)
+    public function destroy(ClassModel $class)
     {
         if ($class->students()->count() > 0) {
             return redirect()->route('admin.classes.index')
@@ -104,3 +105,4 @@ class AdminClassController extends Controller
             ->with('success', 'Class deleted successfully.');
     }
 }
+

@@ -74,11 +74,10 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Class Name</th>
-                    <th>Level</th>
+                    <th>Standard</th>
+                    <th>Section</th>
                     <th>Students</th>
-                    <th>Courses</th>
-                    <th>Color</th>
+                    <th>Description</th>
                     <th style="text-align:right;">Actions</th>
                 </tr>
             </thead>
@@ -89,25 +88,16 @@
                         {{ ($classes->currentPage() - 1) * $classes->perPage() + $loop->iteration }}
                     </td>
                     <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="sb-avatar-sm" style="background:{{ $cls->color }}20;color:{{ $cls->color }};font-weight:700;font-size:14px;">
-                                <i class="bi {{ $cls->icon ?: 'bi-building' }}"></i>
-                            </div>
-                            <span style="font-weight:600;font-size:13.5px;">{{ $cls->name }}</span>
-                        </div>
+                        <span style="font-weight:600;font-size:13.5px;color:var(--sb-accent);">{{ $cls->standard }}</span>
                     </td>
-                    <td style="color:var(--sb-muted);">{{ $cls->level }}</td>
+                    <td>
+                        <span style="font-weight:600;color:var(--sb-text);">{{ $cls->section }}</span>
+                    </td>
                     <td>
                         <span style="font-weight:600;color:var(--sb-text);">{{ $cls->students_count }}</span>
                     </td>
-                    <td>
-                        <span style="font-weight:600;color:var(--sb-text);">{{ $cls->courses_count }}</span>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <div style="width:16px;height:16px;border-radius:4px;background:{{ $cls->color }};"></div>
-                            <span style="color:var(--sb-muted);font-size:12px;">{{ $cls->color }}</span>
-                        </div>
+                    <td style="color:var(--sb-muted);font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        {{ $cls->description ?: '-' }}
                     </td>
                     <td>
                         <div class="d-flex gap-1 justify-content-end">
@@ -117,7 +107,7 @@
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <form method="POST" action="{{ route('admin.classes.destroy', $cls) }}"
-                                  onsubmit="return confirm('Delete {{ addslashes($cls->name) }}? This cannot be undone.')">
+                                  onsubmit="return confirm('Delete {{ addslashes($cls->standard) }} - {{ addslashes($cls->section) }}? This cannot be undone.')">
                                 @csrf @method('DELETE')
                                 <button type="submit"
                                         class="sb-icon-btn" title="Delete"
@@ -130,7 +120,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center py-5" style="color:var(--sb-muted);">
+                    <td colspan="6" class="text-center py-5" style="color:var(--sb-muted);">
                         <i class="bi bi-building" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.3;"></i>
                         No classes found.
                         <a href="{{ route('admin.classes.create') }}" style="color:var(--sb-accent);">Add the first one</a>

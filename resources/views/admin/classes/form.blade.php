@@ -53,45 +53,32 @@
                 @endif
 
                 <div class="row g-3">
-                    <div class="col-12 col-md-8">
-                        <label class="form-label" style="font-size:13px;font-weight:600;">Class Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" value="{{ old('name', $class?->name) }}"
-                               class="form-control @error('name') is-invalid @enderror"
-                               placeholder="e.g. Class 1A"
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" style="font-size:13px;font-weight:600;">Standard <span class="text-danger">*</span></label>
+                        <input type="text" name="standard" value="{{ old('standard', $class?->standard) }}"
+                               class="form-control @error('standard') is-invalid @enderror"
+                               placeholder="e.g. 10th, 11th, XII"
                                style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
-                        @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-12 col-md-4">
-                        <label class="form-label" style="font-size:13px;font-weight:600;">Level <span class="text-danger">*</span></label>
-                        <input type="number" name="level" value="{{ old('level', $class?->level ?? 1) }}"
-                               class="form-control @error('level') is-invalid @enderror"
-                               min="1" max="12"
-                               style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
-                        @error('level')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        @error('standard')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <label class="form-label" style="font-size:13px;font-weight:600;">Theme Color</label>
-                        <div class="d-flex align-items-center gap-2">
-                            <input type="color" name="color" value="{{ old('color', $class?->color ?? '#4F46E5') }}"
-                                   class="form-control form-control-color"
-                                   style="width:50px;border-radius:8px;padding:4px;cursor:pointer;">
-                            <span style="font-size:12.5px;color:var(--sb-muted);">Hex Color Code</span>
-                        </div>
-                        @error('color')<div class="text-danger" style="font-size:12px;margin-top:4px;">{{ $message }}</div>@enderror
+                        <label class="form-label" style="font-size:13px;font-weight:600;">Section <span class="text-danger">*</span></label>
+                        <input type="text" name="section" value="{{ old('section', $class?->section) }}"
+                               class="form-control @error('section') is-invalid @enderror"
+                               placeholder="e.g. A, B, Science"
+                               style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                        @error('section')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label class="form-label" style="font-size:13px;font-weight:600;">Icon Class</label>
-                        <input type="text" name="icon" value="{{ old('icon', $class?->icon ?? 'bi-building') }}"
-                               class="form-control @error('icon') is-invalid @enderror"
-                               placeholder="e.g. bi-building"
-                               style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
-                        <div style="font-size:11.5px;color:var(--sb-muted);margin-top:6px;">
-                            Uses <a href="https://icons.getbootstrap.com/" target="_blank" style="color:var(--sb-accent);">Bootstrap Icons</a>
-                        </div>
-                        @error('icon')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <div class="col-12">
+                        <label class="form-label" style="font-size:13px;font-weight:600;">Description</label>
+                        <textarea name="description"
+                                  class="form-control @error('description') is-invalid @enderror"
+                                  rows="3"
+                                  placeholder="Optional details about this class"
+                                  style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">{{ old('description', $class?->description) }}</textarea>
+                        @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
 
