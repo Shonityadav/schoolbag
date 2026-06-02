@@ -16,15 +16,20 @@ class Lesson extends Model
         return $this->belongsTo(Chapter::class);
     }
 
-    public function progress()
-    {
-        return $this->hasMany(LessonProgress::class);
-    }
-
     public function isCompletedBy(User $user): bool
     {
-        return LessonProgress::where('user_id', $user->id)
-            ->where('lesson_id', $this->id)
+        $course = $this->chapter->course ?? null;
+        if (!$course || !$course->ebook_id) return false;
+
+        $ebookChapter = \App\Models\EbookChapter::where('ebook_id', $course->ebook_id)
+            ->where('chapter_number', $this->chapter->order + 1)
+            ->first();
+            
+        if (!$ebookChapter) return false;
+
+        return \App\Models\LessonProgress::where('user_id', $user->id)
+            ->where('chapter_id', $ebookChapter->id)
+            ->where('stage_number', $this->order + 1)
             ->where('completed', true)
             ->exists();
     }

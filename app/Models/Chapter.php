@@ -21,10 +21,7 @@ class Chapter extends Model
         return $this->hasMany(Lesson::class)->orderBy('order');
     }
 
-    public function quiz()
-    {
-        return $this->hasOne(Quiz::class);
-    }
+
 
     public function nextChapter()
     {
@@ -44,13 +41,20 @@ class Chapter extends Model
             ->orderByDesc('order')
             ->first();
 
-        if (!$prevChapter || !$prevChapter->quiz) return true;
+        if (!$prevChapter) return true;
 
-        $attempt = QuizAttempt::where('user_id', $user->id)
-            ->where('quiz_id', $prevChapter->quiz->id)
-            ->where('status', 'pass')
-            ->exists();
+        return $prevChapter->isCompletedBy($user);
+    }
 
-        return $attempt;
+    public function isCompletedBy(User $user): bool
+    {
+        $lessonsCount = $this->lessons()->count();
+        if ($lessonsCount === 0) return false;
+
+        $completedCount = $this->lessons->filter(function($l) use ($user) {
+            return $l->isCompletedBy($user);
+        })->count();
+
+        return $completedCount === $lessonsCount;
     }
 }

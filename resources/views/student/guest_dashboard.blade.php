@@ -346,7 +346,7 @@
         <div class="section-title mt-2">⭐ Why join Little Learner?</div>
         <div class="feature-pill">
             <span class="fp-icon">🏆</span>
-            <div><strong>Earn XP & Level Up</strong> — Every quiz, lesson, and activity earns you experience points!</div>
+            <div><strong>Earn XP & Level Up</strong> — Every lesson and activity earns you experience points!</div>
         </div>
         <div class="feature-pill">
             <span class="fp-icon">🎖️</span>
@@ -358,7 +358,7 @@
         </div>
         <div class="feature-pill">
             <span class="fp-icon">📝</span>
-            <div><strong>Worksheets & Quizzes</strong> — Practice what you learn with fun, interactive activities.</div>
+            <div><strong>Worksheets</strong> — Practice what you learn with fun, interactive activities.</div>
         </div>
 
         <!-- Extra bottom spacer for fixed CTA -->

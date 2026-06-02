@@ -176,7 +176,7 @@
 @endpush
 
 {{-- ── HTML (from map.html) ── --}}
-<div id="chapter-journey-map">
+<div id="chapter-journey-map" style="{{ isset($requestedChapterId) && $requestedChapterId ? 'display: none; opacity: 0;' : '' }}">
     <a href="{{ route('student.courses.index') }}" class="btn-back d-flex align-items-center justify-content-center text-decoration-none" style="position: fixed; z-index: 9000;" title="Back to Subjects">
         <svg viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
     </a>

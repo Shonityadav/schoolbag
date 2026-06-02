@@ -19,3 +19,14 @@ yarn-error.log
 
 # Large eBook PDF files (exceed GitHub's 100MB limit)
 /public/uploads/ebook/
+*.zip
+*.php
+!app/**/*.php
+!database/**/*.php
+!routes/**/*.php
+!config/**/*.php
+!bootstrap/**/*.php
+!tests/**/*.php
+!server.php
+!artisan
+*.html

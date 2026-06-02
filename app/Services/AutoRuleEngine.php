@@ -38,7 +38,7 @@ class AutoRuleEngine
     protected function conditionMet(AutoRule $rule, array $context): bool
     {
         return match ($rule->trigger_event) {
-            'quiz_pass', 'quiz_fail'      => true,
+
             'chapter_complete'            => true,
             'worksheet_complete'          => true,
             'streak_days'                 => $this->user->streak_count >= $rule->trigger_value,
@@ -54,7 +54,7 @@ class AutoRuleEngine
         match ($rule->action_type) {
             'add_xp' => $this->user->addXp(
                 $payload['amount'] ?? 10,
-                'quiz',
+                'lesson',
                 $context['source_id'] ?? null,
                 $rule->name
             ),
@@ -103,7 +103,7 @@ class AutoRuleEngine
             $earned = match ($badge->condition_type) {
                 'xp_total'         => $this->user->total_xp >= $badge->condition_value,
                 'streak_days'      => $this->user->streak_count >= $badge->condition_value,
-                'quiz_pass_count'  => $this->user->quizAttempts()->where('status', 'pass')->count() >= $badge->condition_value,
+
                 'worksheets_done'  => $this->user->worksheets()->where('status', 'done')->count() >= $badge->condition_value,
                 'lessons_complete' => $this->user->lessonProgress()->where('completed', true)->count() >= $badge->condition_value,
                 default            => false,

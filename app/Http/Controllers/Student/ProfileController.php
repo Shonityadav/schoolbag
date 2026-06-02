@@ -27,14 +27,8 @@ class ProfileController extends Controller
             ->map(fn($d) => $d->toDateString())
             ->toArray();
 
-        $quizStats = [
-            'total'  => $user->quizAttempts()->count(),
-            'passed' => $user->quizAttempts()->where('status', 'pass')->count(),
-            'avg'    => $user->quizAttempts()->avg('percentage') ?? 0,
-        ];
-
         return view('student.profile.index', compact(
-            'user', 'badges', 'xpHistory', 'attendances', 'quizStats'
+            'user', 'badges', 'xpHistory', 'attendances'
         ));
     }
 }

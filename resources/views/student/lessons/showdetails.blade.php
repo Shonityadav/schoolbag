@@ -265,6 +265,8 @@ body::before {
     width: 100%;
     box-sizing: border-box;
     box-shadow: 0 6px 0 #A84A10;
+    flex: 1;
+    overflow: hidden;
 }
 .match-heading-bar h2 {
     font-family: 'Quicksand', sans-serif;
@@ -275,6 +277,24 @@ body::before {
     text-align: center;
     text-shadow: 0 2px 6px rgba(0,0,0,0.25);
     letter-spacing: 0.3px;
+}
+.match-scroll-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 0 -12px;
+    padding: 0 12px;
+}
+.match-scroll-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+.match-scroll-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+}
+.match-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #5D1A1A;
+    border-radius: 6px;
 }
 .match-inner-columns {
     display: flex;
@@ -301,18 +321,23 @@ body::before {
 .match-item {
     border: none;
     border-radius: 12px;
-    padding: 11px 8px;
+    padding: 12px 8px;
     font-family: 'Quicksand', sans-serif;
     font-weight: 800;
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #5D1A1A;
     text-align: center;
     cursor: pointer;
     user-select: none;
-    position: relative;
-    transition: background 0.15s, transform 0.1s;
     box-shadow: 0 4px 0 #D97070;
     z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0px;
+    min-height: 65px;
+    height: auto;
+    transition: background 0.15s, transform 0.1s;
 }
 .match-item:active { transform: scale(0.96); }
 .match-item.selected {
@@ -343,6 +368,17 @@ body::before {
     overflow: visible;
     z-index: 5;
 }
+
+.mcq-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.mcq-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.mcq-scroll::-webkit-scrollbar-thumb {
+    background: #68A984;
+    border-radius: 3px;
+}
 </style>
 @endpush
 
@@ -358,11 +394,11 @@ body::before {
         
         <!-- TOP BAR -->
         <div class="top-bar-custom">
-            <a href="{{ route('student.courses.show', $lesson->chapter->course_id) }}" class="back-btn-square text-decoration-none">
+            <button onclick="showExitPopup()" class="back-btn-square" id="back-btn" style="border:none; cursor:pointer;">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
-            </a>
+            </button>
             <div class="timer-pill" id="lesson-timer">00:00</div>
         </div>
 
@@ -400,8 +436,8 @@ body::before {
                             <div style="font-family: 'Quicksand', sans-serif; font-weight: 800; font-size: 0.85rem; text-align: left; margin-bottom: 10px; color: #000; line-height: 1.2;">
                                 Tick(✓) the correct option to answer the following questions:
                             </div>
-                            <div style="background-color: #81D2A4; border-radius: 12px; padding: 15px 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; min-height: 80px; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1);">
-                                <h3 id="mcq-question-text" style="font-family: 'Quicksand', sans-serif; color: #FFF; font-weight: 800; font-size: 1.25rem; text-align: center; margin: 0; line-height: 1.2; text-shadow: 0px 2px 3px rgba(0,0,0,0.2);">
+                            <div class="mcq-scroll" style="background-color: #81D2A4; border-radius: 12px; padding: 15px 15px; margin-bottom: 15px; display: flex; align-items: flex-start; justify-content: center; min-height: 80px; max-height: 110px; overflow-y: auto; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1);">
+                                <h3 id="mcq-question-text" style="font-family: 'Quicksand', sans-serif; color: #FFF; font-weight: 800; font-size: 1.25rem; text-align: center; margin: auto; line-height: 1.2; text-shadow: 0px 2px 3px rgba(0,0,0,0.2); width: 100%;">
                                     {{ $mcqs[0]['question'] }}
                                 </h3>
                             </div>
@@ -424,28 +460,30 @@ body::before {
                                 <div class="match-heading-bar">
                                     <h2>Match the Following</h2>
                                 </div>
+                                <!-- Scroll Wrapper -->
+                                <div class="match-scroll-wrapper">
+                                    <!-- Two independent columns -->
+                                    <div class="match-inner-columns" id="match-columns" data-pairs="{{ json_encode($matchPairs) }}">
+                                        <!-- SVG overlay for lines -->
+                                        <svg id="match-svg"></svg>
 
-                                <!-- Two independent columns -->
-                                <div class="match-inner-columns" id="match-columns" data-pairs="{{ json_encode($matchPairs) }}">
-                                    <!-- SVG overlay for lines -->
-                                    <svg id="match-svg"></svg>
+                                        <!-- LEFT column (all left items stacked) -->
+                                        <div class="match-col left-col" id="left-col">
+                                            @foreach($shuffledLeft as $i => $lWord)
+                                                <div class="match-item" id="left-{{ $i }}" data-side="left" data-word="{{ $lWord }}">
+                                                    <div style="margin: auto; width: 100%;">{{ $lWord }}</div>
+                                                </div>
+                                            @endforeach
+                                        </div>
 
-                                    <!-- LEFT column (all left items stacked) -->
-                                    <div class="match-col left-col" id="left-col">
-                                        @foreach($shuffledLeft as $i => $lWord)
-                                            <div class="match-item" id="left-{{ $i }}" data-side="left" data-word="{{ $lWord }}">
-                                                {{ $lWord }}
-                                            </div>
-                                        @endforeach
-                                    </div>
-
-                                    <!-- RIGHT column (all right items stacked independently) -->
-                                    <div class="match-col right-col" id="right-col">
-                                        @foreach($shuffledRight as $j => $rWord)
-                                            <div class="match-item" id="right-{{ $j }}" data-side="right" data-word="{{ $rWord }}">
-                                                {{ $rWord }}
-                                            </div>
-                                        @endforeach
+                                        <!-- RIGHT column (all right items stacked independently) -->
+                                        <div class="match-col right-col" id="right-col">
+                                            @foreach($shuffledRight as $j => $rWord)
+                                                <div class="match-item" id="right-{{ $j }}" data-side="right" data-word="{{ $rWord }}">
+                                                    <div style="margin: auto; width: 100%;">{{ $rWord }}</div>
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -536,11 +574,11 @@ body::before {
                         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 8px;">
                             <h3 style="font-family: 'Quicksand', sans-serif; color: #FF6B6B; font-weight: 800; font-size: 1.2rem; margin-bottom: 15px;">You Got {{ $lesson->xp_reward ?? 3 }} XP</h3>
                             
-                            <div class="d-flex justify-content-center gap-2">
+                            <div id="modal-stars-container" class="d-flex justify-content-center gap-2">
                                 <!-- Three Stars -->
-                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star">
-                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); transform: translateY(-10px);" alt="Star">
-                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star">
+                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star">
+                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 60px; height: 60px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15)); transform: translateY(-10px);" alt="Star">
+                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star">
                             </div>
                         </div>
                     </div>
@@ -579,10 +617,26 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 0;
     let totalPages = 1;
     let colWidth = 0;
+    let isSubmitting = false;
     
     const storageKey = 'lesson_answers_' + {{ $lesson->id }} + '_stage_' + {{ $stage ?? 0 }};
     
-    
+    // Check if this was a page reload
+    let isReload = false;
+    if (window.performance) {
+        const navEntries = performance.getEntriesByType("navigation");
+        if (navEntries.length > 0 && navEntries[0].type === "reload") {
+            isReload = true;
+        } else if (performance.navigation && performance.navigation.type === 1) {
+            isReload = true;
+        }
+    }
+
+    // If it's a fresh navigation (not a reload), or if they already completed it, start fresh
+    const isAlreadyCompleted = {{ $isCompleted ? 'true' : 'false' }};
+    if (!isReload || isAlreadyCompleted) {
+        localStorage.removeItem(storageKey);
+    }
 
     let userAnswers = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
@@ -676,13 +730,62 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     window.finalSubmit = function() {
+        isSubmitting = true;
+        if (typeof timerInterval !== 'undefined') {
+            clearInterval(timerInterval);
+        }
         localStorage.removeItem(storageKey);
+        sessionStorage.removeItem(storageKey + '_timer');
         document.getElementById('complete-form').submit();
     };
 
     window.submitLesson = function() {
         document.getElementById('answers-input').value = JSON.stringify(userAnswers);
         document.getElementById('time_taken_input').value = totalSeconds;
+        
+        let score = 0;
+        const matchColumns = document.getElementById('match-columns');
+        if (typeof mcqData !== 'undefined' && mcqData && mcqData.length > 0) {
+            mcqData.forEach((mcq, idx) => {
+                if (userAnswers[idx] == mcq.correct) score++;
+            });
+        } else if (matchColumns) {
+            const pairsData = JSON.parse(matchColumns.getAttribute('data-pairs'));
+            let correctMatches = 0;
+            if (userAnswers['match']) {
+                pairsData.forEach(p => {
+                    if (userAnswers['match'][p.left] === p.right) correctMatches++;
+                });
+            }
+            score = pairsData.length > 0 ? Math.round((correctMatches / pairsData.length) * 10) : 10;
+        } else {
+            // For stages without MCQs or Matching like Reading Mission, automatically award full score (10 points = 3 stars)
+            score = 10;
+        }
+        
+        // Calculate stars
+        let earnedStars = 0;
+        if (score === 10) earnedStars = 3;
+        else if (score >= 8) earnedStars = 2;
+        else if (score >= 4) earnedStars = 1;
+
+        // Update modal stars
+        const starsContainer = document.getElementById('modal-stars-container');
+        if (starsContainer) {
+            const starImgs = starsContainer.querySelectorAll('img');
+            starImgs.forEach((img, idx) => {
+                if (idx < earnedStars) {
+                    if (img.style.transform.includes('translateY')) {
+                        img.style.filter = 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))';
+                    } else {
+                        img.style.filter = 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))';
+                    }
+                } else {
+                    img.style.filter = 'grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15))';
+                }
+            });
+        }
+
         
         const modal = document.getElementById('level-complete-modal');
         if(modal) {
@@ -706,14 +809,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Timer Logic
     const timerElement = document.getElementById('lesson-timer');
-    let totalSeconds = userAnswers['timer'] ? parseInt(userAnswers['timer']) : 0;
+    const timerStorageKey = storageKey + '_timer';
+    
+    if (!isReload) {
+        sessionStorage.removeItem(timerStorageKey);
+    }
+
+    let totalSeconds = sessionStorage.getItem(timerStorageKey) ? parseInt(sessionStorage.getItem(timerStorageKey)) : 0;
     
     // Initial display
     let m = Math.floor(totalSeconds / 60);
     let s = totalSeconds % 60;
     timerElement.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     
-    setInterval(() => {
+    let timerInterval = setInterval(() => {
+        if (isSubmitting) return;
+        
         totalSeconds++;
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
@@ -721,10 +832,14 @@ document.addEventListener('DOMContentLoaded', function() {
             String(minutes).padStart(2, '0') + ':' + 
             String(seconds).padStart(2, '0');
             
-        // Save to localStorage every 5 seconds to reduce write overhead
+        // Save to sessionStorage every 5 seconds to reduce write overhead
         if (totalSeconds % 5 === 0) {
-            userAnswers['timer'] = totalSeconds;
-            localStorage.setItem(storageKey, JSON.stringify(userAnswers));
+            sessionStorage.setItem(timerStorageKey, totalSeconds);
+            // Clean up any lingering timer in localStorage to prevent confusion
+            if (userAnswers['timer']) {
+                delete userAnswers['timer'];
+                localStorage.setItem(storageKey, JSON.stringify(userAnswers));
+            }
         }
     }, 1000);
     window.selectOption = function(element, optIndex) {
@@ -899,6 +1014,142 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== END MATCH GAME =====
 
 });
+</script>
+
+{{-- ===== EXIT CONFIRMATION POPUP ===== --}}
+<style>
+.exit-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+.exit-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+}
+.exit-popup {
+    position: relative;
+    width: 300px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: scale(0.7);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.4);
+}
+.exit-overlay.show .exit-popup {
+    transform: scale(1);
+}
+.exit-frame-img {
+    width: 100%;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+}
+.exit-popup-inner {
+    position: absolute;
+    top: 12%;
+    left: 10%;
+    right: 10%;
+    bottom: 16%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+}
+.exit-bag-img {
+    width: 90px;
+    height: auto;
+    animation: exit-bounce 1.2s infinite ease-in-out;
+}
+@keyframes exit-bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+.exit-question {
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 900;
+    font-size: 1.05rem;
+    color: #5D1A1A;
+    text-align: center;
+    background: #fff8e8;
+    border-radius: 18px;
+    padding: 8px 18px;
+    box-shadow: 0 3px 0 #e0c070;
+    border: 2px solid #f0d88a;
+    line-height: 1.35;
+}
+.exit-btns {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+}
+.exit-btn {
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 900;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 30px;
+    padding: 10px 34px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.18);
+    transition: transform 0.1s, box-shadow 0.1s;
+    letter-spacing: 0.5px;
+}
+.exit-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.18);
+}
+.exit-btn-no {
+    background: linear-gradient(180deg, #6fcf6f, #3aaa3a);
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.exit-btn-yes {
+    background: linear-gradient(180deg, #ff6b6b, #e03030);
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+</style>
+
+<div class="exit-overlay" id="exit-overlay">
+    <div class="exit-popup">
+        <img src="{{ asset('uploads/images/stagecomplete/banner 1.png') }}" class="exit-frame-img" alt="">
+        <div class="exit-popup-inner">
+            <img src="{{ asset('uploads/images/splash/bag.png') }}" class="exit-bag-img" alt="">
+            <div class="exit-question">Do you really<br>want to exit ?</div>
+            <div class="exit-btns">
+                <button class="exit-btn exit-btn-no" onclick="hideExitPopup()">No</button>
+                <button class="exit-btn exit-btn-yes" id="exit-yes-btn">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const exitBackUrl = "{{ route('student.courses.show', $lesson->chapter->course_id) }}?chapter_id={{ $lesson->chapter_id }}";
+    function showExitPopup() {
+        document.getElementById('exit-overlay').classList.add('show');
+    }
+    function hideExitPopup() {
+        document.getElementById('exit-overlay').classList.remove('show');
+    }
+    document.getElementById('exit-yes-btn').addEventListener('click', function() {
+        window.location.href = exitBackUrl;
+    });
+    // Close on backdrop click
+    document.getElementById('exit-overlay').addEventListener('click', function(e) {
+        if (e.target === this) hideExitPopup();
+    });
 </script>
 @endpush
 @endsection

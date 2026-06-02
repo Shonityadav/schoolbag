@@ -170,17 +170,16 @@ class EbookController extends Controller
                 'chapter_name' => $data['title'] ?? 'Untitled Chapter',
                 'start_page' => $startPage,
                 'end_page' => $endPage,
-                'total_stages' => 5
+                'total_stages' => 4
             ]);
 
             // Create stages
-            $stageNames = ['Reading Mission', 'Hard Words', 'Activity Mission', 'Exercise Mission', 'Challenge Mission'];
+            $stageNames = ['Reading Mission', 'Hard Words', 'Activity Mission', 'Exercise Mission'];
             $descriptions = [
                 'Explore the pages of the ebook.',
                 'Master the difficult words found in this chapter.',
-                'Complete interactive activities.',
-                'Solve exercises based on your reading.',
-                'Test your knowledge on this chapter.'
+                'Play fun activities to test your understanding.',
+                'Complete exercises to test your knowledge.'
             ];
             
             foreach ($stageNames as $sIndex => $sName) {
@@ -244,7 +243,7 @@ class EbookController extends Controller
                     'course_id' => $course->id,
                     'title' => $ebChapter->chapter_name ?? 'Chapter ' . ($index + 1),
                     'description' => 'Pages ' . $ebChapter->start_page . ' to ' . $ebChapter->end_page,
-                    'order' => $index + 1,
+                    'order' => $index,
                     'unlock_threshold' => 0,
                     'xp_reward' => 50,
                     'is_active' => true,
@@ -265,16 +264,6 @@ class EbookController extends Controller
                     ]);
                 }
 
-                // Create 1 Quiz (Stage 5)
-                \App\Models\Quiz::create([
-                    'chapter_id' => $chapter->id,
-                    'title' => 'Challenge Mission',
-                    'description' => 'Test your knowledge on this ebook.',
-                    'time_limit_minutes' => 10,
-                    'passing_score' => 50,
-                    'xp_reward' => 30,
-                    'is_active' => true,
-                ]);
             }
         } else {
             // Create 1 Fallback Chapter
@@ -282,7 +271,7 @@ class EbookController extends Controller
                 'course_id' => $course->id,
                 'title' => 'Read ' . $ebook->name,
                 'description' => 'Complete all stages to finish this book.',
-                'order' => 1,
+                'order' => 0,
                 'unlock_threshold' => 0,
                 'xp_reward' => 50,
                 'is_active' => true,
@@ -303,16 +292,6 @@ class EbookController extends Controller
                 ]);
             }
 
-            // Create 1 Quiz (Stage 5)
-            \App\Models\Quiz::create([
-                'chapter_id' => $chapter->id,
-                'title' => 'Challenge Mission',
-                'description' => 'Test your knowledge on this ebook.',
-                'time_limit_minutes' => 10,
-                'passing_score' => 50,
-                'xp_reward' => 30,
-                'is_active' => true,
-            ]);
         }
 
         return redirect()->route('student.courses.index')

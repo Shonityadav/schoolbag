@@ -77,7 +77,7 @@ body {
 }
 
 /* ── Map Container — max-width not in Bootstrap 5 as 450px ── */
-.map-container { max-width: 450px; margin-top: 55px; }
+.map-container { max-width: 450px; }
 
 /* ── Crown Cap Badge — decorative image, must stay custom ── */
 .cap-badge {
@@ -242,20 +242,20 @@ body {
     animation: happy-dance 2.5s infinite ease-in-out;
     transform-origin: bottom center;
 }
-/* ── Path Map Area — fixed height needed for absolute card positions ── */
+/* 🌟 Path Map Area - fixed height needed for absolute card positions 🌟 */
 .path-map-area {
     position: relative; width: 100%;
-    height: 610px; margin-top: 30px; top: 30px;
+    height: 600px; margin-top: 70px; margin-bottom: -70px;
 }
 .path-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
 /* ── Stage card wrappers — absolute grid positions can't be Bootstrap ── */
 .stage-card-wrapper { position: absolute; z-index: 10; }
 .wrapper-1 { top: 2%;  left: 0%;  width: 75%; }
-.wrapper-2 { top: 21%; right: 0%; width: 75%; }
-.wrapper-3 { top: 40%; left: 0%;  width: 75%; }
-.wrapper-4 { top: 59%; right: 0%; width: 75%; }
-.wrapper-5 { top: 78%; left: 0%;  width: 75%; }
+.wrapper-2 { top: 23%; right: 0%; width: 75%; }
+.wrapper-3 { top: 44%; left: 0%;  width: 75%; }
+.wrapper-4 { top: 65%; right: 0%; width: 75%; }
+.wrapper-5 { top: 84%; left: 0%;  width: 75%; }
 
 .stage-card { display: block; position: relative; width: 100%; text-decoration: none; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.25s; cursor: pointer; }
 .stage-card:hover          { transform: scale(1.04) translateY(-2px); filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15)); }
@@ -363,9 +363,6 @@ body {
 .sc-stage-4 .sc-title { color: #5B45B0; }
 /* stage 4 arrow is already purple, no rotation needed */
 
-.sc-stage-5 { border-color: #FFB830; }
-.sc-stage-5 .sc-title { color: #9A6000; }
-.sc-stage-5 .sc-arrow { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)) hue-rotate(144deg); }
 
 .stage-card.locked .sc-card { filter: saturate(0.6) opacity(0.85); }
 
@@ -523,31 +520,57 @@ body {
     $chapterUnlocked = $currentChapterData ? $currentChapterData['unlocked'] : false;
     $chapterCompleted= $currentChapterData ? $currentChapterData['completed'] : false;
     $lessons = $activeChapter ? $activeChapter->lessons : collect();
-    $quiz    = $activeChapter ? $activeChapter->quiz    : null;
+
 
     $stage1 = $lessons->get(0); $stage2 = $lessons->get(1);
     $stage3 = $lessons->get(2); $stage4 = $lessons->get(3);
-    $stage5 = $quiz;
 
     $stage1Completed = $stage1 ? $stage1->isCompletedBy($user) : false;
     $stage2Completed = $stage2 ? $stage2->isCompletedBy($user) : false;
     $stage3Completed = $stage3 ? $stage3->isCompletedBy($user) : false;
     $stage4Completed = $stage4 ? $stage4->isCompletedBy($user) : false;
-    $stage5Completed = $stage5 ? $chapterCompleted : false;
 
     $s1Unlocked = $chapterUnlocked;
     $s2Unlocked = $chapterUnlocked && ($stage1 ? $stage1Completed : true);
     $s3Unlocked = $s2Unlocked && ($stage2 ? $stage2Completed : true);
     $s4Unlocked = $s3Unlocked && ($stage3 ? $stage3Completed : true);
-    $s5Unlocked = $s4Unlocked && ($stage4 ? $stage4Completed : true);
+
+    $stage2EarnedStars = 0;
+    $stage3EarnedStars = 0;
+    if ($stage2) {
+        $ebChap = \App\Models\EbookChapter::where('ebook_id', $course->ebook_id ?? 2)
+            ->where('chapter_number', $activeChapter->order + 1)->first();
+        if ($ebChap) {
+            $stage2Progress = \App\Models\LessonProgress::where('user_id', $user->id)
+                ->where('chapter_id', $ebChap->id)
+                ->where('stage_number', 2)
+                ->first();
+            if ($stage2Progress) {
+                $stage2Score = $stage2Progress->score ?? 0;
+                if ($stage2Score == 10) $stage2EarnedStars = 3;
+                elseif ($stage2Score >= 8) $stage2EarnedStars = 2;
+                elseif ($stage2Score >= 4) $stage2EarnedStars = 1;
+            }
+
+            $stage3Progress = \App\Models\LessonProgress::where('user_id', $user->id)
+                ->where('chapter_id', $ebChap->id)
+                ->where('stage_number', 3)
+                ->first();
+            if ($stage3Progress) {
+                $stage3Score = $stage3Progress->score ?? 0;
+                if ($stage3Score == 10) $stage3EarnedStars = 3;
+                elseif ($stage3Score >= 8) $stage3EarnedStars = 2;
+                elseif ($stage3Score >= 4) $stage3EarnedStars = 1;
+            }
+        }
+    }
 
     $earnedStars = 0; $totalStars = 0;
     if ($stage1) { $totalStars += 3; if ($stage1Completed) $earnedStars += 3; }
-    if ($stage2) { $totalStars += 2; if ($stage2Completed) $earnedStars += 2; }
-    if ($stage3) { $totalStars += 3; if ($stage3Completed) $earnedStars += 3; }
-    if ($stage4) { $totalStars += 4; if ($stage4Completed) $earnedStars += 4; }
-    if ($stage5) { $totalStars += 5; if ($stage5Completed) $earnedStars += 5; }
-    if ($totalStars === 0) $totalStars = 15;
+    if ($stage2) { $totalStars += 3; if ($stage2Completed) $earnedStars += $stage2EarnedStars; }
+    if ($stage3) { $totalStars += 3; if ($stage3Completed) $earnedStars += $stage3EarnedStars; }
+    if ($stage4) { $totalStars += 4; if ($stage4Completed) $earnedStars += 0; }
+    if ($totalStars === 0) $totalStars = 13;
     $progressPercent = $totalStars > 0 ? round(($earnedStars / $totalStars) * 100) : 0;
 @endphp
 
@@ -632,14 +655,12 @@ body {
         <div class="path-map-area">
             {{-- Curved dashed path lines --}}
             <svg class="path-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                {{-- 1 to 2: Blue --}}
-                <path d="M 12.75 8.8  C 45 10,  48 20,  37.75 27.8" fill="none" stroke="#6BB8FF" stroke-width="6" stroke-linecap="round" stroke-dasharray="15 20" vector-effect="non-scaling-stroke"/>
-                {{-- 2 to 3: Green --}}
-                <path d="M 37.75 27.8 C 25 35,  10 40,  12.75 46.8" fill="none" stroke="#5CB85C" stroke-width="6" stroke-linecap="round" stroke-dasharray="15 20" vector-effect="non-scaling-stroke"/>
-                {{-- 3 to 4: Orange --}}
-                <path d="M 12.75 46.8 C 45 50,  48 60,  37.75 65.8" fill="none" stroke="#FF9043" stroke-width="6" stroke-linecap="round" stroke-dasharray="15 20" vector-effect="non-scaling-stroke"/>
-                {{-- 4 to 5: Yellow/Orange --}}
-                <path d="M 37.75 65.8 C 25 73,  10 78,  12.75 84.8" fill="none" stroke="#FFAA00" stroke-width="6" stroke-linecap="round" stroke-dasharray="15 20" vector-effect="non-scaling-stroke"/>
+                {{-- 1 to 2: Blue — left card right-edge (~x=37, y=10) → right card left-edge (~x=25, y=31) --}}
+                <path d="M 37 11  C 55 11,  55 31,  63 31" fill="none" stroke="#6BB8FF" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 14" vector-effect="non-scaling-stroke"/>
+                {{-- 2 to 3: Green — right card left-edge (~x=25, y=31) → left card right-edge (~x=37, y=52) --}}
+                <path d="M 63 31  C 45 31,  45 52,  37 52" fill="none" stroke="#5CB85C" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 14" vector-effect="non-scaling-stroke"/>
+                {{-- 3 to 4: Orange — left card right-edge (~x=37, y=52) → right card left-edge (~x=25, y=73) --}}
+                <path d="M 37 52  C 55 52,  55 73,  63 73" fill="none" stroke="#FF9043" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 14" vector-effect="non-scaling-stroke"/>
             </svg>
 
             {{-- Flower Decorations --}}
@@ -651,10 +672,6 @@ body {
 
             {{-- ── Stage Cards (generated from $stageMap array) ── --}}
             @php
-                /**
-                 * Hardcoded stage display config.
-                 * TODO: Replace with backend-fetched data (lesson/quiz model attributes) later.
-                 */
                 $stageMap = [
                     [
                         'model'      => $stage1,
@@ -682,7 +699,8 @@ body {
                         'icon'       => 'hardwords.png',
                         'title'      => '2. Hard Words',
                         'desc'       => 'Learn new words and their meanings.',
-                        'stars'      => 2,
+                        'stars'      => 3,
+                        'earned_stars' => $stage2EarnedStars,
                     ],
                     [
                         'model'      => $stage3,
@@ -697,6 +715,7 @@ body {
                         'title'      => '3. Activity Mission',
                         'desc'       => 'Play fun activities to understand better.',
                         'stars'      => 3,
+                        'earned_stars' => $stage3EarnedStars,
                     ],
                     [
                         'model'      => $stage4,
@@ -711,19 +730,6 @@ body {
                         'title'      => '4. Exercise Mission',
                         'desc'       => 'Complete the exercises to build your skills.',
                         'stars'      => 4,
-                    ],
-                    [
-                        'model'      => $stage5,
-                        'unlocked'   => $s5Unlocked,
-                        'completed'  => $stage5Completed,
-                        'is_current' => $s5Unlocked && !$stage5Completed,
-                        'route'      => 'student.quizzes.show',
-                        'wrapper'    => 'wrapper-5',
-                        'theme'      => 'sc-stage-5',
-                        'icon'       => 'mission.png',
-                        'title'      => '5. Challenge Mission',
-                        'desc'       => 'Take the challenge and be a champion!',
-                        'stars'      => 5,
                     ],
                 ];
             @endphp
@@ -752,7 +758,13 @@ body {
                         </div>
                         <div class="sc-right">
                             <img src="{{ asset('uploads/images/stage/star.png') }}" class="sc-star-img" alt="Star">
-                            <span class="sc-star-count">x{{ $s['stars'] }}</span>
+                            <span class="sc-star-count">
+                                @if($s['completed'] && isset($s['earned_stars']))
+                                    {{ $s['earned_stars'] }}/{{ $s['stars'] }}
+                                @else
+                                    x{{ $s['stars'] }}
+                                @endif
+                            </span>
                         </div>
                         <img src="{{ asset('uploads/images/stage/arrow.png') }}" class="sc-arrow" alt="">
                     </div>

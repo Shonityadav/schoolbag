@@ -47,8 +47,7 @@
             <div class="done-banner">✅ Lesson completed!</div>
             @if($nextLesson)
                 <a href="{{ route('student.lessons.show', $nextLesson->id) }}" class="btn-complete" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">Next →</a>
-            @elseif($lesson->chapter->quiz)
-                <a href="{{ route('student.quizzes.show', $lesson->chapter->quiz->id) }}" class="btn-complete" style="text-decoration:none">🎯 Take Quiz</a>
+
             @endif
         @else
             <div class="xp-pill">+{{ $lesson->xp_reward }} XP</div>

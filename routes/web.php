@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Support\Facades\Route;
 
@@ -6,9 +6,11 @@ use App\Http\Controllers\Student\StudentAuthController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\CourseController;
 use App\Http\Controllers\Student\LessonController;
-use App\Http\Controllers\Student\QuizController;
+
 use App\Http\Controllers\Student\EbookController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+
+use App\Http\Controllers\Admin\AdminDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,9 +52,7 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::get('/lessons/{id}',      [LessonController::class, 'show'])->name('lessons.show');
         Route::post('/lessons/{id}/done',[LessonController::class, 'complete'])->name('lessons.complete');
 
-        Route::get('/quizzes/{id}',         [QuizController::class, 'show'])->name('quizzes.show');
-        Route::post('/quizzes/{id}/submit', [QuizController::class, 'submit'])->name('quizzes.submit');
-        Route::get('/quizzes/result/{id}',  [QuizController::class, 'result'])->name('quizzes.result');
+
 
         Route::get('/ebooks',                [EbookController::class, 'index'])->name('ebooks');
         Route::get('/ebooks/{id}',           [EbookController::class, 'show'])->name('ebooks.show');
@@ -66,3 +66,53 @@ Route::prefix('student')->name('student.')->group(function () {
     });
 });
 
+
+
+/*
+|--------------------------------------------------------------------------
+| Admin Panel Routes � Completely separate from Student routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+});
+
+
+use App\Http\Controllers\Admin\AdminStudentController;
+use App\Http\Controllers\Admin\AdminStaffController;
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/students',                [AdminStudentController::class, 'index'])->name('students.index');
+    Route::get('/students/create',         [AdminStudentController::class, 'create'])->name('students.create');
+    Route::post('/students',               [AdminStudentController::class, 'store'])->name('students.store');
+    Route::get('/students/{student}/edit', [AdminStudentController::class, 'edit'])->name('students.edit');
+    Route::put('/students/{student}',      [AdminStudentController::class, 'update'])->name('students.update');
+    Route::delete('/students/{student}',   [AdminStudentController::class, 'destroy'])->name('students.destroy');
+
+    Route::get('/staff',                   [AdminStaffController::class, 'index'])->name('staff.index');
+    Route::get('/staff/create',            [AdminStaffController::class, 'create'])->name('staff.create');
+    Route::post('/staff',                  [AdminStaffController::class, 'store'])->name('staff.store');
+    Route::get('/staff/{staff}/edit',      [AdminStaffController::class, 'edit'])->name('staff.edit');
+    Route::put('/staff/{staff}',           [AdminStaffController::class, 'update'])->name('staff.update');
+    Route::delete('/staff/{staff}',        [AdminStaffController::class, 'destroy'])->name('staff.destroy');
+});
+
+// Student CSV import routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/students/sample-csv',  [AdminStudentController::class, 'sampleCsv'])->name('students.sample-csv');
+    Route::post('/students/import',     [AdminStudentController::class, 'importCsv'])->name('students.import');
+    Route::get('/staff/sample-csv',     [AdminStaffController::class,   'sampleCsv'])->name('staff.sample-csv');
+    Route::post('/staff/import',        [AdminStaffController::class,   'importCsv'])->name('staff.import');
+});
+
+use App\Http\Controllers\Admin\AdminClassController;
+
+// Classes CRUD
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/classes',               [AdminClassController::class, 'index'])->name('classes.index');
+    Route::get('/classes/create',        [AdminClassController::class, 'create'])->name('classes.create');
+    Route::post('/classes',              [AdminClassController::class, 'store'])->name('classes.store');
+    Route::get('/classes/{class}/edit',  [AdminClassController::class, 'edit'])->name('classes.edit');
+    Route::put('/classes/{class}',       [AdminClassController::class, 'update'])->name('classes.update');
+    Route::delete('/classes/{class}',    [AdminClassController::class, 'destroy'])->name('classes.destroy');
+});

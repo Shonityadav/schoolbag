@@ -26,7 +26,7 @@ class User extends Authenticatable
 
     // ── Relationships ──────────────────────────────────────────
     public function studentClass()    { return $this->belongsTo(StudentClass::class, 'class_id'); }
-    public function quizAttempts()    { return $this->hasMany(QuizAttempt::class); }
+
     public function xpTransactions()  { return $this->hasMany(XpTransaction::class); }
     public function attendances()     { return $this->hasMany(Attendance::class); }
     public function worksheets()      { return $this->hasMany(Worksheet::class); }

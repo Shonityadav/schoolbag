@@ -22,7 +22,7 @@ class DashboardController extends Controller
         $user    = Auth::user()->load('studentClass');
         $courses = Course::where('class_id', $user->class_id)
                          ->where('is_active', true)
-                         ->with(['chapters.quiz'])
+                         ->with(['chapters'])
                          ->orderBy('order')
                          ->get();
 

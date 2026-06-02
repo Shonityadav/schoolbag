@@ -21,14 +21,11 @@
 .h-cell{width:14px;height:14px;border-radius:3px;background:#2A2A4A}
 .h-cell.active{background:#6C63FF}
 .sec-title{font-size:16px;font-weight:900;margin:22px 0 12px;display:flex;align-items:center;gap:8px}
-.quiz-stat-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px}
-.qs-card{background:#1E1E35;border:1px solid #2A2A4A;border-radius:14px;padding:18px;text-align:center;flex:1;min-width:110px}
-.qs-val{font-size:24px;font-weight:900;margin-bottom:4px}
-.qs-label{font-size:12px;color:#8888BB;font-weight:700}
+
 @media (max-width: 600px) {
     .profile-header { flex-direction: column; text-align: center; }
     .stat-row { justify-content: center; }
-    .qs-card { flex: 1 1 40%; }
+
 }
 </style>
 @endpush
@@ -48,14 +45,7 @@
     </div>
 </div>
 
-<!-- Quiz Stats -->
-<div class="sec-title">📊 Quiz Stats</div>
-<div class="quiz-stat-row">
-    <div class="qs-card"><div class="qs-val">{{ $quizStats['total'] }}</div><div class="qs-label">Quizzes Taken</div></div>
-    <div class="qs-card"><div class="qs-val" style="color:#00D4AA">{{ $quizStats['passed'] }}</div><div class="qs-label">Passed</div></div>
-    <div class="qs-card"><div class="qs-val" style="color:#FF6584">{{ $quizStats['total'] - $quizStats['passed'] }}</div><div class="qs-label">Failed</div></div>
-    <div class="qs-card"><div class="qs-val" style="color:#FFD700">{{ number_format($quizStats['avg'], 1) }}%</div><div class="qs-label">Avg Score</div></div>
-</div>
+
 
 <!-- Badges -->
 <div class="sec-title">🏅 My Badges</div>
@@ -70,7 +60,7 @@
     @endforeach
 </div>
 @else
-<div style="color:#8888BB;font-size:14px;padding:20px 0">Complete quizzes and keep streaks to earn badges!</div>
+<div style="color:#8888BB;font-size:14px;padding:20px 0">Complete lessons and keep streaks to earn badges!</div>
 @endif
 
 <!-- Attendance heatmap -->
