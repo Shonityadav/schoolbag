@@ -93,7 +93,7 @@ class User extends Authenticatable
             'user_permissions',
             'user_id',
             'permission_id'
-        );
+        )->withTimestamps();
     }
 
     public function hasPermission($permission)
@@ -115,6 +115,6 @@ class User extends Authenticatable
             'class_user',
             'user_id',
             'class_id'
-        );
+        )->withTimestamps();
     }
 }

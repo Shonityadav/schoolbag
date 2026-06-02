@@ -17,6 +17,7 @@ class AdminStudentController extends Controller
     public function index(Request $request)
     {
         $query = User::where('role', 'student')
+            ->where('institute_id', auth()->user()->institute_id)
             ->with('studentClass')
             ->latest();
 
@@ -34,7 +35,7 @@ class AdminStudentController extends Controller
         }
 
         $students = $query->paginate(15)->withQueryString();
-        $classes  = ClassModel::orderBy('standard')->get();
+        $classes  = ClassModel::where('institute_id', auth()->user()->institute_id)->orderBy('standard')->get();
 
         return view('admin.students.index', compact('students', 'classes'));
     }
@@ -44,7 +45,7 @@ class AdminStudentController extends Controller
      */
     public function create()
     {
-        $classes = ClassModel::orderBy('standard')->get();
+        $classes = ClassModel::where('institute_id', auth()->user()->institute_id)->orderBy('standard')->get();
         return view('admin.students.form', [
             'student' => null,
             'classes' => $classes,
@@ -60,17 +61,22 @@ class AdminStudentController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'phone'    => 'nullable|string|max:20',
-            'class_id' => 'nullable|exists:classes,id',
+            'class_id' => [
+                'nullable',
+                Rule::exists('classes', 'id')->where('institute_id', auth()->user()->institute_id)
+            ],
             'password' => 'required|string|min:6|confirmed',
         ]);
 
         User::create([
+            'institute_id' => auth()->user()->institute_id,
             'name'     => $data['name'],
             'email'    => $data['email'],
             'phone'    => $data['phone'] ?? null,
             'class_id' => $data['class_id'] ?? null,
             'password' => Hash::make($data['password']),
             'role'     => 'student',
+            'user_type'=> 3,
         ]);
 
         return redirect()->route('admin.students.index')
@@ -82,8 +88,8 @@ class AdminStudentController extends Controller
      */
     public function edit(User $student)
     {
-        abort_unless($student->role === 'student', 404);
-        $classes = ClassModel::orderBy('standard')->get();
+        abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
+        $classes = ClassModel::where('institute_id', auth()->user()->institute_id)->orderBy('standard')->get();
         return view('admin.students.form', compact('student', 'classes'));
     }
 
@@ -92,13 +98,16 @@ class AdminStudentController extends Controller
      */
     public function update(Request $request, User $student)
     {
-        abort_unless($student->role === 'student', 404);
+        abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
 
         $data = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => ['required', 'email', Rule::unique('users')->ignore($student->id)],
             'phone'    => 'nullable|string|max:20',
-            'class_id' => 'nullable|exists:classes,id',
+            'class_id' => [
+                'nullable',
+                Rule::exists('classes', 'id')->where('institute_id', auth()->user()->institute_id)
+            ],
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 
@@ -122,7 +131,7 @@ class AdminStudentController extends Controller
      */
     public function destroy(User $student)
     {
-        abort_unless($student->role === 'student', 404);
+        abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
         $student->delete();
 
         return redirect()->route('admin.students.index')
@@ -160,7 +169,7 @@ class AdminStudentController extends Controller
         $handle  = fopen($file->getPathname(), 'r');
         $headers = array_map(fn($h) => strtolower(trim($h)), fgetcsv($handle));
 
-        $classes = ClassModel::pluck('id', 'standard')->all(); // standard => id map
+        $classes = ClassModel::where('institute_id', auth()->user()->institute_id)->pluck('id', 'standard')->all();
         $imported = 0;
         $skipped  = 0;
         $errors   = [];
@@ -191,12 +200,14 @@ class AdminStudentController extends Controller
             }
 
             User::create([
+                'institute_id' => auth()->user()->institute_id,
                 'name'     => $name,
                 'email'    => $email,
                 'phone'    => $phone ?: null,
-                'class_id' => $classNm && isset($classes[$classNm]) ? $classes[$classNm] : null,
-                'password' => \Illuminate\Support\Facades\Hash::make($password),
+                'class_id' => ($classNm && isset($classes[$classNm])) ? $classes[$classNm] : null,
+                'password' => Hash::make($password),
                 'role'     => 'student',
+                'user_type'=> 3,
             ]);
             $imported++;
         }

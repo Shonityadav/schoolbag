@@ -76,6 +76,7 @@ Route::prefix('student')->name('student.')->group(function () {
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminStudentController;
 use App\Http\Controllers\Admin\AdminStaffController;
+use App\Http\Controllers\Admin\AdminAdminsController;
 use App\Http\Controllers\Admin\AdminClassController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -113,6 +114,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/staff/{staff}',        [AdminStaffController::class, 'destroy'])->name('staff.destroy');
         Route::get('/staff/sample-csv',        [AdminStaffController::class, 'sampleCsv'])->name('staff.sample-csv');
         Route::post('/staff/import',           [AdminStaffController::class, 'importCsv'])->name('staff.import');
+
+        // Admins CRUD
+        Route::get('/admins',                   [AdminAdminsController::class, 'index'])->name('admins.index');
+        Route::get('/admins/create',            [AdminAdminsController::class, 'create'])->name('admins.create');
+        Route::post('/admins',                  [AdminAdminsController::class, 'store'])->name('admins.store');
+        Route::get('/admins/{staff}/edit',      [AdminAdminsController::class, 'edit'])->name('admins.edit');
+        Route::put('/admins/{staff}',           [AdminAdminsController::class, 'update'])->name('admins.update');
+        Route::delete('/admins/{staff}',        [AdminAdminsController::class, 'destroy'])->name('admins.destroy');
+        Route::get('/admins/sample-csv',        [AdminAdminsController::class, 'sampleCsv'])->name('admins.sample-csv');
+        Route::post('/admins/import',           [AdminAdminsController::class, 'importCsv'])->name('admins.import');
 
         // Classes CRUD
         Route::get('/classes',               [AdminClassController::class, 'index'])->name('classes.index');

@@ -15,7 +15,9 @@ class AdminClassController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ClassModel::withCount(['students'])->latest();
+        $query = ClassModel::where('institute_id', auth()->user()->institute_id)
+            ->withCount(['students'])
+            ->latest();
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -65,7 +67,8 @@ class AdminClassController extends Controller
      */
     public function edit(ClassModel $class)
     {
-        return view('admin.classes.form', compact('class'));
+        abort_unless($class->institute_id == auth()->user()->institute_id, 404);
+        return view('admin.classes.form', ['class' => $class]);
     }
 
     /**
@@ -73,6 +76,7 @@ class AdminClassController extends Controller
      */
     public function update(Request $request, ClassModel $class)
     {
+        abort_unless($class->institute_id == auth()->user()->institute_id, 404);
         $data = $request->validate([
             'standard'    => 'required|string|max:100',
             'section'     => 'required|string|max:50',
@@ -94,6 +98,7 @@ class AdminClassController extends Controller
      */
     public function destroy(ClassModel $class)
     {
+        abort_unless($class->institute_id == auth()->user()->institute_id, 404);
         if ($class->students()->count() > 0) {
             return redirect()->route('admin.classes.index')
                 ->with('error', 'Cannot delete class with existing students. Please reassign them first.');

@@ -444,15 +444,19 @@
             <div class="sb-nav-label">People</div>
             <a href="{{ route('admin.students.index') }}" class="sb-nav-link @yield('admin_nav_students', '')">
                 <i class="bi bi-people"></i> Students
-                <span class="sb-nav-badge">{{ \App\Models\User::where('role','student')->count() }}</span>
+                <span class="sb-nav-badge">{{ \App\Models\User::where('user_type', 3)->where('institute_id', auth()->user()->institute_id)->count() }}</span>
+            </a>
+            <a href="{{ route('admin.admins.index') }}" class="sb-nav-link @yield('admin_nav_admins', '')">
+                <i class="bi bi-shield-lock"></i> Admins
+                <span class="sb-nav-badge">{{ \App\Models\User::where('user_type', 1)->where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
             <a href="{{ route('admin.staff.index') }}" class="sb-nav-link @yield('admin_nav_staff', '')">
                 <i class="bi bi-person-badge"></i> Staff
-                <span class="sb-nav-badge">{{ \App\Models\User::where('role','admin')->count() }}</span>
+                <span class="sb-nav-badge">{{ \App\Models\User::where('user_type', 2)->where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
             <a href="{{ route('admin.classes.index') }}" class="sb-nav-link @yield('admin_nav_classes', '')">
                 <i class="bi bi-building"></i> Classes
-                <span class="sb-nav-badge">{{ \App\Models\StudentClass::count() }}</span>
+                <span class="sb-nav-badge">{{ \App\Models\ClassModel::where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
         </div>
 
@@ -551,24 +555,46 @@
 ══════════════════════════════════════ --}}
 <div class="sb-main">
     <div class="sb-content">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert" style="border-radius:8px;font-size:13.5px;">
-                <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+{{-- ══════════════════════════════════════
+     TOAST NOTIFICATIONS
+══════════════════════════════════════ --}}
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050; margin-top: 60px;">
+    @if(session('success'))
+        <div class="toast align-items-center text-white border-0 show" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: var(--sb-green); border-radius: 8px;">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center gap-2" style="font-size: 13.5px;">
+                    <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-        @endif
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert" style="border-radius:8px;font-size:13.5px;">
-                <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="toast align-items-center text-white border-0 show" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: var(--sb-red); border-radius: 8px;">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center gap-2" style="font-size: 13.5px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-        @endif
-
+        </div>
+    @endif
+</div>
         @yield('admin_content')
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Auto-hide toasts after 3 seconds
+    document.addEventListener('DOMContentLoaded', function () {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toastEl => {
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            toast.show();
+        });
+    });
+</script>
 @stack('admin-scripts')
 </body>
 </html>

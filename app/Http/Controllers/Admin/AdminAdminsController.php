@@ -8,14 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
-class AdminStaffController extends Controller
+class AdminAdminsController extends Controller
 {
     /**
      * List all staff with search + pagination.
      */
     public function index(Request $request)
     {
-        $query = User::where('user_type', 2)
+        $query = User::where('user_type', 1)
             ->where('institute_id', auth()->user()->institute_id)
             ->with(['permissions', 'classes'])
             ->latest();
@@ -29,9 +29,9 @@ class AdminStaffController extends Controller
             });
         }
 
-        $staff = $query->paginate(15)->withQueryString();
+        $admins = $query->paginate(15)->withQueryString();
 
-        return view('admin.staff.index', compact('staff'));
+        return view('admin.admins.index', compact('admins'));
     }
 
     /**
@@ -42,7 +42,7 @@ class AdminStaffController extends Controller
         $allPermissions = \App\Models\Permission::all();
         $allClasses = \App\Models\ClassModel::orderBy('standard')->get();
         
-        return view('admin.staff.form', [
+        return view('admin.admins.form', [
             'member' => null,
             'allPermissions' => $allPermissions,
             'allClasses' => $allClasses
@@ -65,40 +65,40 @@ class AdminStaffController extends Controller
             'classes.*' => 'exists:classes,id',
         ]);
 
-        $staff = User::create([
+        $admin = User::create([
             'institute_id' => auth()->user()->institute_id,
             'name'     => $data['name'],
             'email'    => $data['email'],
             'phone'    => $data['phone'] ?? null,
             'password' => Hash::make($data['password']),
-            'role'     => 'staff',
-            'user_type'=> 2,
+            'role'     => 'admin',
+            'user_type'=> 1,
         ]);
 
         if (isset($data['permissions'])) {
-            $staff->permissions()->sync($data['permissions']);
+            $admin->permissions()->sync($data['permissions']);
         }
         
         if (isset($data['classes'])) {
-            $staff->classes()->sync($data['classes']);
+            $admin->classes()->sync($data['classes']);
         }
 
-        return redirect()->route('admin.staff.index')
-            ->with('success', 'Staff member created successfully.');
+        return redirect()->route('admin.admins.index')
+            ->with('success', 'Admin created successfully.');
     }
 
     /**
      * Show edit form.
      */
-    public function edit(User $staff)
+    public function edit(User $admin)
     {
-        abort_unless($staff->user_type == 2 && $staff->institute_id == auth()->user()->institute_id, 404);
+        abort_unless($admin->user_type == 1 && $admin->institute_id == auth()->user()->institute_id, 404);
         
         $allPermissions = \App\Models\Permission::all();
         $allClasses = \App\Models\ClassModel::orderBy('standard')->get();
         
-        return view('admin.staff.form', [
-            'member' => $staff,
+        return view('admin.admins.form', [
+            'member' => $admin,
             'allPermissions' => $allPermissions,
             'allClasses' => $allClasses
         ]);
@@ -107,13 +107,13 @@ class AdminStaffController extends Controller
     /**
      * Update staff member.
      */
-    public function update(Request $request, User $staff)
+    public function update(Request $request, User $admin)
     {
-        abort_unless($staff->user_type == 2 && $staff->institute_id == auth()->user()->institute_id, 404);
+        abort_unless($admin->user_type == 1 && $admin->institute_id == auth()->user()->institute_id, 404);
 
         $data = $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => ['required', 'email', Rule::unique('users')->ignore($staff->id)],
+            'email'    => ['required', 'email', Rule::unique('users')->ignore($admin->id)],
             'phone'    => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6|confirmed',
             'permissions' => 'nullable|array',
@@ -122,42 +122,42 @@ class AdminStaffController extends Controller
             'classes.*' => 'exists:classes,id',
         ]);
 
-        $staff->name  = $data['name'];
-        $staff->email = $data['email'];
-        $staff->phone = $data['phone'] ?? null;
+        $admin->name  = $data['name'];
+        $admin->email = $data['email'];
+        $admin->phone = $data['phone'] ?? null;
 
         if (!empty($data['password'])) {
-            $staff->password = Hash::make($data['password']);
+            $admin->password = Hash::make($data['password']);
         }
 
-        $staff->save();
+        $admin->save();
 
         if (isset($data['permissions'])) {
-            $staff->permissions()->sync($data['permissions']);
+            $admin->permissions()->sync($data['permissions']);
         } else {
-            $staff->permissions()->detach();
+            $admin->permissions()->detach();
         }
         
         if (isset($data['classes'])) {
-            $staff->classes()->sync($data['classes']);
+            $admin->classes()->sync($data['classes']);
         } else {
-            $staff->classes()->detach();
+            $admin->classes()->detach();
         }
 
-        return redirect()->route('admin.staff.index')
-            ->with('success', 'Staff member updated successfully.');
+        return redirect()->route('admin.admins.index')
+            ->with('success', 'Admin updated successfully.');
     }
 
     /**
      * Delete staff member.
      */
-    public function destroy(User $staff)
+    public function destroy(User $admin)
     {
-        abort_unless($staff->user_type == 2 && $staff->institute_id == auth()->user()->institute_id, 404);
-        $staff->delete();
+        abort_unless($admin->user_type == 1 && $admin->institute_id == auth()->user()->institute_id, 404);
+        $admin->delete();
 
-        return redirect()->route('admin.staff.index')
-            ->with('success', 'Staff member deleted successfully.');
+        return redirect()->route('admin.admins.index')
+            ->with('success', 'Admin deleted successfully.');
     }
 
     /**
@@ -165,7 +165,7 @@ class AdminStaffController extends Controller
      */
     public function sampleCsv()
     {
-        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="staff_sample.csv"'];
+        $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="admin_sample.csv"'];
         $rows = [
             ['name', 'email', 'phone', 'password'],
             ['Priya Sharma',  'priya@school.com',  '9876543210', 'pass1234'],
@@ -225,14 +225,14 @@ class AdminStaffController extends Controller
                 'email'    => $email,
                 'phone'    => $phone ?: null,
                 'password' => Hash::make($password),
-                'role'     => 'staff',
-                'user_type'=> 2,
+                'role'     => 'admin',
+                'user_type'=> 1,
             ]);
             $imported++;
         }
         fclose($handle);
 
-        return redirect()->route('admin.staff.create')
+        return redirect()->route('admin.admins.create')
             ->with('import_result', compact('imported', 'skipped', 'errors'));
     }
 }

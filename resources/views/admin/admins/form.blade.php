@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 
 @php $isEdit = isset($member) && $member !== null; @endphp
-@section('title', $isEdit ? 'Edit Staff' : 'Add Staff')
-@section('admin_nav_staff', 'active')
-@section('admin_page_title', $isEdit ? 'Edit Staff Member' : 'Add Staff Member')
+@section('title', $isEdit ? 'Edit admins' : 'Add admins')
+@section('admin_nav_admins', 'active')
+@section('admin_page_title', $isEdit ? 'Edit admins Member' : 'Add admins Member')
 
 @push('admin-styles')
 <style>
@@ -48,14 +48,14 @@
 @section('admin_content')
 
 <div class="d-flex align-items-center gap-3 mb-4">
-    <a href="{{ route('admin.staff.index') }}"
+    <a href="{{ route('admin.admins.index') }}"
        class="sb-icon-btn" style="width:34px;height:34px;border-radius:7px;font-size:16px;">
         <i class="bi bi-arrow-left"></i>
     </a>
     <div>
-        <h5 class="fw-semibold mb-0" style="font-size:18px;">{{ $isEdit ? 'Edit Staff Member' : 'Add Staff Member' }}</h5>
+        <h5 class="fw-semibold mb-0" style="font-size:18px;">{{ $isEdit ? 'Edit admins Member' : 'Add admins Member' }}</h5>
         <p class="mb-0" style="font-size:13px;color:var(--sb-muted);">
-            {{ $isEdit ? 'Update staff account details.' : 'Add individually or import multiple staff via CSV.' }}
+            {{ $isEdit ? 'Update admins account details.' : 'Add individually or import multiple admins via CSV.' }}
         </p>
     </div>
 </div>
@@ -90,17 +90,17 @@
         <div class="sb-panel">
 
             @if(!$isEdit)
-            <div class="sb-tabs" id="staff-tabs">
-                <button class="sb-tab-btn active" data-tab="single" onclick="switchTab('staff-tabs','single',this)">
+            <div class="sb-tabs" id="admins-tabs">
+                <button class="sb-tab-btn active" data-tab="single" onclick="switchTab('admins-tabs','single',this)">
                     <i class="bi bi-person-plus"></i> Single Member
                 </button>
-                <button class="sb-tab-btn" data-tab="bulk" onclick="switchTab('staff-tabs','bulk',this)">
+                <button class="sb-tab-btn" data-tab="bulk" onclick="switchTab('admins-tabs','bulk',this)">
                     <i class="bi bi-cloud-upload"></i> Bulk Import (CSV)
                 </button>
             </div>
             @else
             <div class="sb-panel-header">
-                <div class="sb-panel-title"><i class="bi bi-person-badge me-2"></i>Staff Details</div>
+                <div class="sb-panel-title"><i class="bi bi-person-badge me-2"></i>admins Details</div>
                 <span style="font-size:12px;color:var(--sb-muted);">ID: #{{ $member->id }}</span>
             </div>
             @endif
@@ -108,7 +108,7 @@
             {{-- ── TAB 1: Single Form ── --}}
             <div class="sb-tab-pane active" id="tab-single">
                 <form method="POST"
-                      action="{{ $isEdit ? route('admin.staff.update', $member) : route('admin.staff.store') }}"
+                      action="{{ $isEdit ? route('admin.admins.update', $member) : route('admin.admins.store') }}"
                       class="p-4">
                     @csrf
                     @if($isEdit) @method('PUT') @endif
@@ -136,7 +136,7 @@
                             <label class="form-label" style="font-size:13px;font-weight:600;">Email Address <span class="text-danger">*</span></label>
                             <input type="email" name="email" value="{{ old('email', $member?->email) }}"
                                    class="form-control @error('email') is-invalid @enderror"
-                                   placeholder="staff@school.com"
+                                   placeholder="admins@school.com"
                                    style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
                             @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
@@ -209,9 +209,9 @@
                         <button type="submit" class="btn text-white d-flex align-items-center gap-2"
                                 style="font-size:13.5px;border-radius:8px;background:var(--sb-accent);padding:10px 22px;">
                             <i class="bi bi-{{ $isEdit ? 'check-lg' : 'person-plus' }}"></i>
-                            {{ $isEdit ? 'Save Changes' : 'Create Staff Member' }}
+                            {{ $isEdit ? 'Save Changes' : 'Create admins Member' }}
                         </button>
-                        <a href="{{ route('admin.staff.index') }}"
+                        <a href="{{ route('admin.admins.index') }}"
                            class="btn btn-outline-secondary"
                            style="font-size:13.5px;border-radius:8px;padding:10px 20px;border-color:var(--sb-border);">
                             Cancel
@@ -233,26 +233,26 @@
                             Optional columns: <code>phone</code><br>
                             First row must be the header row. Passwords must be at least 6 characters.
                         </div>
-                        <a href="{{ route('admin.staff.sample-csv') }}"
+                        <a href="{{ route('admin.admins.sample-csv') }}"
                            class="btn btn-sm ms-auto flex-shrink-0 d-flex align-items-center gap-2"
                            style="font-size:12px;border-radius:7px;border:1px solid #BAE6FD;color:#0284C7;background:#fff;white-space:nowrap;padding:6px 12px;">
                             <i class="bi bi-download"></i> Sample CSV
                         </a>
                     </div>
 
-                    <div class="csv-dropzone" id="csv-dropzone-staff">
-                        <input type="file" id="csv-file-staff" accept=".csv,text/csv">
+                    <div class="csv-dropzone" id="csv-dropzone-admins">
+                        <input type="file" id="csv-file-admins" accept=".csv,text/csv">
                         <div class="csv-dropzone-icon"><i class="bi bi-cloud-arrow-up"></i></div>
-                        <div class="csv-dropzone-title" id="csv-dz-title-staff">Drag &amp; drop your CSV file here</div>
+                        <div class="csv-dropzone-title" id="csv-dz-title-admins">Drag &amp; drop your CSV file here</div>
                         <div class="csv-dropzone-sub">or <u>click to browse</u> — .csv files only</div>
                     </div>
 
-                    <div id="csv-preview-staff" style="display:none;">
+                    <div id="csv-preview-admins" style="display:none;">
                         <div class="d-flex align-items-center justify-content-between mt-4 mb-2">
                             <div style="font-size:13px;font-weight:600;">
-                                Preview — <span id="csv-count-staff">0</span> rows found
+                                Preview — <span id="csv-count-admins">0</span> rows found
                             </div>
-                            <button onclick="clearCsv('staff')" class="btn btn-sm btn-outline-secondary"
+                            <button onclick="clearCsv('admins')" class="btn btn-sm btn-outline-secondary"
                                     style="font-size:12px;border-radius:6px;padding:4px 10px;">
                                 <i class="bi bi-x"></i> Clear
                             </button>
@@ -264,22 +264,22 @@
                                         <th>Row</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th>
                                     </tr>
                                 </thead>
-                                <tbody id="csv-tbody-staff"></tbody>
+                                <tbody id="csv-tbody-admins"></tbody>
                             </table>
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('admin.staff.import') }}"
-                          enctype="multipart/form-data" id="csv-form-staff">
+                    <form method="POST" action="{{ route('admin.admins.import') }}"
+                          enctype="multipart/form-data" id="csv-form-admins">
                         @csrf
-                        <input type="file" name="csv_file" id="csv-hidden-staff" style="display:none;" accept=".csv">
+                        <input type="file" name="csv_file" id="csv-hidden-admins" style="display:none;" accept=".csv">
                         <div class="d-flex gap-2 mt-4 pt-3" style="border-top:1px solid var(--sb-border);">
-                            <button type="submit" id="csv-submit-staff"
+                            <button type="submit" id="csv-submit-admins"
                                     class="btn text-white d-flex align-items-center gap-2"
                                     style="font-size:13.5px;border-radius:8px;background:var(--sb-accent);padding:10px 22px;" disabled>
-                                <i class="bi bi-cloud-upload"></i> Import Staff
+                                <i class="bi bi-cloud-upload"></i> Import admins
                             </button>
-                            <a href="{{ route('admin.staff.index') }}"
+                            <a href="{{ route('admin.admins.index') }}"
                                class="btn btn-outline-secondary"
                                style="font-size:13.5px;border-radius:8px;padding:10px 20px;border-color:var(--sb-border);">
                                 Cancel
@@ -372,6 +372,6 @@ function clearCsv(suffix) {
     document.getElementById('csv-file-' + suffix).value = '';
 }
 
-initCsvDropzone('staff');
+initCsvDropzone('admins');
 </script>
 @endpush
