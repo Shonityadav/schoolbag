@@ -487,9 +487,12 @@
             <a href="#" class="sb-nav-link">
                 <i class="bi bi-gear"></i> Settings
             </a>
-            <a href="{{ route('student.welcome') }}" class="sb-nav-link" style="color:rgba(220,38,38,0.6);">
-                <i class="bi bi-box-arrow-left"></i> Exit Admin
+            <a href="#" onclick="event.preventDefault(); document.getElementById('admin-logout-form').submit();" class="sb-nav-link" style="color:rgba(220,38,38,0.6);">
+                <i class="bi bi-box-arrow-left"></i> Sign Out
             </a>
+            <form id="admin-logout-form" action="{{ route('admin.logout') }}" method="POST" class="d-none">
+                @csrf
+            </form>
         </div>
     </nav>
 
@@ -497,12 +500,13 @@
         <div class="sb-user">
             <div class="sb-user-avatar"><i class="bi bi-person-fill"></i></div>
             <div>
-                <div class="sb-user-name">Administrator</div>
-                <div class="sb-user-role">Super Admin</div>
+                <div class="sb-user-name">{{ Auth::user() ? Auth::user()->name : 'Administrator' }}</div>
+                <div class="sb-user-role">{{ Auth::user() && Auth::user()->user_type == 1 ? 'Institute Admin' : 'Admin' }}</div>
             </div>
         </div>
     </div>
 </aside>
+
 
 {{-- ══════════════════════════════════════
      TOPBAR
