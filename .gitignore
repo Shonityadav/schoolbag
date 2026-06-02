@@ -1,4 +1,4 @@
-/node_modules
+﻿/node_modules
 /public/build
 /public/hot
 /public/storage
@@ -24,9 +24,11 @@ yarn-error.log
 !app/**/*.php
 !database/**/*.php
 !routes/**/*.php
+!resources/**/*.php
 !config/**/*.php
 !bootstrap/**/*.php
 !tests/**/*.php
 !server.php
 !artisan
 *.html
+

@@ -1,0 +1,426 @@
+@extends('layouts.admin')
+
+@php $isEdit = isset($student) && $student !== null; @endphp
+@section('title', $isEdit ? 'Edit Student' : 'Add Student')
+@section('admin_nav_students', 'active')
+@section('admin_page_title', $isEdit ? 'Edit Student' : 'Add Student')
+
+@push('admin-styles')
+<style>
+/* ── Tabs ── */
+.sb-tabs { display:flex; gap:0; border-bottom:1px solid var(--sb-border); padding:0 22px; background:#FAFBFD; }
+.sb-tab-btn {
+    padding:12px 18px; font-size:13px; font-weight:600; color:var(--sb-muted);
+    border:none; background:transparent; cursor:pointer; border-bottom:2px solid transparent;
+    transition:all .15s; display:flex; align-items:center; gap:7px; margin-bottom:-1px;
+}
+.sb-tab-btn:hover { color:var(--sb-text); }
+.sb-tab-btn.active { color:var(--sb-accent); border-bottom-color:var(--sb-accent); }
+.sb-tab-pane { display:none; }
+.sb-tab-pane.active { display:block; }
+
+/* ── Drop zone ── */
+.csv-dropzone {
+    border:2px dashed var(--sb-border); border-radius:10px;
+    padding:40px 20px; text-align:center; cursor:pointer;
+    transition:border-color .2s, background .2s; position:relative;
+}
+.csv-dropzone:hover, .csv-dropzone.dragover {
+    border-color:var(--sb-accent); background:#EFF6FF;
+}
+.csv-dropzone input[type=file] {
+    position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+}
+.csv-dropzone-icon { font-size:36px; color:var(--sb-muted); margin-bottom:10px; line-height:1; }
+.csv-dropzone-title { font-size:14px; font-weight:600; color:var(--sb-text); margin-bottom:4px; }
+.csv-dropzone-sub { font-size:12.5px; color:var(--sb-muted); }
+.csv-dropzone.has-file { border-color:var(--sb-green); background:#F0FDF4; }
+.csv-dropzone.has-file .csv-dropzone-icon { color:var(--sb-green); }
+
+/* ── Preview table ── */
+.csv-preview-wrap { margin-top:20px; overflow-x:auto; border-radius:8px; border:1px solid var(--sb-border); }
+.csv-preview-wrap table { width:100%; border-collapse:collapse; min-width:500px; }
+.csv-preview-wrap th { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--sb-muted); background:#F8FAFC; padding:8px 14px; border-bottom:1px solid var(--sb-border); white-space:nowrap; }
+.csv-preview-wrap td { font-size:12.5px; padding:9px 14px; border-bottom:1px solid var(--sb-border); color:var(--sb-text); }
+.csv-preview-wrap tr:last-child td { border-bottom:none; }
+.csv-preview-wrap tr:hover td { background:#FAFBFD; }
+.csv-row-ok   { color:var(--sb-green); }
+.csv-row-warn { color:var(--sb-orange); }
+.csv-row-err  { color:var(--sb-red); }
+
+/* ── Result badges (after import) ── */
+.import-result { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+.import-chip { padding:10px 18px; border-radius:8px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.import-chip.success { background:#F0FDF4; color:var(--sb-green); border:1px solid #BBF7D0; }
+.import-chip.error   { background:#FEF2F2; color:var(--sb-red);   border:1px solid #FECACA; }
+</style>
+@endpush
+
+@section('admin_content')
+
+{{-- Page Header --}}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ route('admin.students.index') }}"
+       class="sb-icon-btn" style="width:34px;height:34px;border-radius:7px;font-size:16px;">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="fw-semibold mb-0" style="font-size:18px;">{{ $isEdit ? 'Edit Student' : 'Add Student' }}</h5>
+        <p class="mb-0" style="font-size:13px;color:var(--sb-muted);">
+            {{ $isEdit ? 'Update student details below.' : 'Add individually or import multiple students via CSV.' }}
+        </p>
+    </div>
+</div>
+
+{{-- Import Results --}}
+@if(session('import_result'))
+    @php $res = session('import_result'); @endphp
+    <div class="import-result mb-3">
+        <div class="import-chip success">
+            <i class="bi bi-check-circle-fill"></i>
+            {{ $res['imported'] }} imported successfully
+        </div>
+        @if($res['skipped'] > 0)
+        <div class="import-chip error">
+            <i class="bi bi-x-circle-fill"></i>
+            {{ $res['skipped'] }} skipped (errors)
+        </div>
+        @endif
+    </div>
+    @if(!empty($res['errors']))
+    <div class="sb-panel mb-4">
+        <div class="sb-panel-header">
+            <div class="sb-panel-title" style="color:var(--sb-red);"><i class="bi bi-exclamation-triangle me-2"></i>Import Errors</div>
+        </div>
+        <div class="p-3">
+            @foreach($res['errors'] as $err)
+                <div style="font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--sb-border);color:var(--sb-red);">
+                    <span style="font-weight:700;">Row {{ $err['row'] }}:</span> {{ $err['message'] }}
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+@endif
+
+<div class="row justify-content-center">
+    <div class="{{ $isEdit ? 'col-12 col-lg-7' : 'col-12 col-lg-9' }}">
+        <div class="sb-panel">
+
+            {{-- Tabs (only on create) --}}
+            @if(!$isEdit)
+            <div class="sb-tabs" id="student-tabs">
+                <button class="sb-tab-btn active" data-tab="single" onclick="switchTab('student-tabs','single',this)">
+                    <i class="bi bi-person-plus"></i> Single Student
+                </button>
+                <button class="sb-tab-btn" data-tab="bulk" onclick="switchTab('student-tabs','bulk',this)">
+                    <i class="bi bi-cloud-upload"></i> Bulk Import (CSV)
+                </button>
+            </div>
+            @else
+            <div class="sb-panel-header">
+                <div class="sb-panel-title"><i class="bi bi-person-gear me-2"></i>Student Details</div>
+                <span style="font-size:12px;color:var(--sb-muted);">ID: #{{ $student->id }}</span>
+            </div>
+            @endif
+
+            {{-- ── TAB 1: Single Form ── --}}
+            <div class="sb-tab-pane active" id="tab-single">
+                <form method="POST"
+                      action="{{ $isEdit ? route('admin.students.update', $student) : route('admin.students.store') }}"
+                      class="p-4">
+                    @csrf
+                    @if($isEdit) @method('PUT') @endif
+
+                    @if($errors->any())
+                        <div class="alert alert-danger d-flex gap-2 mb-4" style="border-radius:8px;font-size:13px;">
+                            <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+                            <div>
+                                <div class="fw-bold mb-1">Please fix the following errors:</div>
+                                <ul class="mb-0 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" value="{{ old('name', $student?->name) }}"
+                                   class="form-control @error('name') is-invalid @enderror"
+                                   placeholder="e.g. Aarav Sharma"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" name="email" value="{{ old('email', $student?->email) }}"
+                                   class="form-control @error('email') is-invalid @enderror"
+                                   placeholder="student@school.com"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Phone</label>
+                            <input type="text" name="phone" value="{{ old('phone', $student?->phone) }}"
+                                   class="form-control @error('phone') is-invalid @enderror"
+                                   placeholder="+91 98765 43210"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Class</label>
+                            <select name="class_id" class="form-select @error('class_id') is-invalid @enderror"
+                                    style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                                <option value="">— No class assigned —</option>
+                                @foreach($classes as $class)
+                                    <option value="{{ $class->id }}" {{ old('class_id', $student?->class_id) == $class->id ? 'selected' : '' }}>
+                                        {{ $class->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('class_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12">
+                            <div style="border-top:1px solid var(--sb-border);padding-top:16px;font-size:13px;font-weight:600;">
+                                {{ $isEdit ? 'Change Password' : 'Set Password' }}
+                                @if($isEdit)<span style="font-size:12px;color:var(--sb-muted);font-weight:400;"> — leave blank to keep current</span>@endif
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Password @if(!$isEdit)<span class="text-danger">*</span>@endif</label>
+                            <input type="password" name="password"
+                                   class="form-control @error('password') is-invalid @enderror"
+                                   placeholder="Min. 6 characters"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Confirm Password</label>
+                            <input type="password" name="password_confirmation"
+                                   class="form-control" placeholder="Repeat password"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4 pt-3" style="border-top:1px solid var(--sb-border);">
+                        <button type="submit" class="btn text-white d-flex align-items-center gap-2"
+                                style="font-size:13.5px;border-radius:8px;background:var(--sb-accent);padding:10px 22px;">
+                            <i class="bi bi-{{ $isEdit ? 'check-lg' : 'person-plus' }}"></i>
+                            {{ $isEdit ? 'Save Changes' : 'Create Student' }}
+                        </button>
+                        <a href="{{ route('admin.students.index') }}"
+                           class="btn btn-outline-secondary"
+                           style="font-size:13.5px;border-radius:8px;padding:10px 20px;border-color:var(--sb-border);">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            {{-- ── TAB 2: CSV Bulk Import (only on create) ── --}}
+            @if(!$isEdit)
+            <div class="sb-tab-pane" id="tab-bulk">
+                <div class="p-4">
+
+                    {{-- Instructions + sample download --}}
+                    <div class="d-flex align-items-start gap-3 p-3 mb-4"
+                         style="background:#F0F9FF;border:1px solid #BAE6FD;border-radius:9px;">
+                        <i class="bi bi-info-circle-fill" style="color:#0284C7;font-size:18px;flex-shrink:0;margin-top:1px;"></i>
+                        <div style="font-size:13px;color:#0C4A6E;line-height:1.6;">
+                            <div class="fw-bold mb-1">CSV Format Guide</div>
+                            Required columns: <code>name</code>, <code>email</code>, <code>password</code><br>
+                            Optional columns: <code>phone</code>, <code>class_name</code> (must match an existing class name)<br>
+                            First row must be the header row. Passwords must be at least 6 characters.
+                        </div>
+                        <a href="{{ route('admin.students.sample-csv') }}"
+                           class="btn btn-sm ms-auto flex-shrink-0 d-flex align-items-center gap-2"
+                           style="font-size:12px;border-radius:7px;border:1px solid #BAE6FD;color:#0284C7;background:#fff;white-space:nowrap;padding:6px 12px;">
+                            <i class="bi bi-download"></i> Sample CSV
+                        </a>
+                    </div>
+
+                    {{-- Drop zone --}}
+                    <div class="csv-dropzone" id="csv-dropzone-students">
+                        <input type="file" id="csv-file-students" accept=".csv,text/csv">
+                        <div class="csv-dropzone-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                        <div class="csv-dropzone-title" id="csv-dz-title-students">
+                            Drag &amp; drop your CSV file here
+                        </div>
+                        <div class="csv-dropzone-sub">or <u>click to browse</u> — .csv files only</div>
+                    </div>
+
+                    {{-- Preview --}}
+                    <div id="csv-preview-students" style="display:none;">
+                        <div class="d-flex align-items-center justify-content-between mt-4 mb-2">
+                            <div style="font-size:13px;font-weight:600;">
+                                Preview — <span id="csv-count-students">0</span> rows found
+                            </div>
+                            <button onclick="clearCsv('students')" class="btn btn-sm btn-outline-secondary"
+                                    style="font-size:12px;border-radius:6px;padding:4px 10px;">
+                                <i class="bi bi-x"></i> Clear
+                            </button>
+                        </div>
+                        <div class="csv-preview-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Row</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Class</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="csv-tbody-students"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- Upload form --}}
+                    <form method="POST" action="{{ route('admin.students.import') }}"
+                          enctype="multipart/form-data" id="csv-form-students">
+                        @csrf
+                        <input type="file" name="csv_file" id="csv-hidden-students" style="display:none;" accept=".csv">
+                        <div class="d-flex gap-2 mt-4 pt-3" style="border-top:1px solid var(--sb-border);">
+                            <button type="submit" id="csv-submit-students"
+                                    class="btn text-white d-flex align-items-center gap-2"
+                                    style="font-size:13.5px;border-radius:8px;background:var(--sb-accent);padding:10px 22px;" disabled>
+                                <i class="bi bi-cloud-upload"></i> Import Students
+                            </button>
+                            <a href="{{ route('admin.students.index') }}"
+                               class="btn btn-outline-secondary"
+                               style="font-size:13.5px;border-radius:8px;padding:10px 20px;border-color:var(--sb-border);">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            @endif
+
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('admin-scripts')
+<script>
+// ── Tab switcher ──────────────────────────────────
+function switchTab(groupId, tabId, btn) {
+    document.querySelectorAll('#' + groupId + ' .sb-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.sb-tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+// ── CSV drag-drop + preview ───────────────────────
+function initCsvDropzone(suffix) {
+    const dz      = document.getElementById('csv-dropzone-' + suffix);
+    const fileIn  = document.getElementById('csv-file-' + suffix);
+    const hiddenIn= document.getElementById('csv-hidden-' + suffix);
+    const form    = document.getElementById('csv-form-' + suffix);
+    const preview = document.getElementById('csv-preview-' + suffix);
+    const tbody   = document.getElementById('csv-tbody-' + suffix);
+    const count   = document.getElementById('csv-count-' + suffix);
+    const title   = document.getElementById('csv-dz-title-' + suffix);
+    const submit  = document.getElementById('csv-submit-' + suffix);
+
+    if (!dz) return;
+
+    ['dragenter','dragover'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('dragover'); }));
+    ['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('dragover'); }));
+
+    dz.addEventListener('drop', ev => {
+        const file = ev.dataTransfer.files[0];
+        if (file) processFile(file);
+    });
+
+    fileIn.addEventListener('change', () => {
+        if (fileIn.files[0]) processFile(fileIn.files[0]);
+    });
+
+    function processFile(file) {
+        if (!file.name.endsWith('.csv')) {
+            alert('Please select a .csv file.');
+            return;
+        }
+        title.textContent = file.name;
+        dz.classList.add('has-file');
+
+        // Copy file to hidden input via DataTransfer
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        hiddenIn.files = dt.files;
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            const rows = parseCSV(e.target.result);
+            renderPreview(rows);
+        };
+        reader.readAsText(file);
+    }
+
+    function parseCSV(text) {
+        const lines = text.trim().split('\n').filter(l => l.trim());
+        if (lines.length < 2) return [];
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z_]/g,''));
+        return lines.slice(1).map((line, i) => {
+            const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g,''));
+            const obj  = {};
+            headers.forEach((h, idx) => obj[h] = vals[idx] || '');
+            obj._row = i + 2;
+            return obj;
+        });
+    }
+
+    function renderPreview(rows) {
+        tbody.innerHTML = '';
+        count.textContent = rows.length;
+
+        rows.slice(0, 50).forEach(r => {
+            const hasName  = r.name && r.name.length > 0;
+            const hasEmail = r.email && r.email.includes('@');
+            const hasPass  = r.password && r.password.length >= 6;
+            const ok       = hasName && hasEmail && hasPass;
+            const warn     = !ok;
+
+            const statusIcon = ok
+                ? '<span class="csv-row-ok"><i class="bi bi-check-circle-fill"></i> Ready</span>'
+                : '<span class="csv-row-err"><i class="bi bi-x-circle-fill"></i> ' +
+                  (!hasName ? 'Missing name' : !hasEmail ? 'Invalid email' : 'Password too short') + '</span>';
+
+            tbody.innerHTML += `<tr>
+                <td style="color:var(--sb-muted);font-size:12px;">${r._row}</td>
+                <td>${r.name || '<span style="color:var(--sb-red)">—</span>'}</td>
+                <td style="color:var(--sb-muted);">${r.email || '<span style="color:var(--sb-red)">—</span>'}</td>
+                <td style="color:var(--sb-muted);">${r.phone || '—'}</td>
+                <td style="color:var(--sb-muted);">${r.class_name || '—'}</td>
+                <td>${statusIcon}</td>
+            </tr>`;
+        });
+
+        if (rows.length > 50) {
+            tbody.innerHTML += `<tr><td colspan="6" style="text-align:center;color:var(--sb-muted);font-size:12px;padding:10px;">
+                … and ${rows.length - 50} more rows (all will be imported)
+            </td></tr>`;
+        }
+
+        preview.style.display = 'block';
+        submit.disabled = rows.length === 0;
+    }
+}
+
+function clearCsv(suffix) {
+    document.getElementById('csv-preview-' + suffix).style.display = 'none';
+    document.getElementById('csv-dropzone-' + suffix).classList.remove('has-file');
+    document.getElementById('csv-dz-title-' + suffix).textContent = 'Drag & drop your CSV file here';
+    document.getElementById('csv-submit-' + suffix).disabled = true;
+    document.getElementById('csv-file-' + suffix).value = '';
+}
+
+initCsvDropzone('students');
+</script>
+@endpush
