@@ -4,100 +4,301 @@
 
 @push('styles')
 <style>
-.profile-header{background:linear-gradient(135deg,rgba(108,99,255,.15),rgba(255,101,132,.08));border:1px solid rgba(108,99,255,.2);border-radius:18px;padding:28px;margin-bottom:24px;display:flex;align-items:center;gap:20px}
-.avatar-circle{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#FF6584);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0}
-.user-name{font-size:22px;font-weight:900}
-.user-class{color:#8888BB;font-size:14px;margin-bottom:10px}
-.stat-row{display:flex;gap:14px;flex-wrap:wrap}
-.stat-pill{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:5px 16px;font-size:13px;font-weight:800}
-.badges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px}
-.badge-card{background:#1E1E35;border:1px solid #2A2A4A;border-radius:14px;padding:16px;text-align:center}
-.badge-icon{font-size:36px;margin-bottom:8px}
-.badge-name{font-size:13px;font-weight:800;margin-bottom:4px}
-.badge-desc{font-size:11px;color:#8888BB}
-.xp-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #2A2A4A}
-.xp-row:last-child{border-bottom:none}
-.heatmap{display:flex;flex-wrap:wrap;gap:4px}
-.h-cell{width:14px;height:14px;border-radius:3px;background:#2A2A4A}
-.h-cell.active{background:#6C63FF}
-.sec-title{font-size:16px;font-weight:900;margin:22px 0 12px;display:flex;align-items:center;gap:8px}
+/* Override default layout body background if possible, or just cover it */
+.profile-container {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #FDF6E9; /* Cream background */
+    z-index: 1;
+    overflow-x: hidden;
+    padding-bottom: 120px;
+}
 
-@media (max-width: 600px) {
-    .profile-header { flex-direction: column; text-align: center; }
-    .stat-row { justify-content: center; }
+/* Wavy Top Background */
+.profile-top-wave {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(180deg, #FFCE63 0%, #FFB642 100%);
+    border-bottom-left-radius: 50% 20%;
+    border-bottom-right-radius: 50% 20%;
+    z-index: -1;
+}
+.profile-top-wave::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: -10%;
+    width: 120%;
+    height: 150px;
+    background: rgba(255, 206, 99, 0.4);
+    border-top-left-radius: 50% 100%;
+    border-top-right-radius: 50% 100%;
+    border-bottom-left-radius: 50% 20%;
+    border-bottom-right-radius: 50% 20%;
+    z-index: -1;
+    transform: rotate(-3deg);
+}
 
+/* Decorative Background Image (Shapes) */
+.profile-bg-shapes {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('{{ asset("uploads/images/banners/shapes.png") }}');
+    background-size: cover;
+    background-position: top center;
+    background-repeat: no-repeat;
+    opacity: 0.6;
+    z-index: -2;
+    pointer-events: none;
+}
+
+/* Header & Back Button */
+.profile-header-bar {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+}
+.btn-back {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #40C4FF, #0081CB);
+    border: 3px solid #FFD54F;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    box-shadow: 0 4px 0 #005B8F;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.1s;
+}
+.btn-back:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #005B8F;
+}
+
+/* Avatar Section */
+.profile-avatar-wrapper {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.profile-avatar-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+.profile-avatar-img {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    z-index: 1;
+}
+.edit-pencil {
+    position: absolute;
+    bottom: 15px;
+    right: 25px;
+    width: 32px;
+    height: 32px;
+    background: white;
+    border: 1px solid #CCC;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+/* User Info */
+.profile-info {
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+}
+.profile-name {
+    font-size: 28px;
+    font-weight: 900;
+    color: #332211;
+    margin-bottom: 0;
+}
+.profile-email {
+    font-size: 14px;
+    color: #554433;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.profile-class-level {
+    font-size: 16px;
+    font-weight: 700;
+    color: #554433;
+}
+
+/* Stats Cards */
+.stats-container {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 2;
+    padding: 0 20px;
+}
+.stat-card {
+    background: #FFEAC2;
+    border: 2px solid #5B3B24;
+    border-radius: 12px;
+    width: 100px;
+    height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 0 #D4B688;
+}
+/* Calendar pins */
+.stat-card::before, .stat-card::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    width: 10px;
+    height: 16px;
+    background: #5B3B24;
+    border-radius: 4px;
+}
+.stat-card::before { left: 16px; }
+.stat-card::after { right: 16px; }
+.stat-icon {
+    font-size: 32px;
+    margin-bottom: 4px;
+    margin-top: 8px;
+}
+.stat-icon img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+.stat-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: #5B3B24;
+}
+
+/* Quiz Stats Section */
+.quiz-stats-section {
+    padding: 0 30px;
+    max-width: 500px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+.quiz-stats-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #5B3B24;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+}
+.quiz-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.quiz-stat-box {
+    background: #FFEAC2;
+    border: 2px solid #5B3B24;
+    border-radius: 12px;
+    height: 90px;
+}
+
+/* Ensure the layout sidebar is above */
+.sidebar {
+    z-index: 1000 !important;
 }
 </style>
 @endpush
 
 @section('content')
-<div class="profile-header">
-    <div class="avatar-circle">{{ $user->avatar ?? '🧑‍🎓' }}</div>
-    <div>
-        <div class="user-name">{{ $user->name }}</div>
-        <div class="user-class">{{ $user->studentClass->name ?? 'School Bag' }} • Level {{ $user->level }}</div>
-        <div class="stat-row">
-            <span class="stat-pill">⚡ {{ number_format($user->total_xp) }} XP</span>
-            <span class="stat-pill">🔥 {{ $user->streak_count }} Streak</span>
-            <span class="stat-pill">🏅 {{ $badges->count() }} Badges</span>
-            <span class="stat-pill">📧 {{ $user->email }}</span>
+<div class="profile-container">
+    <div class="profile-top-wave"></div>
+    <div class="profile-bg-shapes"></div>
+
+    <div class="profile-header-bar">
+        <a href="{{ route('student.dashboard') }}" class="btn-back">
+            <i class="bi bi-arrow-left-short" style="font-size:32px; font-weight:bold;-webkit-text-stroke:1px;"></i>
+        </a>
+    </div>
+
+    <div class="profile-avatar-wrapper">
+        <img src="{{ asset('uploads/images/banners/badges/Gold.png') }}" alt="Gold Frame" class="profile-avatar-frame">
+        <img src="{{ asset('uploads/images/banners/Avatar/iron male.png') }}" alt="Avatar" class="profile-avatar-img">
+        <div class="edit-pencil">
+            ✏️
         </div>
     </div>
-</div>
 
-
-
-<!-- Badges -->
-<div class="sec-title">🏅 My Badges</div>
-@if($badges->count())
-<div class="badges-grid">
-    @foreach($badges as $badge)
-    <div class="badge-card">
-        <div class="badge-icon">{{ $badge->icon }}</div>
-        <div class="badge-name">{{ $badge->name }}</div>
-        <div class="badge-desc">{{ $badge->description }}</div>
+    <div class="profile-info">
+        <h2 class="profile-name">{{ $user->name }}</h2>
+        <div class="profile-email">{{ $user->email }}</div>
+        <div class="profile-class-level">{{ $user->studentClass->name ?? 'Class 4' }} &bull; Level {{ $user->level ?? 1 }}</div>
     </div>
-    @endforeach
-</div>
-@else
-<div style="color:#8888BB;font-size:14px;padding:20px 0">Complete lessons and keep streaks to earn badges!</div>
-@endif
 
-<!-- Attendance heatmap -->
-<div class="sec-title">📅 Attendance (last 12 weeks)</div>
-<div class="card" style="margin-bottom:24px">
-    <div class="heatmap">
-        @php $start = now()->subWeeks(12)->startOfWeek(); @endphp
-        @for($day = clone $start; $day->lte(now()); $day->addDay())
-            <div class="h-cell {{ in_array($day->toDateString(), $attendances) ? 'active' : '' }}" title="{{ $day->format('d M Y') }}"></div>
-        @endfor
-    </div>
-    <div style="font-size:12px;color:#8888BB;margin-top:10px">🟣 = Present · ⬛ = Absent</div>
-</div>
-
-<!-- XP History -->
-<div class="sec-title">⭐ XP History</div>
-<div class="card">
-    @forelse($xpHistory as $tx)
-    <div class="xp-row">
-        <div>
-            <div style="font-size:14px;font-weight:700">{{ $tx->description ?? ucfirst($tx->source_type) }}</div>
-            <div style="font-size:12px;color:#8888BB">{{ $tx->created_at->format('d M Y, H:i') }}</div>
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon" style="color: #FFB300;">⭐</div>
+            <div class="stat-value">{{ number_format($user->total_xp ?? 320) }} XP</div>
         </div>
-        <div style="font-weight:900;color:#00D4AA;font-size:14px">+{{ $tx->amount }}</div>
+        <div class="stat-card">
+            <div class="stat-icon" style="color: #FF5722;">🔥</div>
+            <div class="stat-value">{{ $user->streak_count ?? 2 }} Streak</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <img src="{{ asset('uploads/images/banners/badges/Gold.png') }}" alt="Gold Tier">
+            </div>
+            <div class="stat-value">Gold Tier</div>
+        </div>
     </div>
-    @empty
-    <div style="color:#8888BB;font-size:13px;padding:10px 0">No XP earned yet. Start learning!</div>
-    @endforelse
-</div>
 
-<!-- Logout Button -->
-<div style="margin-top: 32px; margin-bottom: 24px; text-align: center;">
-    <form method="POST" action="{{ route('student.logout') }}">
-        @csrf
-        <button type="submit" style="background: #FF6584; color: #FFF; border: none; padding: 14px 40px; border-radius: 999px; font-size: 16px; font-weight: 900; font-family: 'Quicksand', sans-serif; cursor: pointer; box-shadow: 0 6px 16px rgba(255,101,132,0.3); transition: transform 0.2s;">
-            <span style="margin-right: 8px;">👋</span> Logout from {{ config('app.name') }}
-        </button>
-    </form>
+    <div class="quiz-stats-section">
+        <div class="quiz-stats-title">Quiz Stats</div>
+        <div class="quiz-stats-grid">
+            <div class="quiz-stat-box"></div>
+            <div class="quiz-stat-box"></div>
+            <div class="quiz-stat-box"></div>
+            <div class="quiz-stat-box"></div>
+        </div>
+        
+        <!-- Logout Button at bottom -->
+        <div style="margin-top: 40px; text-align: center;">
+            <form method="POST" action="{{ route('student.logout') }}">
+                @csrf
+                <button type="submit" style="background: #FF6584; color: #FFF; border: 2px solid #C23351; padding: 12px 30px; border-radius: 999px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 0 #C23351; transition: transform 0.1s;">
+                    Logout
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
