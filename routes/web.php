@@ -78,6 +78,7 @@ use App\Http\Controllers\Admin\AdminStudentController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminAdminsController;
 use App\Http\Controllers\Admin\AdminClassController;
+use App\Http\Controllers\Admin\AdminAttendanceController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
@@ -96,24 +97,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Students CRUD
-        Route::get('/students',                [AdminStudentController::class, 'index'])->name('students.index');
-        Route::get('/students/create',         [AdminStudentController::class, 'create'])->name('students.create');
-        Route::post('/students',               [AdminStudentController::class, 'store'])->name('students.store');
-        Route::get('/students/{student}/edit', [AdminStudentController::class, 'edit'])->name('students.edit');
-        Route::put('/students/{student}',      [AdminStudentController::class, 'update'])->name('students.update');
-        Route::delete('/students/{student}',   [AdminStudentController::class, 'destroy'])->name('students.destroy');
-        Route::get('/students/sample-csv',     [AdminStudentController::class, 'sampleCsv'])->name('students.sample-csv');
-        Route::post('/students/import',        [AdminStudentController::class, 'importCsv'])->name('students.import');
+        Route::get('/students',                [AdminStudentController::class, 'index'])->middleware('permission:students.view')->name('students.index');
+        Route::get('/students/create',         [AdminStudentController::class, 'create'])->middleware('permission:students.create')->name('students.create');
+        Route::post('/students',               [AdminStudentController::class, 'store'])->middleware('permission:students.create')->name('students.store');
+        Route::get('/students/{student}/edit', [AdminStudentController::class, 'edit'])->middleware('permission:students.edit')->name('students.edit');
+        Route::put('/students/{student}',      [AdminStudentController::class, 'update'])->middleware('permission:students.edit')->name('students.update');
+        Route::delete('/students/{student}',   [AdminStudentController::class, 'destroy'])->middleware('permission:students.delete')->name('students.destroy');
+        Route::get('/students/sample-csv',     [AdminStudentController::class, 'sampleCsv'])->middleware('permission:students.edit')->name('students.sample-csv');
+        Route::post('/students/import',        [AdminStudentController::class, 'importCsv'])->middleware('permission:students.edit')->name('students.import');
 
         // Staff CRUD
-        Route::get('/staff',                   [AdminStaffController::class, 'index'])->name('staff.index');
-        Route::get('/staff/create',            [AdminStaffController::class, 'create'])->name('staff.create');
-        Route::post('/staff',                  [AdminStaffController::class, 'store'])->name('staff.store');
-        Route::get('/staff/{staff}/edit',      [AdminStaffController::class, 'edit'])->name('staff.edit');
-        Route::put('/staff/{staff}',           [AdminStaffController::class, 'update'])->name('staff.update');
-        Route::delete('/staff/{staff}',        [AdminStaffController::class, 'destroy'])->name('staff.destroy');
-        Route::get('/staff/sample-csv',        [AdminStaffController::class, 'sampleCsv'])->name('staff.sample-csv');
-        Route::post('/staff/import',           [AdminStaffController::class, 'importCsv'])->name('staff.import');
+        Route::get('/staff',                   [AdminStaffController::class, 'index'])->middleware('permission:staff.view')->name('staff.index');
+        Route::get('/staff/create',            [AdminStaffController::class, 'create'])->middleware('permission:staff.create')->name('staff.create');
+        Route::post('/staff',                  [AdminStaffController::class, 'store'])->middleware('permission:staff.create')->name('staff.store');
+        Route::get('/staff/{staff}/edit',      [AdminStaffController::class, 'edit'])->middleware('permission:staff.edit')->name('staff.edit');
+        Route::put('/staff/{staff}',           [AdminStaffController::class, 'update'])->middleware('permission:staff.edit')->name('staff.update');
+        Route::delete('/staff/{staff}',        [AdminStaffController::class, 'destroy'])->middleware('permission:staff.delete')->name('staff.destroy');
+        Route::get('/staff/sample-csv',        [AdminStaffController::class, 'sampleCsv'])->middleware('permission:staff.edit')->name('staff.sample-csv');
+        Route::post('/staff/import',           [AdminStaffController::class, 'importCsv'])->middleware('permission:staff.edit')->name('staff.import');
 
         // Admins CRUD
         Route::get('/admins',                   [AdminAdminsController::class, 'index'])->name('admins.index');
@@ -132,6 +133,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/classes/{class}/edit',  [AdminClassController::class, 'edit'])->name('classes.edit');
         Route::put('/classes/{class}',       [AdminClassController::class, 'update'])->name('classes.update');
         Route::delete('/classes/{class}',    [AdminClassController::class, 'destroy'])->name('classes.destroy');
+
+        // Attendance
+        Route::get('/attendance',             [AdminAttendanceController::class, 'index'])->name('attendance.index');
+        Route::post('/attendance/bulk-mark',  [AdminAttendanceController::class, 'markBulk'])->name('attendance.markBulk');
+        Route::post('/attendance/{id}/mark',  [AdminAttendanceController::class, 'mark'])->name('attendance.mark');
+        Route::post('/attendance/{id}/unmark',[AdminAttendanceController::class, 'unmark'])->name('attendance.unmark');
     });
 });
 

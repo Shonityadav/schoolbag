@@ -111,9 +111,11 @@
                     <td style="color:var(--sb-muted);">{{ $student->email }}</td>
                     <td style="color:var(--sb-muted);">{{ $student->phone ?? '—' }}</td>
                     <td>
-                        @if($student->studentClass)
+                        @if($student->student && $student->student->class)
                             <span style="background:#EEF2FF;color:var(--sb-accent);padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;">
-                                {{ $student->studentClass->standard }} - {{ $student->studentClass->section }}
+                                {{ $student->student->class->standard }}
+                                -
+                                {{ $student->student->class->section }}
                             </span>
                         @else
                             <span style="color:var(--sb-muted);">—</span>

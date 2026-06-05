@@ -8,36 +8,106 @@ use App\Models\ClassModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Models\Student;
+use Illuminate\Support\Facades\DB;
 
 class AdminStudentController extends Controller
 {
+
+    private function canAccessStudent(User $studentUser)
+    {
+        $user = auth()->user();
+
+        if ($user->user_type == 1) {
+            return true;
+        }
+
+        $assignedClassIds = $user->classes()
+            ->pluck('classes.id')
+            ->toArray();
+
+        return Student::where(
+            'created_for',
+            $studentUser->id
+        )
+        ->whereIn('class_id', $assignedClassIds)
+        ->exists();
+    }
     /**
      * List all students with search + pagination.
      */
     public function index(Request $request)
     {
-        $query = User::where('role', 'student')
-            ->where('institute_id', auth()->user()->institute_id)
-            ->with('studentClass')
-            ->latest();
+        abort_unless(
+            auth()->user()->hasPermission('students.view'),
+            403
+        );
+
+        $user = auth()->user();
+
+        $query = User::where('user_type', 3)
+            ->where('institute_id', $user->institute_id)
+            ->with(['student.class']);
+
+        // Staff can only see assigned classes
+        if ($user->user_type != 1) {
+
+            $assignedClassIds = $user->classes()
+                ->pluck('classes.id')
+                ->toArray();
+
+            $query->whereHas('student', function ($q) use ($assignedClassIds) {
+                $q->whereIn('class_id', $assignedClassIds);
+            });
+        }
 
         if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function ($q) use ($s) {
-                $q->where('name', 'like', "%$s%")
-                  ->orWhere('email', 'like', "%$s%")
-                  ->orWhere('phone', 'like', "%$s%");
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
+
             });
         }
 
         if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
+
+            $query->whereHas('student', function ($q) use ($request) {
+
+                $q->where('class_id', $request->class_id);
+
+            });
         }
 
-        $students = $query->paginate(15)->withQueryString();
-        $classes  = ClassModel::where('institute_id', auth()->user()->institute_id)->orderBy('standard')->get();
+        $students = $query->latest()
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('admin.students.index', compact('students', 'classes'));
+        if ($user->user_type == 1) {
+
+            // Institute Admin sees all classes
+            $classes = ClassModel::where(
+                'institute_id',
+                $user->institute_id
+            )
+            ->orderBy('standard')
+            ->get();
+
+        } else {
+
+            // Staff sees only assigned classes
+            $classes = $user->classes()
+                ->orderBy('standard')
+                ->get();
+        }
+        return view(
+            'admin.students.index',
+            compact('students', 'classes')
+        );
     }
 
     /**
@@ -57,29 +127,42 @@ class AdminStudentController extends Controller
      */
     public function store(Request $request)
     {
+        abort_unless(
+            auth()->user()->hasPermission('students.create'),
+            403
+        );
+
         $data = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'phone'    => 'nullable|string|max:20',
-            'class_id' => [
-                'nullable',
-                Rule::exists('classes', 'id')->where('institute_id', auth()->user()->institute_id)
-            ],
+            'class_id' => 'required|exists:classes,id',
+            'roll_no'  => 'nullable|string|max:50',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        User::create([
-            'institute_id' => auth()->user()->institute_id,
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'phone'    => $data['phone'] ?? null,
-            'class_id' => $data['class_id'] ?? null,
-            'password' => Hash::make($data['password']),
-            'role'     => 'student',
-            'user_type'=> 3,
-        ]);
+        DB::transaction(function () use ($data) {
 
-        return redirect()->route('admin.students.index')
+            $user = User::create([
+                'institute_id' => auth()->user()->institute_id,
+                'name'         => $data['name'],
+                'email'        => $data['email'],
+                'phone'        => $data['phone'] ?? null,
+                'password'     => Hash::make($data['password']),
+                'role'         => 'student',
+                'user_type'    => 3,
+            ]);
+
+            Student::create([
+                'created_for'  => $user->id,
+                'institute_id' => auth()->user()->institute_id,
+                'class_id'     => $data['class_id'],
+                'roll_no'      => $data['roll_no'] ?? null,
+            ]);
+        });
+
+        return redirect()
+            ->route('admin.students.index')
             ->with('success', 'Student created successfully.');
     }
 
@@ -88,7 +171,16 @@ class AdminStudentController extends Controller
      */
     public function edit(User $student)
     {
-        abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
+        abort_unless(
+            auth()->user()->hasPermission('students.edit'),
+            403
+        );
+
+        abort_unless(
+            $this->canAccessStudent($student),
+            403
+        );
+        // abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
         $classes = ClassModel::where('institute_id', auth()->user()->institute_id)->orderBy('standard')->get();
         return view('admin.students.form', compact('student', 'classes'));
     }
@@ -97,24 +189,36 @@ class AdminStudentController extends Controller
      * Update student.
      */
     public function update(Request $request, User $student)
-    {
-        abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
+{
+    abort_unless(
+        auth()->user()->hasPermission('students.edit'),
+        403
+    );
 
-        $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => ['required', 'email', Rule::unique('users')->ignore($student->id)],
-            'phone'    => 'nullable|string|max:20',
-            'class_id' => [
-                'nullable',
-                Rule::exists('classes', 'id')->where('institute_id', auth()->user()->institute_id)
-            ],
-            'password' => 'nullable|string|min:6|confirmed',
-        ]);
+    abort_unless(
+        $this->canAccessStudent($student),
+        403
+    );
 
-        $student->name     = $data['name'];
-        $student->email    = $data['email'];
-        $student->phone    = $data['phone'] ?? null;
-        $student->class_id = $data['class_id'] ?? null;
+    $data = $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => ['required', 'email', Rule::unique('users')->ignore($student->id)],
+        'phone'    => 'nullable|string|max:20',
+        'class_id' => [
+            'required',
+            Rule::exists('classes', 'id')
+                ->where('institute_id', auth()->user()->institute_id)
+        ],
+        'roll_no'  => 'nullable|string|max:50',
+        'password' => 'nullable|string|min:6|confirmed',
+    ]);
+
+    DB::transaction(function () use ($student, $data) {
+
+        // Update User table
+        $student->name  = $data['name'];
+        $student->email = $data['email'];
+        $student->phone = $data['phone'] ?? null;
 
         if (!empty($data['password'])) {
             $student->password = Hash::make($data['password']);
@@ -122,16 +226,39 @@ class AdminStudentController extends Controller
 
         $student->save();
 
-        return redirect()->route('admin.students.index')
-            ->with('success', 'Student updated successfully.');
-    }
+        // Update Student table
+        Student::updateOrCreate(
+            [
+                'created_for' => $student->id
+            ],
+            [
+                'institute_id' => $student->institute_id,
+                'class_id'     => $data['class_id'],
+                'roll_no'      => $data['roll_no'] ?? null,
+            ]
+        );
+    });
+
+    return redirect()
+        ->route('admin.students.index')
+        ->with('success', 'Student updated successfully.');
+}
 
     /**
      * Delete student.
      */
     public function destroy(User $student)
     {
-        abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
+        abort_unless(
+            auth()->user()->hasPermission('students.edit'),
+            403
+        );
+
+        abort_unless(
+            $this->canAccessStudent($student),
+            403
+        );
+        // abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
         $student->delete();
 
         return redirect()->route('admin.students.index')
@@ -199,15 +326,22 @@ class AdminStudentController extends Controller
                 continue;
             }
 
-            User::create([
+            $user = User::create([
                 'institute_id' => auth()->user()->institute_id,
-                'name'     => $name,
-                'email'    => $email,
-                'phone'    => $phone ?: null,
-                'class_id' => ($classNm && isset($classes[$classNm])) ? $classes[$classNm] : null,
-                'password' => Hash::make($password),
-                'role'     => 'student',
-                'user_type'=> 3,
+                'name'         => $name,
+                'email'        => $email,
+                'phone'        => $phone ?: null,
+                'password'     => Hash::make($password),
+                'role'         => 'student',
+                'user_type'    => 3,
+            ]);
+
+            Student::create([
+                'created_for'  => $user->id,
+                'institute_id' => auth()->user()->institute_id,
+                'class_id'     => ($classNm && isset($classes[$classNm]))
+                                    ? $classes[$classNm]
+                                    : null,
             ]);
             $imported++;
         }

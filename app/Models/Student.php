@@ -43,7 +43,7 @@ class Student extends Model
      * Student belongs to a class
      * NOTE: Do NOT name model "Class" (PHP reserved keyword)
      */
-    public function schoolClass()
+    public function class()
     {
         return $this->belongsTo(ClassModel::class, 'class_id');
     }
