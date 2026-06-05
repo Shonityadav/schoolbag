@@ -13,7 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password',
-        'role', 'user_type', 'institute_id', 'avatar',
+        'class_id', 'role', 'user_type', 'institute_id', 'avatar',
         'total_xp', 'streak_count', 'last_streak_date', 'phone',
     ];
 
@@ -26,9 +26,9 @@ class User extends Authenticatable
 
     // ── Relationships ──────────────────────────────────────────
     public function studentClass()    { return $this->belongsTo(ClassModel::class, 'class_id'); }
-    public function institute()       { return $this->belongsTo(Institute::class, 'institute_id'); }
+
     public function xpTransactions()  { return $this->hasMany(XpTransaction::class); }
-    public function attendances()     { return $this->hasMany(\App\Models\Attendance::class, 'created_for'); }
+    public function attendances()     { return $this->hasMany(Attendance::class); }
     public function worksheets()      { return $this->hasMany(Worksheet::class); }
     public function studentBadges()   { return $this->hasMany(StudentBadge::class); }
     public function badges()          { return $this->hasManyThrough(Badge::class, StudentBadge::class, 'user_id', 'id', 'id', 'badge_id'); }
@@ -52,18 +52,10 @@ class User extends Authenticatable
     public function markAttendanceToday(): bool
     {
         $today = now()->toDateString();
-        $alreadyMarked = \App\Models\vps\Attendance::where('created_for', $this->id)
-            ->where('attendance_date', $today)
-            ->exists();
+        $alreadyMarked = Attendance::where('user_id', $this->id)->where('date', $today)->exists();
         if ($alreadyMarked) return false;
 
-        \App\Models\vps\Attendance::create([
-            'created_for' => $this->id,
-            'attendance_date' => $today,
-            'institute_id' => $this->institute_id,
-            'status' => 'Present',
-            'created_by' => $this->id,
-        ]);
+        Attendance::create(['user_id' => $this->id, 'date' => $today]);
 
         // Update streak
         $yesterday = now()->subDay()->toDateString();
@@ -124,10 +116,5 @@ class User extends Authenticatable
             'user_id',
             'class_id'
         )->withTimestamps();
-    }
-
-    public function student()
-    {
-        return $this->hasOne(Student::class, 'created_for');
     }
 }
