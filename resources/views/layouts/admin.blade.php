@@ -465,7 +465,10 @@
             <a href="#" class="sb-nav-link @yield('admin_nav_courses', '')">
                 <i class="bi bi-journal-bookmark"></i> Courses
             </a>
-            <a href="#" class="sb-nav-link">
+            <a href="{{ route('admin.ebook_assignments.index') }}" class="sb-nav-link @yield('admin_nav_ebooks', '')">
+                <i class="bi bi-book"></i> Ebook Assignments
+            </a>
+            <a href="{{ route('admin.attendance.index') }}" class="sb-nav-link @yield('admin_nav_attendance', '')">
                 <i class="bi bi-calendar3"></i> Attendance
             </a>
             <a href="#" class="sb-nav-link">

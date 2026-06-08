@@ -77,6 +77,7 @@
                     <th>Standard</th>
                     <th>Section</th>
                     <th>Students</th>
+                    <th>Ebooks</th>
                     <th>Description</th>
                     <th style="text-align:right;">Actions</th>
                 </tr>
@@ -96,11 +97,37 @@
                     <td>
                         <span style="font-weight:600;color:var(--sb-text);">{{ $cls->students_count }}</span>
                     </td>
+                    <td style="max-width: 250px;">
+                        @if($cls->ebooks && $cls->ebooks->count() > 0)
+                            <div class="mb-1" style="font-size: 11px; font-weight: 600; color: var(--sb-muted); text-transform: uppercase;">
+                                Total: {{ $cls->ebooks->count() }}
+                            </div>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach($cls->ebooks->take(3) as $ebook)
+                                    <span class="badge" style="background:#EEF2FF;color:var(--sb-accent);font-weight:600;border-radius:4px;font-size:11.5px;white-space:normal;text-align:left;line-height:1.4;padding:4px 8px;">
+                                        {{ $ebook->name }}
+                                    </span>
+                                @endforeach
+                                @if($cls->ebooks->count() > 3)
+                                    <span class="badge" style="background:#f1f5f9;color:var(--sb-muted);font-weight:600;border-radius:4px;font-size:11px;align-self:center;">
+                                        +{{ $cls->ebooks->count() - 3 }} more
+                                    </span>
+                                @endif
+                            </div>
+                        @else
+                            <span style="font-size:12px;color:var(--sb-muted);">-</span>
+                        @endif
+                    </td>
                     <td style="color:var(--sb-muted);font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                         {{ $cls->description ?: '-' }}
                     </td>
                     <td>
                         <div class="d-flex gap-1 justify-content-end">
+                            <a href="{{ route('admin.ebook_assignments.index', ['class_id' => $cls->id]) }}"
+                               class="sb-icon-btn" title="Assign Ebooks"
+                               style="width:32px;height:32px;font-size:14px;border-radius:6px;color:var(--sb-accent);">
+                                <i class="bi bi-book"></i>
+                            </a>
                             <a href="{{ route('admin.classes.edit', $cls) }}"
                                class="sb-icon-btn" title="Edit"
                                style="width:32px;height:32px;font-size:14px;border-radius:6px;">
@@ -120,7 +147,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="text-center py-5" style="color:var(--sb-muted);">
+                    <td colspan="7" class="text-center py-5" style="color:var(--sb-muted);">
                         <i class="bi bi-building" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.3;"></i>
                         No classes found.
                         <a href="{{ route('admin.classes.create') }}" style="color:var(--sb-accent);">Add the first one</a>

@@ -25,6 +25,7 @@ class User extends Authenticatable
     ];
 
     // ── Relationships ──────────────────────────────────────────
+    public function student()         { return $this->hasOne(Student::class, 'created_for'); }
     public function studentClass()    { return $this->belongsTo(ClassModel::class, 'class_id'); }
 
     public function xpTransactions()  { return $this->hasMany(XpTransaction::class); }

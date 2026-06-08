@@ -16,6 +16,7 @@ class AdminClassController extends Controller
     public function index(Request $request)
     {
         $query = ClassModel::where('institute_id', auth()->user()->institute_id)
+            ->with(['ebooks:id,name'])
             ->withCount(['students'])
             ->latest();
 
