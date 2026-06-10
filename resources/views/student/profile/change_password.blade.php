@@ -79,7 +79,7 @@
     margin-bottom: 40px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     position: relative;
-    z-index: 4;
+    z-index: 6;
 }
 
 .cp-card {
@@ -87,12 +87,13 @@
     border: 3px solid #FFEAC2;
     border-radius: 20px;
     width: 85%;
-    height: 360px;
+    max-width: 400px;
+    min-height: 360px;
     padding: 30px 20px 40px;
     text-align: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     position: relative;
-    z-index: 2;
+    z-index: 5;
 }
 
 .cp-card-title {

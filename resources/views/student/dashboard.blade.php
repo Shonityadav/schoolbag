@@ -4,6 +4,10 @@
 
 @push('styles')
 <style>
+body {
+    padding: 2%;
+}
+
 .dashboard-layout-wrapper {
     display: grid;
     grid-template-columns: 320px 1fr;
@@ -160,7 +164,7 @@
 
 @include('student.partials.splash')
 
-<div class="container-fluid pt-2 px-0 pb-5 mb-5">
+<div class="container-fluid pt-4 px-0 pb-5 mb-5" style="overflow: visible;">
     <div class="row g-3 g-md-4 align-items-start">
         
         <!-- Left Column: Mascot -->
@@ -170,7 +174,7 @@
                 
                 <div class="mascot-ring-wrapper mx-auto" style="width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(180deg, #8BDDFF 50%, #FFB37C 50%); padding: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); margin-bottom: 16px;">
                     <div class="mascot-ring-inner" style="width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; justify-content: center; align-items: center;">
-                        <img src="{{ asset('uploads/images/lion.png') }}" alt="Lion Badge" style="width: 90px; height: 90px; object-fit: contain;">
+                        <img src="{{ asset('uploads/images/lion.png') }}" alt="Lion Badge" style="width: 90px; height: 90px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
                     </div>
                 </div>
                 
@@ -183,27 +187,27 @@
         </div>
         
         <!-- Right Column: Content -->
-        <div class="col-12 col-lg-8 col-xl-9 mt-4 mt-lg-0">
+        <div class="col-12 col-lg-8 col-xl-9 mt-4 mt-lg-3" style="overflow: visible;">
             
-            <!-- The 3 Div Cards - Side by Side on Mobile -->
-            <div class="row g-2 g-md-3 mb-4">
+        <!-- The 3 Div Cards - Side by Side on Mobile -->
+            <div class="row g-2 g-md-3 mb-4" style="overflow: visible; padding-top: 8px;">
                 <div class="col-4">
                     <a href="{{ route('student.courses.index') }}" class="s-card h-100 d-flex flex-column align-items-center text-center p-2 p-md-3" style="background: linear-gradient(160deg, #A8E8FF 0%, #8BDDFF 100%); border-radius: 20px; text-decoration: none; box-shadow: 0 10px 0 #4AADCC, 0 14px 28px rgba(70,160,200,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
-                        <img src="{{ asset('uploads/images/owl teacher.png') }}" alt="Math Adventure" class="img-fluid mb-2" style="max-height: 80px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));">
+                        <img src="{{ asset('uploads/images/owl teacher.png') }}" alt="Math Adventure" class="img-fluid mb-2" style="max-height: 80px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));" fetchpriority="high" loading="eager" decoding="async">
                         <div class="s-card-title text-white" style="font-family: 'Bubblegum Sans', cursive; font-size: clamp(14px, 4vw, 20px); font-weight: 900; line-height: 1.1; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Math Adventure</div>
                         <div class="s-card-desc text-white" style="font-size: clamp(9px, 2.5vw, 13px); line-height: 1.2; opacity: 0.9;">Solve equations and unlock treasure!</div>
                     </a>
                 </div>
                 <div class="col-4">
                     <a href="{{ route('student.courses.index') }}" class="s-card h-100 d-flex flex-column align-items-center text-center p-2 p-md-3" style="background: linear-gradient(160deg, #BAEDAA 0%, #9DE182 100%); border-radius: 20px; text-decoration: none; box-shadow: 0 10px 0 #5CAA44, 0 14px 28px rgba(80,160,60,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
-                        <img src="{{ asset('uploads/images/robot.png') }}" alt="Science Explorer" class="img-fluid mb-2" style="max-height: 80px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));">
+                        <img src="{{ asset('uploads/images/robot.png') }}" alt="Science Explorer" class="img-fluid mb-2" style="max-height: 80px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));" fetchpriority="high" loading="eager" decoding="async">
                         <div class="s-card-title text-white" style="font-family: 'Bubblegum Sans', cursive; font-size: clamp(14px, 4vw, 20px); font-weight: 900; line-height: 1.1; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Science Explorer</div>
                         <div class="s-card-desc text-white" style="font-size: clamp(9px, 2.5vw, 13px); line-height: 1.2; opacity: 0.9;">Discover the world with experiments!</div>
                     </a>
                 </div>
                 <div class="col-4">
                     <a href="{{ route('student.courses.index') }}" class="s-card h-100 d-flex flex-column align-items-center text-center p-2 p-md-3" style="background: linear-gradient(160deg, #FFCC9E 0%, #FFB37C 100%); border-radius: 20px; text-decoration: none; box-shadow: 0 10px 0 #CC7A3C, 0 14px 28px rgba(200,120,60,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
-                        <img src="{{ asset('uploads/images/test paper.png') }}" alt="English Storytime" class="img-fluid mb-2" style="max-height: 80px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));">
+                        <img src="{{ asset('uploads/images/test paper.png') }}" alt="English Storytime" class="img-fluid mb-2" style="max-height: 80px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));" fetchpriority="high" loading="eager" decoding="async">
                         <div class="s-card-title text-white" style="font-family: 'Bubblegum Sans', cursive; font-size: clamp(14px, 4vw, 20px); font-weight: 900; line-height: 1.1; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">English Storytime</div>
                         <div class="s-card-desc text-white" style="font-size: clamp(9px, 2.5vw, 13px); line-height: 1.2; opacity: 0.9;">Read tales and grow your vocabulary!</div>
                     </a>
@@ -213,7 +217,7 @@
             <!-- Daily Quest Box -->
             <div class="daily-quest-flat d-flex align-items-stretch gap-3 p-3 p-md-4" style="background: linear-gradient(160deg, #FFF8DD 0%, #FFF3CC 100%); border-radius: 20px; box-shadow: 0 10px 0 #D4A017, 0 14px 28px rgba(200,160,20,0.25), inset 0 1px 0 rgba(255,255,255,0.8);">
                 <div class="dq-left flex-shrink-0" style="width: 35%; max-width: 140px; position: relative;">
-                    <img src="{{ asset('uploads/images/treasuremap.png') }}" alt="Treasure Map" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                    <img src="{{ asset('uploads/images/treasuremap.png') }}" alt="Treasure Map" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" fetchpriority="high" loading="eager" decoding="async">
                 </div>
                 <div class="dq-right w-100 d-flex flex-column justify-content-center">
                     <div class="dq-title-text" style="font-family: 'Bubblegum Sans', cursive; font-size: clamp(18px, 5vw, 24px); font-weight: 900; color: #5E4D3B; line-height: 1.2;">Daily Quest</div>

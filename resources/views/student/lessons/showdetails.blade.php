@@ -394,10 +394,8 @@ body::before {
         
         <!-- TOP BAR -->
         <div class="top-bar-custom">
-            <button onclick="showExitPopup()" class="back-btn-square" id="back-btn" style="border:none; cursor:pointer;">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
+            <button onclick="showExitPopup()" id="back-btn" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <img src="{{ asset('uploads/images/buttons/cross button.png') }}" alt="Close" style="width: 44px; height: 44px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
             </button>
             <div class="timer-pill" id="lesson-timer">00:00</div>
         </div>
@@ -414,20 +412,20 @@ body::before {
                 elseif ($lesson->order >= 4) { $hueRotate = '144deg'; $stageName = '5. Challenge Mission'; }
             @endphp
             <div style="position: relative; display: inline-block; width: 100%;">
-                <img src="{{ asset('uploads/images/stage1/banner.png') }}" class="purple-banner-img" style="filter: hue-rotate({{ $hueRotate }});" alt="Purple Banner">
+                <img src="{{ asset('uploads/images/stage1/banner.png') }}" class="purple-banner-img" style="filter: hue-rotate({{ $hueRotate }});" alt="Purple Banner" fetchpriority="high" loading="eager" decoding="async">
                 <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-family: 'Bubblegum Sans', cursive; color: #FFF; font-size: 1.5rem; font-weight: bold; z-index: 12; width: 70%; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
                     {{ $stageName }}
                 </div>
             </div>
             <div style="position: relative; display: inline-block; width: 100%;">
-                <img src="{{ asset('uploads/images/stage1/banner-2.png') }}" class="beige-banner-img" alt="Beige Banner">
+                <img src="{{ asset('uploads/images/stage1/banner-2.png') }}" class="beige-banner-img" alt="Beige Banner" fetchpriority="high" loading="eager" decoding="async">
                 <div class="lesson-title-overlay" style="top: 25%;">{{ $lesson->chapter->title }}</div>
             </div>
         </div>
 
         <!-- NOTE CARD -->
         <div class="note-container">
-            <img src="{{ asset('uploads/images/stage1/note.png') }}" class="note-bg-img" alt="Note Card">
+            <img src="{{ asset('uploads/images/stage1/note.png') }}" class="note-bg-img" alt="Note Card" fetchpriority="high" loading="eager" decoding="async">
             
             <div class="note-viewport" id="note-viewport">
                 <div class="note-content-overlay" id="note-content">
@@ -491,7 +489,7 @@ body::before {
                     @elseif(isset($ebookPages) && count($ebookPages) > 0)
                         @foreach($ebookPages as $index => $page)
                             <div class="page-image-wrapper" id="page-{{ $index }}" style="z-index: {{ count($ebookPages) - $index }}; background-color: #FFFDF5;">
-                                <img src="{{ asset($page->url . '/' . $page->title) }}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;" alt="Page {{ $loop->iteration }}">
+                                <img src="{{ asset($page- fetchpriority="high" loading="eager" decoding="async">url . '/' . $page->title) }}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;" alt="Page {{ $loop->iteration }}">
                             </div>
                         @endforeach
                     @else
@@ -504,14 +502,12 @@ body::before {
             </div>
             <!-- PREVIOUS & NEXT BUTTONS (Inside Note Container at Corners) -->
             <div class="nav-buttons-container">
-                <a href="javascript:void(0)" onclick="prevPage()" id="prev-btn" class="nav-btn-wrapper">
-                    <img src="{{ asset('uploads/images/stage1/previous.png') }}" class="nav-btn-img" alt="Previous">
-                    <span class="nav-btn-text text-prev" style="text-transform: uppercase;">PREVIOUS</span>
+                <a href="javascript:void(0)" onclick="prevPage()" id="prev-btn" style="text-decoration: none; display: inline-block; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Previous" style="height: 60px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
                 </a>
                 
-                <a href="javascript:void(0)" onclick="nextPage()" id="next-btn" class="nav-btn-wrapper">
-                    <img src="{{ asset('uploads/images/stage1/next.png') }}" class="nav-btn-img" alt="Next Page">
-                    <span class="nav-btn-text text-next" style="text-transform: uppercase; margin-right: 15px;">NEXT PAGE</span>
+                <a href="javascript:void(0)" onclick="nextPage()" id="next-btn" style="text-decoration: none; display: inline-block; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <img src="{{ asset('uploads/images/buttons/forward button.png') }}" alt="Next Page" style="height: 60px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
                 </a>
             </div>
         </div>
@@ -522,7 +518,7 @@ body::before {
                 @if(isset($matchPairs) && count($matchPairs) > 0)
                     {{-- Retry button for match game --}}
                     <a href="javascript:void(0)" onclick="retryMatchGame()" id="retry-btn" class="action-btn" style="text-decoration: none; position: relative; display: inline-block; width: 140px; transition: transform 0.1s;">
-                        <img src="{{ asset('uploads/images/stage1/previous.png') }}" alt="Retry" style="width: 100%; height: auto; display: block;">
+                        <img src="{{ asset('uploads/images/stage1/previous.png') }}" alt="Retry" style="width: 100%; height: auto; display: block;" fetchpriority="high" loading="eager" decoding="async">
                         <span class="nav-btn-text text-prev" style="font-size: 1.1rem; text-transform: uppercase;">RETRY</span>
                     </a>
                 @endif
@@ -541,9 +537,8 @@ body::before {
                         <input type="hidden" name="chapter_id" value="{{ $chapter_id }}">
                     @endif
                     
-                    <a href="javascript:void(0)" onclick="submitLesson()" class="action-btn" style="text-decoration: none; position: relative; display: inline-block; width: 100%; transition: transform 0.1s;">
-                        <img src="{{ asset('uploads/images/stage1/submit.png') }}" alt="Submit" style="width: 100%; height: auto; display: block;">
-                        <span class="nav-btn-text" style="top: 45%; font-size: 1.25rem;">SUBMIT</span>
+                    <a href="javascript:void(0)" onclick="submitLesson()" style="text-decoration: none; display: inline-block; width: 100%; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="{{ asset('uploads/images/buttons/claim reward button.png') }}" alt="Submit" style="height: 80px; object-fit: contain; margin: 0 auto; display: block;" fetchpriority="high" loading="eager" decoding="async">
                     </a>
                 </form>
             </div>
@@ -554,13 +549,13 @@ body::before {
             <div class="modal-content-wrapper position-relative" style="width: 90%; max-width: 420px; text-align: center; transform: scale(0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
                 
                 <!-- Main Board (banner 1) -->
-                <img src="{{ asset('uploads/images/stagecomplete/banner 1.png') }}" style="width: 100%; height: auto; position: relative; z-index: 1;" alt="Board">
+                <img src="{{ asset('uploads/images/stagecomplete/banner 1.png') }}" style="width: 100%; height: auto; position: relative; z-index: 1;" alt="Board" fetchpriority="high" loading="eager" decoding="async">
                 
                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 110%; z-index: 2; display: flex; flex-direction: column; align-items: center;">
                     
                     <!-- Top Congrats Banner (banner 3) -->
                     <div style="position: relative; margin-top: 17%; width: 85%;">
-                        <img src="{{ asset('uploads/images/stagecomplete/banner 3.png') }}" style="width: 100%; height: auto; padding-top: 15%;" alt="Congrats">
+                        <img src="{{ asset('uploads/images/stagecomplete/banner 3.png') }}" style="width: 100%; height: auto; padding-top: 15%;" alt="Congrats" fetchpriority="high" loading="eager" decoding="async">
                         <div style="position: absolute; top: 60%; left: 55%; transform: translate(-50%, -50%); width: 70%; text-align: center;">
                             <h2 style="font-family: 'Quicksand', sans-serif; font-weight: 900; font-size: 1.3rem; color: #FF5A5F; margin: 0; letter-spacing: 0.5px;">Congratulations</h2>
                             <p style="font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 0.8rem; color: #8D7E6A; margin: 0; height: 10px;">You Completed this level</p>
@@ -569,23 +564,23 @@ body::before {
 
                     <!-- Inner Stars Board (banner 2) -->
                     <div style="position: relative; margin-top: 4%; width: 72%;">
-                        <img src="{{ asset('uploads/images/stagecomplete/banner 2.png') }}" style="width: 100%; height: auto;" alt="Stars Board">
+                        <img src="{{ asset('uploads/images/stagecomplete/banner 2.png') }}" style="width: 100%; height: auto;" alt="Stars Board" fetchpriority="high" loading="eager" decoding="async">
                         
                         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 8px;">
                             <h3 style="font-family: 'Quicksand', sans-serif; color: #FF6B6B; font-weight: 800; font-size: 1.2rem; margin-bottom: 15px;">You Got {{ $lesson->xp_reward ?? 3 }} XP</h3>
                             
                             <div id="modal-stars-container" class="d-flex justify-content-center gap-2">
                                 <!-- Three Stars -->
-                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star">
-                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 60px; height: 60px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15)); transform: translateY(-10px);" alt="Star">
-                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star">
+                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star" fetchpriority="high" loading="eager" decoding="async">
+                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 60px; height: 60px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15)); transform: translateY(-10px);" alt="Star" fetchpriority="high" loading="eager" decoding="async">
+                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star" fetchpriority="high" loading="eager" decoding="async">
                             </div>
                         </div>
                     </div>
                     
                     <!-- Continue Button -->
                     <div style="position: absolute; bottom: -8%; left: 50%; transform: translateX(-50%); width: 70%; cursor: pointer; z-index: 10;" onclick="finalSubmit()">
-                        <img src="{{ asset('uploads/images/stagecomplete/continue buttons.png') }}" style="width: 100%; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25)); transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" alt="Continue">
+                        <img src="{{ asset('uploads/images/stagecomplete/continue buttons.png') }}" style="width: 100%; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25)); transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" alt="Continue" fetchpriority="high" loading="eager" decoding="async">
                     </div>
 
                 </div>
@@ -1123,9 +1118,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div class="exit-overlay" id="exit-overlay">
     <div class="exit-popup">
-        <img src="{{ asset('uploads/images/stagecomplete/banner 1.png') }}" class="exit-frame-img" alt="">
+        <img src="{{ asset('uploads/images/stagecomplete/banner 1.png') }}" class="exit-frame-img" alt="" fetchpriority="high" loading="eager" decoding="async">
         <div class="exit-popup-inner">
-            <img src="{{ asset('uploads/images/splash/bag.png') }}" class="exit-bag-img" alt="">
+            <img src="{{ asset('uploads/images/splash/bag.png') }}" class="exit-bag-img" alt="" fetchpriority="high" loading="eager" decoding="async">
             <div class="exit-question">Do you really<br>want to exit ?</div>
             <div class="exit-btns">
                 <button class="exit-btn exit-btn-no" onclick="hideExitPopup()">No</button>

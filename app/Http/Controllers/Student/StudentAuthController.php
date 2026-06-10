@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\StudentClass;
+use App\Models\ClassModel;
 use App\Models\User;
 use App\Services\AutoRuleEngine;
 use Illuminate\Http\Request;
@@ -14,15 +14,15 @@ class StudentAuthController extends Controller
 {
     public function showLogin()
     {
-        if (Auth::check()) return redirect()->route('student.dashboard');
-        $classes = StudentClass::orderBy('level')->get();
+        if (Auth::guard('student')->check()) return redirect()->route('student.dashboard');
+        $classes = ClassModel::orderBy('standard')->get();
         return view('student.auth.login', compact('classes'));
     }
 
     public function showRegister()
     {
-        if (Auth::check()) return redirect()->route('student.dashboard');
-        $classes = StudentClass::orderBy('level')->get();
+        if (Auth::guard('student')->check()) return redirect()->route('student.dashboard');
+        $classes = ClassModel::orderBy('standard')->get();
         return view('student.auth.register', compact('classes'));
     }
 
@@ -33,11 +33,11 @@ class StudentAuthController extends Controller
             'password' => 'required|string|min:4',
         ]);
 
-        if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        if (!Auth::guard('student')->attempt(['email' => $request->email, 'password' => $request->password])) {
             return back()->withErrors(['email' => 'Invalid email or password.'])->withInput();
         }
 
-        $user = Auth::user();
+        $user = Auth::guard('student')->user();
 
         return redirect()->route('student.dashboard');
     }
@@ -59,18 +59,20 @@ class StudentAuthController extends Controller
             'class_id' => $request->class_id,
             'phone'    => $request->phone,
             'role'     => 'student',
+            'user_type' => 3, // Make sure user_type is set for consistency!
         ]);
 
-        Auth::login($user);
+        Auth::guard('student')->login($user);
 
         return redirect()->route('student.dashboard')->with('success', "Welcome, {$user->name}! 🎉");
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        Auth::guard('student')->logout();
+        // Since session is shared (with different keys), regenerating might affect other guards. 
+        // We can just invalidate the guard specific data or just redirect.
+        // It's safe to skip session invalidate to keep admin session alive if present.
         return redirect()->route('student.welcome');
     }
 }

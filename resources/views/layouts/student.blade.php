@@ -30,7 +30,7 @@
             font-family: 'Quicksand', sans-serif;
             background-color: var(--bg);
             background-image: url('{{ asset("uploads/images/background.png") }}');
-            background-size: 100% 100%;
+            background-size: cover;
             background-position: center;
             background-attachment: fixed;
             background-repeat: no-repeat;
@@ -240,6 +240,7 @@
 
         /* ── Mobile Responsive ── */
         @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
             .sidebar {
                 position: fixed;
                 width: calc(100% - 32px); max-width: 480px; height: 80px; 
@@ -286,17 +287,70 @@
             .sidebar form button { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; margin: 0; border: none; background: transparent; gap: 4px; }
             .main { margin-left: 0; padding-bottom: 120px; background: transparent; width: 100%; overflow-x: hidden; }
             
-            .content { padding: 12px; width: 100%; box-sizing: border-box; overflow-x: hidden; }
+            .content { padding: 0px; width: 100%; box-sizing: border-box; overflow-x: hidden; }
+        }
+
+        /* ── Tablet / iPad sidebar ── */
+        @media (min-width: 769px) and (max-width: 1200px) {
+            .sidebar {
+                position: fixed;
+                width: calc(100% - 48px);
+                max-width: 680px;
+                height: 110px;
+                display: flex; flex-direction: row; justify-content: center; align-items: center;
+                top: auto; bottom: 20px; left: 50%; transform: translateX(-50%);
+                border-right: none; border-top: none; padding: 0 80px; z-index: 1000;
+                background-color: #FFF9E5;
+                background-image: url('/uploads/images/pencil.png');
+                background-size: 100% 100%;
+                background-position: center;
+                background-repeat: no-repeat;
+                border-radius: 55px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+                gap: 8px;
+            }
+            .sidebar .logo { display: none; }
+            .nav-item {
+                flex: 0 0 90px !important; width: 90px !important; max-width: 90px !important;
+                display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; padding: 8px 4px; margin: 0;
+                height: 100%; border-radius: 16px;
+                border: none !important; background: transparent; box-shadow: none !important;
+            }
+            .nav-item.active {
+                background: rgba(255,255,255,0.55) !important;
+                backdrop-filter: blur(6px);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+                align-self: center;
+                padding: 8px 8px !important;
+            }
+            .nav-item .icon { font-size: 28px; margin: 0; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+            .nav-item .icon img { width: 44px !important; height: 46px !important; }
+            .nav-item .label { display: block !important; opacity: 1; font-size: 13px; font-weight: 900; color: #1a4f66; font-family: 'Quicksand', sans-serif; white-space: nowrap; text-align: center; }
+            .nav-item.active .icon { background: #FFFFFF; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+            .nav-item.active { background: transparent !important; box-shadow: none !important; color: #1a4f66 !important; border: none !important; }
+            .nav-spacer { display: none; }
+            .sidebar form button { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; margin: 0; border: none; background: transparent; gap: 6px; }
+            .main { margin-left: 0; padding-bottom: 160px; background: transparent; width: 100%; overflow-x: hidden; }
+            .content { padding: 0px; width: 100%; box-sizing: border-box; overflow-x: hidden; }
         }
     </style>
     @stack('styles')
 </head>
 <body>
+    <!-- Global Page Loader -->
+    <div id="global-page-loader" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #FDF6E9; z-index: 99999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s ease;">
+        <div style="text-align: center;">
+            <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #FFC145;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div style="margin-top: 15px; font-weight: 800; color: #1E1E35;">Loading...</div>
+        </div>
+    </div>
     <!-- Sidebar -->
     <nav class="sidebar">
         <img src="{{ asset('images/logo.png') }}" alt="School Bag" class="logo">
         <a href="{{ route('student.dashboard') }}"   class="nav-item @yield('nav_dashboard', '')">
-            <span class="icon"><img src="{{ asset('uploads/images/icons/home.png') }}" alt="Dashboard" style="width:30px;height:32px;object-fit:contain;"></span><span class="label">Dashboard</span>
+            <span class="icon"><img src="{{ asset('uploads/images/buttons/home button.png') }}" alt="Dashboard" style="width:30px;height:32px;object-fit:contain;"></span><span class="label">Dashboard</span>
         </a>
         <a href="{{ route('student.courses.index') }}" class="nav-item @yield('nav_courses', '')">
             <span class="icon"><img src="{{ asset('uploads/images/icons/game.png') }}" alt="Subjects" style="width:30px;height:32px;object-fit:contain;"></span><span class="label">Subjects</span>
@@ -411,6 +465,18 @@
                 }, 3000);
             });
         });
+
+        // Hide loader when page is fully loaded
+        window.addEventListener('load', function() {
+            const loader = document.getElementById('global-page-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 300);
+            }
+        });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

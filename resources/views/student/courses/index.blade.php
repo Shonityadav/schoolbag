@@ -19,25 +19,27 @@
 @endpush
 
 @section('content')
-<div class="page-head">
-    <h1>🗺️ My Subjects</h1>
-    <p>{{ $user->studentClass->name ?? '' }} — Choose a subject to explore chapters</p>
-</div>
-
-<div class="grid-3">
-    @forelse($courses as $course)
-    <a href="{{ route('student.courses.show', $course->id) }}" class="subject-card" style="--c1:{{ $course->color }}33;--c2:{{ $course->color }}11">
-        <div class="subject-badge">{{ $course->chapters_count }} chapters</div>
-        <span class="subject-icon">{{ $course->icon }}</span>
-        <div class="subject-name">{{ $course->title }}</div>
-        <div class="subject-count">{{ $course->description ?? 'Tap to explore' }}</div>
-    </a>
-    @empty
-    <div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#8888BB">
-        <div style="font-size:64px;margin-bottom:12px">📭</div>
-        <div style="font-size:18px;font-weight:800">No subjects yet</div>
-        <div style="font-size:14px;margin-top:6px">Your teacher will add subjects soon!</div>
+<div style="padding: 24px;">
+    <div class="page-head">
+        <h1>🗺️ My Subjects</h1>
+        <p>{{ $user->studentClass->name ?? '' }} — Choose a subject to explore chapters</p>
     </div>
-    @endforelse
+
+    <div class="grid-3">
+        @forelse($courses as $course)
+        <a href="{{ route('student.courses.show', $course->id) }}" class="subject-card" style="--c1:{{ $course->color }}33;--c2:{{ $course->color }}11">
+            <div class="subject-badge">{{ $course->chapters_count }} chapters</div>
+            <span class="subject-icon">{{ $course->icon }}</span>
+            <div class="subject-name">{{ $course->title }}</div>
+            <div class="subject-count">{{ $course->description ?? 'Tap to explore' }}</div>
+        </a>
+        @empty
+        <div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#8888BB">
+            <div style="font-size:64px;margin-bottom:12px">📭</div>
+            <div style="font-size:18px;font-weight:800">No subjects yet</div>
+            <div style="font-size:14px;margin-top:6px">Your teacher will add subjects soon!</div>
+        </div>
+        @endforelse
+    </div>
 </div>
 @endsection

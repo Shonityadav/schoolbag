@@ -90,8 +90,8 @@ body {
     filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
 }
 
-/* ── Back / Book Buttons — green leaf pseudo-elements can't be Bootstrap ── */
-.btn-back, .btn-book {
+/* ── Book Button — green leaf pseudo-elements ── */
+.btn-book {
     position: absolute;
     top: 20px;
     width: 52px; height: 52px;
@@ -103,30 +103,29 @@ body {
     z-index: 100;
     color: #3B9EE8;
 }
-.btn-back { left: 10px; }
 .btn-book { right: 10px; }
-.btn-back:hover, .btn-book:hover {
+.btn-book:hover {
     transform: translateY(-2px);
     box-shadow: 0 7px 0 #A8D1EE, 0 12px 20px rgba(0,0,0,0.15);
     color: #1A6BAA;
 }
-.btn-back:active, .btn-book:active {
+.btn-book:active {
     transform: translateY(2px);
     box-shadow: 0 1px 0 #A8D1EE, 0 2px 4px rgba(0,0,0,0.1);
 }
-.btn-back::before, .btn-book::before {
+.btn-book::before {
     content: ''; position: absolute; top: -5px; left: -5px;
     width: 16px; height: 16px;
     background: #8BD85F; border: 2px solid #5E4D3B;
     border-radius: 0 100% 0 100%; transform: rotate(-15deg); z-index: -1;
 }
-.btn-back::after, .btn-book::after {
+.btn-book::after {
     content: ''; position: absolute; bottom: -5px; right: -5px;
     width: 16px; height: 16px;
     background: #8BD85F; border: 2px solid #5E4D3B;
     border-radius: 0 100% 0 100%; transform: rotate(45deg); z-index: -1;
 }
-.btn-back svg, .btn-book svg { width: 26px; height: 26px; }
+.btn-book svg { width: 26px; height: 26px; }
 
 /* ── Header Scroll — background image must stay custom ── */
 .header-scroll {
@@ -388,9 +387,7 @@ body {
 .ch-overlay.hidden { opacity: 0; pointer-events: none; }
 .ch-overlay.hidden .ch-modal { transform: scale(0.9); }
 .ch-modal { background: #FFF9E5; border: 4px solid #FFE8AC !important; box-shadow: 0 24px 48px rgba(0,0,0,0.25); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.ch-close { position: absolute; top: -14px; right: -14px; width: 38px; height: 38px; background: #FFD561; border: 3px solid #FFF; color: #5E4D3B; box-shadow: 0 4px 0 #C9A300, 0 4px 8px rgba(0,0,0,0.15); transition: transform 0.15s; }
-.ch-close:hover  { transform: scale(1.05) translateY(-2px); }
-.ch-close:active { transform: translateY(0); box-shadow: 0 1px 0 #C9A300; }
+
 .ch-title { font-family: 'Bubblegum Sans', cursive; font-size: 26px; color: #5E4D3B; }
 .ch-list::-webkit-scrollbar { width: 6px; }
 .ch-list::-webkit-scrollbar-track { background: transparent; }
@@ -481,14 +478,7 @@ body {
     animation: bounce 2s infinite; text-align: center; line-height: 1.1;
 }
 
-.chest-next-btn {
-    padding: 14px 35px; font-family: 'Fredoka', sans-serif;
-    font-size: 20px; font-weight: bold; background: linear-gradient(180deg, #5CB85C 0%, #4CAE4C 100%); color: #FFF;
-    border: 3px solid #FFF; border-radius: 99px; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-    transition: transform 0.2s, filter 0.2s;
-}
-.chest-next-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
-.chest-next-btn:active { transform: scale(0.95); }
+
 
 @@keyframes chest-wiggle {
     0%, 100% { transform: scale(1) rotate(0); }
@@ -583,7 +573,7 @@ body {
 
 {{-- ── PAGE LOADER (shown while images are loading) ── --}}
 <div id="page-loader" class="page-loader">
-    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/logo.png'))) }}" class="loader-bag" alt="Loading...">
+    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/logo.png'))) }}" class="loader-bag" alt="Loading..." fetchpriority="high" loading="eager" decoding="async">
     <div class="loader-text">Loading your adventure…</div>
     <div class="loader-dots">
         <span></span><span></span><span></span>
@@ -594,16 +584,16 @@ body {
 <div class="map-container w-100 mx-auto position-relative d-flex flex-column align-items-center">
 
     {{-- Crown cap badge --}}
-    <img src="{{ asset('uploads/images/stage/banner 3.png') }}" class="cap-badge" alt="Chapter Crown">
+    <img src="{{ asset('uploads/images/stage/banner 3.png') }}" class="cap-badge" alt="Chapter Crown" fetchpriority="high" loading="eager" decoding="async">
 
     {{-- Navigation Buttons --}}
     @if(count($chaptersData) > 0)
-    <button onclick="openCjm()" class="btn-back d-flex align-items-center justify-content-center text-decoration-none border-0" title="Back to Map">
-        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
+    <button onclick="openCjm()" style="position: absolute; top: 20px; left: 10px; background: transparent; border: none; padding: 0; cursor: pointer; z-index: 100; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Map">
+        <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 52px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
     </button>
     @else
-    <a href="{{ route('student.courses.index') }}" class="btn-back d-flex align-items-center justify-content-center text-decoration-none" title="Back to Subjects">
-        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
+    <a href="{{ route('student.courses.index') }}" style="position: absolute; top: 20px; left: 10px; z-index: 100; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Subjects">
+        <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 52px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
     </a>
     @endif
     <button class="btn-book d-flex align-items-center justify-content-center border-0" onclick="openChapterList()" title="Select Chapter">
@@ -626,7 +616,7 @@ body {
                 <div class="position-relative flex-grow-1 d-flex align-items-center" style="margin-left:28px; margin-right:60px; height:42px;">
                     {{-- Star badge --}}
                     <div class="progress-star-badge d-flex flex-column align-items-center">
-                        <div class="star-icon"><img src="{{ asset('uploads/images/stage/star.png') }}"></div>
+                        <div class="star-icon"><img src="{{ asset('uploads/images/stage/star.png') }}" fetchpriority="high" loading="eager" decoding="async"></div>
                         <div class="star-label px-1">x{{ $earnedStars }}</div>
                     </div>
                     {{-- Track --}}
@@ -641,12 +631,12 @@ body {
                 {{-- Treasure Chest --}}
                 @if($chapterCompleted)
                     <div class="treasure-box-img" style="height: 72px; animation: none; cursor: default;" title="Reward Claimed!">
-                        <img src="{{ asset('uploads/images/stage/star.png') }}" style="position: absolute; top: -15px; left: 50%; width: 50px; margin-left: -25px; z-index: 1; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.9));" alt="Star">
-                        <img src="{{ asset('uploads/images/stage/lower_chest.png') }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 2;" alt="Opened Chest">
-                        <img src="{{ asset('uploads/images/stage/upper_chest_opened.png') }}" style="position: absolute; top: -19%; left: -5%; width: 120%; height: 50%; object-fit: contain; z-index: 3;" alt="Lid">
+                        <img src="{{ asset('uploads/images/stage/star.png') }}" style="position: absolute; top: -15px; left: 50%; width: 50px; margin-left: -25px; z-index: 1; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.9));" alt="Star" fetchpriority="high" loading="eager" decoding="async">
+                        <img src="{{ asset('uploads/images/stage/lower_chest.png') }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 2;" alt="Opened Chest" fetchpriority="high" loading="eager" decoding="async">
+                        <img src="{{ asset('uploads/images/stage/upper_chest_opened.png') }}" style="position: absolute; top: -19%; left: -5%; width: 120%; height: 50%; object-fit: contain; z-index: 3;" alt="Lid" fetchpriority="high" loading="eager" decoding="async">
                     </div>
                 @else
-                    <img src="{{ asset('uploads/images/stage/treasure box.png') }}" class="treasure-box-img" alt="Treasure Chest">
+                    <img src="{{ asset('uploads/images/stage/treasure box.png') }}" class="treasure-box-img" alt="Treasure Chest" fetchpriority="high" loading="eager" decoding="async">
                 @endif
             </div>
         </div>
@@ -664,11 +654,11 @@ body {
             </svg>
 
             {{-- Flower Decorations --}}
-            <img src="{{ asset('uploads/images/stage/flower-1.png') }}" class="deco deco-1" alt="">
-            <img src="{{ asset('uploads/images/stage/flower-1.png') }}" class="deco deco-2" alt="">
-            <img src="{{ asset('uploads/images/stage/flower-2.png') }}" class="deco deco-3" alt="">
-            <img src="{{ asset('uploads/images/stage/flower-2.png') }}" class="deco deco-4" alt="">
-            <img src="{{ asset('uploads/images/stage/flower-1.png') }}" class="deco deco-5" alt="">
+            <img src="{{ asset('uploads/images/stage/flower-1.png') }}" class="deco deco-1" alt="" fetchpriority="high" loading="eager" decoding="async">
+            <img src="{{ asset('uploads/images/stage/flower-1.png') }}" class="deco deco-2" alt="" fetchpriority="high" loading="eager" decoding="async">
+            <img src="{{ asset('uploads/images/stage/flower-2.png') }}" class="deco deco-3" alt="" fetchpriority="high" loading="eager" decoding="async">
+            <img src="{{ asset('uploads/images/stage/flower-2.png') }}" class="deco deco-4" alt="" fetchpriority="high" loading="eager" decoding="async">
+            <img src="{{ asset('uploads/images/stage/flower-1.png') }}" class="deco deco-5" alt="" fetchpriority="high" loading="eager" decoding="async">
 
             {{-- ── Stage Cards (generated from $stageMap array) ── --}}
             @php
@@ -745,11 +735,11 @@ body {
                     <div class="sc-card {{ $s['theme'] }}">
                         <div class="sc-icon-wrap">
                             <img src="{{ asset('uploads/images/stage/' . $s['icon']) }}"
-                                 class="sc-icon-img" alt="{{ $s['title'] }}">
+                                 class="sc-icon-img" alt="{{ $s['title'] }}" fetchpriority="high" loading="eager" decoding="async">
                             @if($s['completed'])
-                                <img src="{{ asset('uploads/images/stage/tick icon.png') }}" class="sc-status" alt="Done">
+                                <img src="{{ asset('uploads/images/stage/tick icon.png') }}" class="sc-status" alt="Done" fetchpriority="high" loading="eager" decoding="async">
                             @elseif(!$s['unlocked'])
-                                <img src="{{ asset('uploads/images/stage/lock icon.png') }}" class="sc-status" alt="Locked">
+                                <img src="{{ asset('uploads/images/buttons/lock button.png') }}" class="sc-status" alt="Locked" fetchpriority="high" loading="eager" decoding="async">
                             @endif
                         </div>
                         <div class="sc-body">
@@ -757,7 +747,7 @@ body {
                             <p class="sc-desc">{{ $s['desc'] }}</p>
                         </div>
                         <div class="sc-right">
-                            <img src="{{ asset('uploads/images/stage/star.png') }}" class="sc-star-img" alt="Star">
+                            <img src="{{ asset('uploads/images/stage/star.png') }}" class="sc-star-img" alt="Star" fetchpriority="high" loading="eager" decoding="async">
                             <span class="sc-star-count">
                                 @if($s['completed'] && isset($s['earned_stars']))
                                     {{ $s['earned_stars'] }}/{{ $s['stars'] }}
@@ -766,7 +756,7 @@ body {
                                 @endif
                             </span>
                         </div>
-                        <img src="{{ asset('uploads/images/stage/arrow.png') }}" class="sc-arrow" alt="">
+                        <img src="{{ asset('uploads/images/stage/arrow.png') }}" class="sc-arrow" alt="" fetchpriority="high" loading="eager" decoding="async">
                     </div>
                 @if($s['model'] && $s['unlocked']) </a> @else </div> @endif
             </div>
@@ -779,10 +769,10 @@ body {
             <div class="scroll-banner d-flex align-items-center justify-content-center position-relative" style="padding: 0 45px;">
                 @if($chapterCompleted)
                     <span class="scroll-text text-center pe-3" style="color:#27AE60;">Chapter completed! Great job! 🎉</span>
-                    <img src="{{ asset('uploads/images/stage/tick icon.png') }}" class="scroll-icon" alt="Tick">
+                    <img src="{{ asset('uploads/images/stage/tick icon.png') }}" class="scroll-icon" alt="Tick" fetchpriority="high" loading="eager" decoding="async">
                 @else
                     <span class="scroll-text text-center pe-3">Complete all missions to unlock the next chapter!</span>
-                    <img src="{{ asset('uploads/images/stage/lock icon.png') }}" class="scroll-icon" alt="Lock">
+                    <img src="{{ asset('uploads/images/buttons/lock button.png') }}" class="scroll-icon" alt="Lock" fetchpriority="high" loading="eager" decoding="async">
                 @endif
             </div>
         </div>
@@ -793,7 +783,9 @@ body {
 {{-- Chapter Selector Modal --}}
 <div id="ch-selector-modal" class="ch-overlay d-flex justify-content-center align-items-center hidden" onclick="if(event.target===this) closeChapterList()">
     <div class="ch-modal position-relative rounded-4 p-4" style="width:90%; max-width:400px;">
-        <button class="ch-close border-0 rounded-circle d-flex align-items-center justify-content-center fs-5 fw-bold" onclick="closeChapterList()">✕</button>
+        <button onclick="closeChapterList()" style="position: absolute; top: -14px; right: -14px; background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <img src="{{ asset('uploads/images/buttons/cross button.png') }}" alt="Close" style="width: 38px; height: 38px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
+        </button>
         <h3 class="ch-title text-center mb-4">Select Chapter</h3>
         <div class="ch-list d-flex flex-column gap-3 pe-1" style="max-height:350px; overflow-y:auto;">
             @foreach($chaptersData as $data)
@@ -833,17 +825,19 @@ body {
 <div id="chest-unlock-overlay" class="chest-unlock-overlay">
     <div class="chest-wrapper" id="chest-wrapper" onclick="openTreasureChest()">
         <div class="chest-container" id="chest-container">
-            <img src="{{ asset('uploads/images/stage/star.png') }}" class="chest-star" alt="Star">
-            <img src="{{ asset('uploads/images/stage/lower_chest.png') }}" class="chest-lower" alt="Chest Base">
-            <img src="{{ asset('uploads/images/stage/upper_chest.png') }}" class="chest-upper closed-lid" alt="Chest Lid Closed">
-            <img src="{{ asset('uploads/images/stage/upper_chest_opened.png') }}" class="chest-upper opened-lid" alt="Chest Lid Opened">
-            <img src="{{ asset('uploads/images/stage/chest_button.png') }}" class="chest-btn-img" alt="Tap to Open">
+            <img src="{{ asset('uploads/images/stage/star.png') }}" class="chest-star" alt="Star" fetchpriority="high" loading="eager" decoding="async">
+            <img src="{{ asset('uploads/images/stage/lower_chest.png') }}" class="chest-lower" alt="Chest Base" fetchpriority="high" loading="eager" decoding="async">
+            <img src="{{ asset('uploads/images/stage/upper_chest.png') }}" class="chest-upper closed-lid" alt="Chest Lid Closed" fetchpriority="high" loading="eager" decoding="async">
+            <img src="{{ asset('uploads/images/stage/upper_chest_opened.png') }}" class="chest-upper opened-lid" alt="Chest Lid Opened" fetchpriority="high" loading="eager" decoding="async">
+            <img src="{{ asset('uploads/images/stage/chest_button.png') }}" class="chest-btn-img" alt="Tap to Open" fetchpriority="high" loading="eager" decoding="async">
         </div>
         <div class="tap-text">Tap to open</div>
     </div>
     <div class="success-message-wrap">
         <h2 class="yay-text">Yay! You got a star!</h2>
-        <button class="chest-next-btn" onclick="closeTreasureChest(); openChapterList();">Continue to next chapter</button>
+        <button onclick="closeTreasureChest(); openChapterList();" style="background: transparent; border: none; cursor: pointer; padding: 0; transition: transform 0.2s; margin-top: 20px;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <img src="{{ asset('uploads/images/buttons/continue buttons.png') }}" alt="Continue" style="height: 60px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
+        </button>
     </div>
 </div>
 

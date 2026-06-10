@@ -52,11 +52,11 @@ class DashboardController extends Controller
 
         // Attendance for current month
         $now = Carbon::now();
-        $attendanceDates = Attendance::where('user_id', $user->id)
-            ->whereYear('date',  $now->year)
-            ->whereMonth('date', $now->month)
-            ->pluck('date')
-            ->map(fn($d) => $d->toDateString())
+        $attendanceDates = Attendance::where('created_for', $user->id)
+            ->whereYear('attendance_date',  $now->year)
+            ->whereMonth('attendance_date', $now->month)
+            ->pluck('attendance_date')
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->toDateString())
             ->toArray();
 
         return view('student.dashboard', compact(

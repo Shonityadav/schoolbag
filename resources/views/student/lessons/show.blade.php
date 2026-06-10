@@ -14,8 +14,7 @@
 .lesson-body strong{color:#E8E8FF;font-weight:800}
 .lesson-footer{padding:20px 28px;border-top:1px solid #2A2A4A;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .xp-pill{background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.3);color:#00D4AA;border-radius:999px;padding:6px 16px;font-size:14px;font-weight:800}
-.btn-complete{background:linear-gradient(135deg,#6C63FF,#5A51FF);color:#fff;border:none;border-radius:999px;padding:12px 28px;font-weight:900;font-size:15px;cursor:pointer;transition:all .2s;font-family:inherit}
-.btn-complete:hover{transform:translateY(-2px)}
+
 .done-banner{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);border-radius:12px;padding:12px 18px;color:#00D4AA;font-weight:800;font-size:14px}
 .type-badge{background:rgba(108,99,255,.2);border:1px solid rgba(108,99,255,.3);border-radius:999px;padding:5px 14px;font-size:12px;font-weight:800;color:#6C63FF}
 </style>
@@ -46,14 +45,17 @@
         @if($isCompleted)
             <div class="done-banner">✅ Lesson completed!</div>
             @if($nextLesson)
-                <a href="{{ route('student.lessons.show', $nextLesson->id) }}" class="btn-complete" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">Next →</a>
-
+                <a href="{{ route('student.lessons.show', $nextLesson->id) }}" style="display: inline-block; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <img src="{{ asset('uploads/images/buttons/forward button.png') }}" alt="Next" style="height: 60px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
+                </a>
             @endif
         @else
             <div class="xp-pill">+{{ $lesson->xp_reward }} XP</div>
             <form method="POST" action="{{ route('student.lessons.complete', $lesson->id) }}">
                 @csrf
-                <button type="submit" class="btn-complete">✓ Mark Done</button>
+                <button type="submit" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <img src="{{ asset('uploads/images/buttons/claim reward button.png') }}" alt="Mark Done" style="height: 80px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
+                </button>
             </form>
         @endif
     </div>

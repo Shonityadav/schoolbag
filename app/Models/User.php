@@ -14,7 +14,9 @@ class User extends Authenticatable
     protected $fillable = [
         'name', 'email', 'password',
         'class_id', 'role', 'user_type', 'institute_id', 'avatar',
+        'banner',
         'total_xp', 'streak_count', 'last_streak_date', 'phone',
+        'unlocked_items'
     ];
 
     protected $hidden = ['password', 'api_token'];
@@ -22,14 +24,15 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_streak_date'  => 'date',
+        'unlocked_items'    => 'array',
     ];
 
     // ── Relationships ──────────────────────────────────────────
-    public function student()         { return $this->hasOne(Student::class, 'created_for'); }
     public function studentClass()    { return $this->belongsTo(ClassModel::class, 'class_id'); }
+    public function institute()       { return $this->belongsTo(Institute::class, 'institute_id'); }
 
     public function xpTransactions()  { return $this->hasMany(XpTransaction::class); }
-    public function attendances()     { return $this->hasMany(Attendance::class); }
+    public function attendances()     { return $this->hasMany(\App\Models\Attendance::class, 'created_for'); }
     public function worksheets()      { return $this->hasMany(Worksheet::class); }
     public function studentBadges()   { return $this->hasMany(StudentBadge::class); }
     public function badges()          { return $this->hasManyThrough(Badge::class, StudentBadge::class, 'user_id', 'id', 'id', 'badge_id'); }
@@ -53,10 +56,18 @@ class User extends Authenticatable
     public function markAttendanceToday(): bool
     {
         $today = now()->toDateString();
-        $alreadyMarked = Attendance::where('user_id', $this->id)->where('date', $today)->exists();
+        $alreadyMarked = \App\Models\Attendance::where('created_for', $this->id)
+            ->where('attendance_date', $today)
+            ->exists();
         if ($alreadyMarked) return false;
 
-        Attendance::create(['user_id' => $this->id, 'date' => $today]);
+        \App\Models\Attendance::create([
+            'created_for' => $this->id,
+            'attendance_date' => $today,
+            'institute_id' => $this->institute_id,
+            'status' => 'Present',
+            'created_by' => $this->id,
+        ]);
 
         // Update streak
         $yesterday = now()->subDay()->toDateString();
@@ -75,6 +86,78 @@ class User extends Authenticatable
     {
         // Each level = 500 XP
         return (int) floor($this->total_xp / 500) + 1;
+    }
+
+    public function getInitialsAttribute(): string
+    {
+        $name = trim($this->name);
+        $words = explode(' ', $name);
+        $initials = '';
+        foreach ($words as $word) {
+            if (!empty($word)) {
+                $initials .= strtoupper($word[0]);
+            }
+        }
+        return substr($initials, 0, 2);
+    }
+
+    public function getInitialsBgAttribute(): string
+    {
+        $gradients = [
+            'linear-gradient(135deg, #71b8ff 0%, #4da6ff 100%)',
+            'linear-gradient(135deg, #ffe099 0%, #ffc857 100%)',
+            'linear-gradient(135deg, #ffa564 0%, #ff9f5a 100%)',
+            'linear-gradient(135deg, #96e6b7 0%, #7ed9a3 100%)',
+            'linear-gradient(135deg, #ff8b8b 0%, #ff6b6b 100%)',
+        ];
+        return $gradients[$this->id % 5];
+    }
+
+    public function getUnlockedFramesAttribute(): array
+    {
+        $level = $this->level;
+        $frames = ['Bronze.png']; // Default unlocked for everyone
+        
+        if ($level >= 5) $frames[] = 'SIlver.png';
+        if ($level >= 10) $frames[] = 'Gold.png';
+        if ($level >= 15) $frames[] = 'Ace.png';
+        if ($level >= 20) $frames[] = 'Ace_Master.png';
+        if ($level >= 25) $frames[] = 'Diamond.png';
+        
+        return $frames;
+    }
+
+    public function awardChestDrop()
+    {
+        $avatarPath = public_path('uploads/images/banners/Avatar');
+        if (!\Illuminate\Support\Facades\File::exists($avatarPath)) {
+            return null;
+        }
+
+        $allAvatars = array_map(function($file) {
+            return $file->getFilename();
+        }, \Illuminate\Support\Facades\File::files($avatarPath));
+
+        $unlocked = $this->unlocked_items ?? [];
+        $unlockedAvatars = $unlocked['avatars'] ?? [];
+
+        // Find avatars we haven't unlocked yet
+        $lockedAvatars = array_diff($allAvatars, $unlockedAvatars);
+
+        if (empty($lockedAvatars)) {
+            return null; // everything is unlocked
+        }
+
+        // Pick one at random
+        $newUnlock = $lockedAvatars[array_rand($lockedAvatars)];
+        
+        $unlockedAvatars[] = $newUnlock;
+        $unlocked['avatars'] = $unlockedAvatars;
+        
+        $this->unlocked_items = $unlocked;
+        $this->save();
+
+        return $newUnlock;
     }
 
     public function getXpToNextLevelAttribute(): int
