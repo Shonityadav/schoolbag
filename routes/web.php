@@ -79,6 +79,7 @@ use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminAdminsController;
 use App\Http\Controllers\Admin\AdminClassController;
 use App\Http\Controllers\Admin\AdminAttendanceController;
+use App\Http\Controllers\Admin\AdminEbookAssignmentController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
@@ -139,6 +140,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/attendance/bulk-mark',  [AdminAttendanceController::class, 'markBulk'])->name('attendance.markBulk');
         Route::post('/attendance/{id}/mark',  [AdminAttendanceController::class, 'mark'])->name('attendance.mark');
         Route::post('/attendance/{id}/unmark',[AdminAttendanceController::class, 'unmark'])->name('attendance.unmark');
+
+        // Ebook Assignments
+        Route::get('/ebook-assignments',        [AdminEbookAssignmentController::class, 'index'])->name('ebook_assignments.index');
+        Route::post('/ebook-assignments/assign', [AdminEbookAssignmentController::class, 'assign'])->name('ebook_assignments.assign');
     });
 });
 

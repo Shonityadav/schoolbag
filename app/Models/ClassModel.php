@@ -32,6 +32,16 @@ class ClassModel extends Model
         return $this->hasMany(Student::class, 'class_id');
     }
 
+    public function classEbooks()
+    {
+        return $this->hasMany(ClassEbook::class, 'class_id');
+    }
+
+    public function ebooks()
+    {
+        return $this->belongsToMany(Ebook::class, 'class_ebooks', 'class_id', 'ebook_id');
+    }
+
     public function users()
     {
         return $this->belongsToMany(
@@ -42,4 +52,3 @@ class ClassModel extends Model
         );
     }
 }
-
