@@ -170,8 +170,8 @@ body::before {
 .nav-buttons-container {
     position: absolute;
     bottom: -20px;
-    left: -15px;
-    right: -15px;
+    left: 5px;
+    right: 5px;
     display: flex;
     justify-content: space-between;
     z-index: 20;
@@ -489,7 +489,7 @@ body::before {
                     @elseif(isset($ebookPages) && count($ebookPages) > 0)
                         @foreach($ebookPages as $index => $page)
                             <div class="page-image-wrapper" id="page-{{ $index }}" style="z-index: {{ count($ebookPages) - $index }}; background-color: #FFFDF5;">
-                                <img src="{{ asset($page- fetchpriority="high" loading="eager" decoding="async">url . '/' . $page->title) }}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;" alt="Page {{ $loop->iteration }}">
+                                <img src="{{ asset($page->url . '/' . $page->title) }}" fetchpriority="high" loading="eager" decoding="async" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;" alt="Page {{ $loop->iteration }}">
                             </div>
                         @endforeach
                     @else
@@ -502,11 +502,11 @@ body::before {
             </div>
             <!-- PREVIOUS & NEXT BUTTONS (Inside Note Container at Corners) -->
             <div class="nav-buttons-container">
-                <a href="javascript:void(0)" onclick="prevPage()" id="prev-btn" style="text-decoration: none; display: inline-block; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <a href="javascript:void(0)" onclick="prevPage()" id="prev-btn" style="pointer-events: auto; text-decoration: none; display: inline-block; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                     <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Previous" style="height: 60px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
                 </a>
                 
-                <a href="javascript:void(0)" onclick="nextPage()" id="next-btn" style="text-decoration: none; display: inline-block; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <a href="javascript:void(0)" onclick="nextPage()" id="next-btn" style="pointer-events: auto; text-decoration: none; display: inline-block; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                     <img src="{{ asset('uploads/images/buttons/forward button.png') }}" alt="Next Page" style="height: 60px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
                 </a>
             </div>
@@ -536,12 +536,13 @@ body::before {
                     @if(isset($chapter_id))
                         <input type="hidden" name="chapter_id" value="{{ $chapter_id }}">
                     @endif
-                    
-                    <a href="javascript:void(0)" onclick="submitLesson()" style="text-decoration: none; display: inline-block; width: 100%; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="{{ asset('uploads/images/buttons/claim reward button.png') }}" alt="Submit" style="height: 80px; object-fit: contain; margin: 0 auto; display: block;" fetchpriority="high" loading="eager" decoding="async">
+                    <a href="javascript:void(0)" onclick="submitLesson()" style="text-decoration: none; position: relative; display: inline-block; width: 150px; transition: transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="{{ asset('uploads/images/stage1/submit.png') }}" alt="Submit" style="width: 100%; height: auto; margin: 0 auto; display: block;" fetchpriority="high" loading="eager" decoding="async">
+                        <span class="nav-btn-text" style="font-size: 1.15rem; text-transform: uppercase; margin-left: -12px; margin-top: -2px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">SUBMIT</span>
                     </a>
                 </form>
             </div>
+            
         </div>
         
         {{-- Level Completed Modal --}}
@@ -580,7 +581,7 @@ body::before {
                     
                     <!-- Continue Button -->
                     <div style="position: absolute; bottom: -8%; left: 50%; transform: translateX(-50%); width: 70%; cursor: pointer; z-index: 10;" onclick="finalSubmit()">
-                        <img src="{{ asset('uploads/images/stagecomplete/continue buttons.png') }}" style="width: 100%; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25)); transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" alt="Continue" fetchpriority="high" loading="eager" decoding="async">
+                        <img src="{{ asset('uploads/images/buttons/claim reward button.png') }}" style="width: 100%; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25)); transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" alt="Claim Reward" fetchpriority="high" loading="eager" decoding="async">
                     </div>
 
                 </div>
