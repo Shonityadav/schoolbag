@@ -527,7 +527,8 @@ body {
 
     $stage2EarnedStars = 0;
     $stage3EarnedStars = 0;
-    if ($stage2) {
+    $stage4EarnedStars = 0;
+    if ($stage2 || $stage3 || $stage4) {
         $ebChap = \App\Models\EbookChapter::where('ebook_id', $course->ebook_id ?? 2)
             ->where('chapter_number', $activeChapter->order + 1)->first();
         if ($ebChap) {
@@ -552,6 +553,18 @@ body {
                 elseif ($stage3Score >= 8) $stage3EarnedStars = 2;
                 elseif ($stage3Score >= 4) $stage3EarnedStars = 1;
             }
+
+            $stage4Progress = \App\Models\LessonProgress::where('user_id', $user->id)
+                ->where('chapter_id', $ebChap->id)
+                ->where('stage_number', 4)
+                ->first();
+            if ($stage4Progress) {
+                $stage4Score = $stage4Progress->score ?? 0;
+                if ($stage4Score == 10) $stage4EarnedStars = 4;
+                elseif ($stage4Score >= 8) $stage4EarnedStars = 3;
+                elseif ($stage4Score >= 5) $stage4EarnedStars = 2;
+                elseif ($stage4Score >= 2) $stage4EarnedStars = 1;
+            }
         }
     }
 
@@ -559,7 +572,7 @@ body {
     if ($stage1) { $totalStars += 3; if ($stage1Completed) $earnedStars += 3; }
     if ($stage2) { $totalStars += 3; if ($stage2Completed) $earnedStars += $stage2EarnedStars; }
     if ($stage3) { $totalStars += 3; if ($stage3Completed) $earnedStars += $stage3EarnedStars; }
-    if ($stage4) { $totalStars += 4; if ($stage4Completed) $earnedStars += 0; }
+    if ($stage4) { $totalStars += 4; if ($stage4Completed) $earnedStars += $stage4EarnedStars; }
     if ($totalStars === 0) $totalStars = 13;
     $progressPercent = $totalStars > 0 ? round(($earnedStars / $totalStars) * 100) : 0;
 @endphp
@@ -676,6 +689,7 @@ body {
                         'title'      => '1. Reading Mission',
                         'desc'       => 'Read the story and answer the questions.',
                         'stars'      => 3,
+                        'earned_stars' => $stage1Completed ? 3 : 0,
                     ],
                     [
                         'model'      => $stage2,
@@ -720,6 +734,7 @@ body {
                         'title'      => '4. Exercise Mission',
                         'desc'       => 'Complete the exercises to build your skills.',
                         'stars'      => 4,
+                        'earned_stars' => $stage4EarnedStars,
                     ],
                 ];
             @endphp
