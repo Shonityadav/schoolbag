@@ -42,12 +42,12 @@ class User extends Authenticatable
 
     public function staff()
     {
-        return $this->hasOne(Staff::class, 'user_id');
+        return $this->hasOne(StaffDetails::class, 'user_id');
     }
 
     public function student()
     {
-        return $this->hasOne(Student::class, 'user_id');
+        return $this->hasOne(StudentDetails::class, 'user_id');
     }
 
     public function attendances()

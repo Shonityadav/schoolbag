@@ -15,7 +15,7 @@
     <div class="d-flex align-items-center gap-3">
         <form action="{{ route('admin.attendance.index') }}" method="GET" class="d-flex align-items-center gap-2">
             <select name="user_type" class="form-select form-select-sm" style="width: auto; cursor: pointer; box-shadow: none;" onchange="this.form.submit()">
-                @if(auth()->user()->hasPermission('students.view'))
+                @if(auth()->user()->hasPermission('student_details.view'))
                     <option value="3" {{ $userType == '3' ? 'selected' : '' }}>
                         Students
                     </option>
@@ -127,7 +127,7 @@
                         <td colspan="{{ $userType == '3' ? 5 : 4 }}" class="text-center text-muted py-5">
                             <i class="bi bi-people" style="font-size: 32px; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
                             @if($userType == '3' && empty($classId))
-                                <span style="font-weight: 500; font-size: 16px;">Please select a Class to view students.</span>
+                                <span style="font-weight: 500; font-size: 16px;">Please select a Class to view student_details.</span>
                             @else
                                 <span style="font-weight: 500; font-size: 16px;">No users found.</span>
                             @endif

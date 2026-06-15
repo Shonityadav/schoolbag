@@ -25,7 +25,7 @@ class AdminAttendanceController extends Controller
 
     $requestedType = $request->input('user_type');
 
-    $canViewStudents = auth()->user()->hasPermission('students.view');
+    $canViewStudents = auth()->user()->hasPermission('student_details.view');
     $canViewStaff    = auth()->user()->hasPermission('staff.view');
 
     if ($requestedType) {
@@ -44,7 +44,7 @@ class AdminAttendanceController extends Controller
     }
     if (
         $userType == '3' &&
-        !auth()->user()->hasPermission('students.view')
+        !auth()->user()->hasPermission('student_details.view')
     ) {
         abort(403);
     }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Staff;
+use App\Models\StaffDetails;
 use App\Models\Permission;
 use App\Models\ClassModel;
 use App\Models\StaffCategory;
@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
-class AdminStaffController extends Controller
+class AdminStaffDetailsController extends Controller
 {
     private function canAccessStaff(User $staffUser)
     {
@@ -75,7 +75,7 @@ class AdminStaffController extends Controller
         $staff = $query->paginate(15)->withQueryString();
 
         return view(
-            'admin.staff.index',
+            'admin.staff_details.index',
             compact('staff')
         );
     }
@@ -97,7 +97,7 @@ class AdminStaffController extends Controller
             auth()->user()->institute_id
         )->orderBy('name')->get();
 
-        return view('admin.staff.form', [
+        return view('admin.staff_details.form', [
             'member' => null,
             'allPermissions' => $allPermissions,
             'allClasses' => $allClasses,
@@ -142,7 +142,7 @@ class AdminStaffController extends Controller
                 'user_type' => 2,
             ]);
 
-            Staff::create([
+            StaffDetails::create([
                 'created_for' => $staffUser->id,
                 'institute_id' => auth()->user()->institute_id,
                 'staff_category_id' => $data['staff_category_id'],
@@ -165,7 +165,7 @@ class AdminStaffController extends Controller
         });
 
         return redirect()
-            ->route('admin.staff.index')
+            ->route('admin.staff_details.index')
             ->with('success', 'Staff member created successfully.');
     }
     /**
@@ -196,7 +196,7 @@ class AdminStaffController extends Controller
             auth()->user()->institute_id
         )->get();
 
-        return view('admin.staff.form', [
+        return view('admin.staff_details.form', [
             'member' => $staff->load([
                 'permissions',
                 'classes',
@@ -252,7 +252,7 @@ class AdminStaffController extends Controller
 
         } else {
 
-            Staff::create([
+            StaffDetails::create([
                 'created_for' => $staff->id,
                 'institute_id' => $staff->institute_id,
                 'staff_category_id' => $data['staff_category_id'],
@@ -280,7 +280,7 @@ class AdminStaffController extends Controller
             $staff->managedCategories()->detach();
         }
 
-        return redirect()->route('admin.staff.index')
+        return redirect()->route('admin.staff_details.index')
             ->with('success', 'Staff member updated successfully.');
     }
 
@@ -299,7 +299,7 @@ class AdminStaffController extends Controller
 
         $staff->delete();
 
-        return redirect()->route('admin.staff.index')
+        return redirect()->route('admin.staff_details.index')
             ->with('success', 'Staff member deleted successfully.');
     }
 
@@ -375,7 +375,7 @@ class AdminStaffController extends Controller
                 'user_type'=> 2,
             ]);
 
-            Staff::create([
+            StaffDetails::create([
                 'created_for' => $user->id,
                 'institute_id' => $user->institute_id,
                 'staff_category_id' => $request->staff_category_id,
@@ -385,7 +385,7 @@ class AdminStaffController extends Controller
         }
         fclose($handle);
 
-        return redirect()->route('admin.staff.create')
+        return redirect()->route('admin.staff_details.create')
             ->with('import_result', compact('imported', 'skipped', 'errors'));
     }
 }

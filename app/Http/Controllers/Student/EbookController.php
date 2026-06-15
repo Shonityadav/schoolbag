@@ -49,7 +49,7 @@ class EbookController extends Controller
             ->get();
 
         $user = \Illuminate\Support\Facades\Auth::user();
-        $assignedEbookIds = \App\Models\Course::where('user_id', $user->id)
+        $assignedEbookIds = \App\Models\AssignedEbook::where('user_id', $user->id)
             ->whereNotNull('ebook_id')
             ->pluck('ebook_id')
             ->toArray();
@@ -206,20 +206,20 @@ class EbookController extends Controller
         $ebook = Ebook::findOrFail($id);
 
         // Check if already assigned
-        $existing = \App\Models\Course::where('user_id', $user->id)
+        $existing = \App\Models\AssignedEbook::where('user_id', $user->id)
             ->where('ebook_id', $ebook->id)
             ->first();
 
         if ($existing) {
-            return redirect()->route('student.courses.index')
+            return redirect()->route('student.assigned_ebooks.index')
                 ->with('success', 'Ebook is already assigned to your subjects.');
         }
 
         // Get max order
-        $maxOrder = \App\Models\Course::where('class_id', $user->class_id)->max('order') ?? 0;
+        $maxOrder = \App\Models\AssignedEbook::where('class_id', $user->class_id)->max('order') ?? 0;
 
         // Create the Course (Subject)
-        $course = \App\Models\Course::create([
+        $course = \App\Models\AssignedEbook::create([
             'user_id' => $user->id,
             'ebook_id' => $ebook->id,
             'class_id' => null, // Not a global class subject
@@ -294,7 +294,7 @@ class EbookController extends Controller
 
         }
 
-        return redirect()->route('student.courses.index')
+        return redirect()->route('student.assigned_ebooks.index')
             ->with('success', 'Ebook assigned successfully! You can now view it here.');
     }
 }

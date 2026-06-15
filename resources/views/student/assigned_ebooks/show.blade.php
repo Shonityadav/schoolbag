@@ -605,7 +605,7 @@ body {
         <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 52px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
     </button>
     @else
-    <a href="{{ route('student.courses.index') }}" style="position: absolute; top: 20px; left: 10px; z-index: 100; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Subjects">
+    <a href="{{ route('student.assigned_ebooks.index') }}" style="position: absolute; top: 20px; left: 10px; z-index: 100; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Subjects">
         <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 52px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
     </a>
     @endif
@@ -681,7 +681,7 @@ body {
                         'unlocked'   => $s1Unlocked,
                         'completed'  => $stage1Completed,
                         'is_current' => $s1Unlocked && !$stage1Completed,
-                        'route'      => 'student.courses.stage',
+                        'route'      => 'student.assigned_ebooks.stage',
                         'route_params' => ['id' => $course->id, 'stage' => 1, 'chapter_id' => $activeChapter->id],
                         'wrapper'    => 'wrapper-1',
                         'theme'      => 'sc-stage-1',
@@ -696,7 +696,7 @@ body {
                         'unlocked'   => $s2Unlocked,
                         'completed'  => $stage2Completed,
                         'is_current' => $s2Unlocked && !$stage2Completed,
-                        'route'      => 'student.courses.stage',
+                        'route'      => 'student.assigned_ebooks.stage',
                         'route_params' => ['id' => $course->id, 'stage' => 2, 'chapter_id' => $activeChapter->id],
                         'wrapper'    => 'wrapper-2',
                         'theme'      => 'sc-stage-2',
@@ -711,7 +711,7 @@ body {
                         'unlocked'   => $s3Unlocked,
                         'completed'  => $stage3Completed,
                         'is_current' => $s3Unlocked && !$stage3Completed,
-                        'route'      => 'student.courses.stage',
+                        'route'      => 'student.assigned_ebooks.stage',
                         'route_params' => ['id' => $course->id, 'stage' => 3, 'chapter_id' => $activeChapter->id],
                         'wrapper'    => 'wrapper-3',
                         'theme'      => 'sc-stage-3',
@@ -726,7 +726,7 @@ body {
                         'unlocked'   => $s4Unlocked,
                         'completed'  => $stage4Completed,
                         'is_current' => $s4Unlocked && !$stage4Completed,
-                        'route'      => 'student.courses.stage',
+                        'route'      => 'student.assigned_ebooks.stage',
                         'route_params' => ['id' => $course->id, 'stage' => 4, 'chapter_id' => $activeChapter->id],
                         'wrapper'    => 'wrapper-4',
                         'theme'      => 'sc-stage-4',
@@ -832,7 +832,7 @@ body {
 <div class="text-center py-5" style="color: #FFF9E5;">
     <div style="font-size: 64px;">📭</div>
     <h3 style="font-family: 'Bubblegum Sans', cursive; font-size: 28px; margin-top: 15px;">No chapters found</h3>
-    <a href="{{ route('student.courses.index') }}" class="btn btn-primary mt-3">Back to Subjects</a>
+    <a href="{{ route('student.assigned_ebooks.index') }}" class="btn btn-primary mt-3">Back to Subjects</a>
 </div>
 @endif
 

@@ -14,7 +14,7 @@
             {{ $staff->total() }} total staff accounts
         </p>
     </div>
-    <a href="{{ route('admin.staff.create') }}"
+    <a href="{{ route('admin.staff_details.create') }}"
        class="btn btn-sm text-white d-flex align-items-center gap-2"
        style="font-size:13px;border-radius:7px;background:var(--sb-accent);padding:8px 16px;">
         <i class="bi bi-plus-lg"></i> Add Staff
@@ -26,7 +26,7 @@
 {{-- Search Filter --}}
 <div class="sb-panel mb-4">
     <div class="p-3">
-        <form method="GET" action="{{ route('admin.staff.index') }}" class="row g-2 align-items-end">
+        <form method="GET" action="{{ route('admin.staff_details.index') }}" class="row g-2 align-items-end">
             <div class="col-12 col-md-7">
                 <label class="form-label" style="font-size:12px;font-weight:600;color:var(--sb-muted);">Search</label>
                 <div class="input-group" style="height:36px;">
@@ -44,7 +44,7 @@
                     <i class="bi bi-funnel"></i> Search
                 </button>
                 @if(request('search'))
-                    <a href="{{ route('admin.staff.index') }}"
+                    <a href="{{ route('admin.staff_details.index') }}"
                        class="btn btn-sm btn-outline-secondary flex-fill"
                        style="font-size:13px;border-radius:7px;height:36px;display:flex;align-items:center;justify-content:center;">
                         Clear
@@ -120,12 +120,12 @@
                     </td>
                     <td>
                         <div class="d-flex gap-1 justify-content-end">
-                            <a href="{{ route('admin.staff.edit', $member) }}"
+                            <a href="{{ route('admin.staff_details.edit', $member) }}"
                                class="sb-icon-btn" title="Edit"
                                style="width:32px;height:32px;font-size:14px;border-radius:6px;">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form method="POST" action="{{ route('admin.staff.destroy', $member) }}"
+                            <form method="POST" action="{{ route('admin.staff_details.destroy', $member) }}"
                                   onsubmit="return confirm('Delete {{ addslashes($member->name) }}? This cannot be undone.')">
                                 @csrf @method('DELETE')
                                 <button type="submit"
@@ -142,7 +142,7 @@
                     <td colspan="9" class="text-center py-5" style="color:var(--sb-muted);">
                         <i class="bi bi-person-badge" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.3;"></i>
                         No staff members found.
-                        <a href="{{ route('admin.staff.create') }}" style="color:var(--sb-accent);">Add the first one</a>
+                        <a href="{{ route('admin.staff_details.create') }}" style="color:var(--sb-accent);">Add the first one</a>
                     </td>
                 </tr>
                 @endforelse

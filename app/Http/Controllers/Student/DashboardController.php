@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
-use App\Models\Course;
+use App\Models\AssignedEbook;
 use App\Models\Worksheet;
 use App\Services\AutoRuleEngine;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +20,7 @@ class DashboardController extends Controller
     public function index()
     {
         $user    = Auth::user()->load('studentClass');
-        $courses = Course::where('class_id', $user->class_id)
+        $courses = AssignedEbook::where('class_id', $user->class_id)
                          ->where('is_active', true)
                          ->with(['chapters'])
                          ->orderBy('order')

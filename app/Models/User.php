@@ -204,13 +204,13 @@ class User extends Authenticatable
 
     public function student()
     {
-        return $this->hasOne(Student::class, 'created_for');
+        return $this->hasOne(StudentDetails::class, 'created_for');
     }
 
     public function staff()
     {
         return $this->hasOne(
-            Staff::class,
+            StaffDetails::class,
             'created_for'
         );
     }

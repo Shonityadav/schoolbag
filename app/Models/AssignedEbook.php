@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Course extends Model
+class AssignedEbook extends Model
 {
     use HasFactory;
+
+    protected $table = 'assigned_ebooks';
 
     protected $fillable = [
         'class_id', 'user_id', 'ebook_id', 'title', 'description', 'icon', 'color', 'order', 'is_active'

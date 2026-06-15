@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\Institute;
-use App\Models\Staff;
-use App\Models\Student;
+use App\Models\StaffDetails;
+use App\Models\StudentDetails;
 use App\Models\Attendance;
 use App\Models\Permission;
 use Illuminate\Http\Request;
@@ -227,7 +227,7 @@ class InstituteAuthController extends Controller
         ]);
 
         if ($request->role === 'student') {
-            Student::create([
+            StudentDetails::create([
                 'created_for'  => $user->id,
                 'institute_id' => $authUser->institute_id,
                 'class_id'     => $request->class_id,
@@ -238,7 +238,7 @@ class InstituteAuthController extends Controller
             ]);
         }
         else{
-            Staff::create([
+            StaffDetails::create([
                 'created_for'  => $user->id,
                 'institute_id' => $authUser->institute_id,
                 'designation'     => $request->designation,
@@ -334,7 +334,7 @@ public function bulkStudents(Request $request)
             // ==========================
             // CREATE STUDENT
             // ==========================
-            Student::create([
+            StudentDetails::create([
                 'created_for'   => $user->id,
                 'institute_id'  => $authUser->institute_id,
                 'class_id'      => $row[4],
@@ -428,7 +428,7 @@ public function bulkStaff(Request $request)
             // ==========================
             // CREATE STAFF
             // ==========================
-            Staff::create([
+            StaffDetails::create([
                 'created_for' => $user->id,
                 'institute_id'=> $authUser->institute_id,
                 'designation' => $row[4],
@@ -477,8 +477,8 @@ public function bulkStaff(Request $request)
 {
     $authUser = $this->authInstitute($request);
 
-    $staffs = Staff::where('institute_id', $authUser->institute_id)->get();
-    $students = Student::where('institute_id', $authUser->institute_id)->get();
+    $staffs = StaffDetails::where('institute_id', $authUser->institute_id)->get();
+    $students = StudentDetails::where('institute_id', $authUser->institute_id)->get();
 
     return response()->json([
         'staffs'   => $staffs,
@@ -494,7 +494,7 @@ public function instituteStudents(Request $request)
         return response()->json(['message' => 'Forbidden'], 403);
     	}
     	
-    	$query = Student::where('institute_id', $authUser->institute_id)
+    	$query = StudentDetails::where('institute_id', $authUser->institute_id)
         ->with(['user', 'schoolClass']);
         
         
@@ -546,7 +546,7 @@ public function instituteStaffs(Request $request)
     }
 
     // 4️⃣ Build query
-    $query = Staff::where('institute_id', $authUser->institute_id)
+    $query = StaffDetails::where('institute_id', $authUser->institute_id)
         ->with('user');
 
     // 5️⃣ Optional role filter
@@ -995,7 +995,7 @@ public function AttendanceReport(Request $request)
         ];
 
         if ($user->user_type === 3) {
-            $student = Student::where('created_for', $user->id)->first();
+            $student = StudentDetails::where('created_for', $user->id)->first();
             $userInfo['roll_no'] = $student->roll_no ?? null;
         }
 

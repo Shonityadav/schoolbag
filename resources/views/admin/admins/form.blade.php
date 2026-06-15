@@ -349,7 +349,7 @@ function initCsvDropzone(suffix, columns) {
                 ? '<span class="csv-row-ok"><i class="bi bi-check-circle-fill"></i> Ready</span>'
                 : '<span class="csv-row-err"><i class="bi bi-x-circle-fill"></i> ' +
                   (!r.name ? 'Missing name' : !r.email || !r.email.includes('@') ? 'Invalid email' : 'Password too short') + '</span>';
-            const extra = suffix === 'students' ? `<td style="color:var(--sb-muted);">${r.class_name||'—'}</td>` : '';
+            const extra = suffix === 'student_details' ? `<td style="color:var(--sb-muted);">${r.class_name||'—'}</td>` : '';
             tbody.innerHTML += `<tr>
                 <td style="color:var(--sb-muted);font-size:12px;">${r._row}</td>
                 <td>${r.name||'<span style="color:var(--sb-red)">—</span>'}</td>
