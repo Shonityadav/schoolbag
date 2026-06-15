@@ -252,7 +252,7 @@
 
     <!-- Top Bar -->
     <div class="guest-topbar">
-        <img src="{{ asset('images/logo.png') }}" alt="Little Learner Logo" class="logo">
+        <img src="{{ asset('images/logo.png') }}" alt="Little Learner Logo" class="logo" fetchpriority="high" loading="eager" decoding="async">
         <div class="auth-btns">
             <a href="{{ route('student.login') }}" class="btn-login">Login</a>
             <a href="{{ route('student.register') }}" class="btn-signup">🚀 Sign Up Free</a>
@@ -263,7 +263,7 @@
     <div class="hero-section">
         <div class="hero-mascot-wrapper">
             <div class="hero-mascot-inner">
-                <img src="{{ asset('uploads/images/lion.png') }}" alt="Little Learner Lion">
+                <img src="{{ asset('uploads/images/lion.png') }}" alt="Little Learner Lion" fetchpriority="high" loading="eager" decoding="async">
             </div>
         </div>
         <div class="hero-title">Hi, Little Learner! 🎒</div>
@@ -280,7 +280,7 @@
             <!-- Math — visible preview -->
             <div class="col-4">
                 <div class="s-card" style="background: linear-gradient(160deg, #A8E8FF 0%, #8BDDFF 100%); box-shadow: 0 10px 0 #4AADCC, 0 14px 28px rgba(70,160,200,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
-                    <img src="{{ asset('uploads/images/owl teacher.png') }}" alt="Math Adventure" class="img-fluid">
+                    <img src="{{ asset('uploads/images/owl teacher.png') }}" alt="Math Adventure" class="img-fluid" fetchpriority="high" loading="eager" decoding="async">
                     <div class="s-card-title">Math Adventure</div>
                     <div class="s-card-desc">Solve equations and unlock treasure!</div>
                 </div>
@@ -289,7 +289,7 @@
             <div class="col-4">
                 <div class="position-relative">
                     <div class="s-card" style="background: linear-gradient(160deg, #BAEDAA 0%, #9DE182 100%); box-shadow: 0 10px 0 #5CAA44, 0 14px 28px rgba(80,160,60,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
-                        <img src="{{ asset('uploads/images/robot.png') }}" alt="Science Explorer" class="img-fluid">
+                        <img src="{{ asset('uploads/images/robot.png') }}" alt="Science Explorer" class="img-fluid" fetchpriority="high" loading="eager" decoding="async">
                         <div class="s-card-title">Science Explorer</div>
                         <div class="s-card-desc">Discover the world with experiments!</div>
                     </div>
@@ -304,7 +304,7 @@
             <div class="col-4">
                 <div class="position-relative">
                     <div class="s-card" style="background: linear-gradient(160deg, #FFCC9E 0%, #FFB37C 100%); box-shadow: 0 10px 0 #CC7A3C, 0 14px 28px rgba(200,120,60,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
-                        <img src="{{ asset('uploads/images/test paper.png') }}" alt="English Storytime" class="img-fluid">
+                        <img src="{{ asset('uploads/images/test paper.png') }}" alt="English Storytime" class="img-fluid" fetchpriority="high" loading="eager" decoding="async">
                         <div class="s-card-title">English Storytime</div>
                         <div class="s-card-desc">Read tales and grow your vocabulary!</div>
                     </div>
@@ -321,7 +321,7 @@
         <div class="section-title mt-2">🗺️ Daily Quest</div>
         <div class="quest-preview d-flex align-items-center gap-3 mb-4">
             <div class="flex-shrink-0" style="width: 35%; max-width: 130px;">
-                <img src="{{ asset('uploads/images/treasuremap.png') }}" alt="Treasure Map" style="width:100%; border-radius:12px;">
+                <img src="{{ asset('uploads/images/treasuremap.png') }}" alt="Treasure Map" style="width:100%; border-radius:12px;" fetchpriority="high" loading="eager" decoding="async">
             </div>
             <div class="flex-grow-1">
                 <div style="font-family:'Bubblegum Sans',cursive; font-size:clamp(16px,5vw,22px); color:#5E4D3B; margin-bottom:4px;">Daily Quest</div>

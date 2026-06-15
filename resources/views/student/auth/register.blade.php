@@ -270,8 +270,8 @@
                     <div class="class-opt">
                         <input type="radio" name="class_id" id="cls{{ $cls->id }}" value="{{ $cls->id }}" {{ old('class_id') == $cls->id ? 'checked' : '' }} required>
                         <label for="cls{{ $cls->id }}">
-                            <span style="font-size:20px">{{ $cls->icon ?? '📚' }}</span>
-                            <span>{{ $cls->name }}</span>
+                            <span style="font-size:20px">📚</span>
+                            <span>Class {{ $cls->standard }} {{ $cls->section }}</span>
                         </label>
                     </div>
                     @endforeach

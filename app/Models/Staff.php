@@ -12,6 +12,7 @@ class Staff extends Model
     protected $fillable = [
         'created_for',
         'institute_id',
+        'staff_category_id',
         'designation',
         'department',
         'joining_date',
@@ -30,6 +31,14 @@ class Staff extends Model
     public function subjects()
     {
         return $this->hasMany(StaffSubject::class, 'staff_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(
+            StaffCategory::class,
+            'staff_category_id'
+        );
     }
 
 }

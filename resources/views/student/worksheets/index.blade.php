@@ -368,7 +368,7 @@
                     </ul>
                 </div>
                 <div class="eb-illustration">
-                    <img src="{{ asset('uploads/images/icons/Publication.png') }}" alt="Publications">
+                    <img src="{{ asset('uploads/images/icons/Publication.png') }}" alt="Publications" fetchpriority="high" loading="eager" decoding="async">
                 </div>
             </div>
         </div>
@@ -401,7 +401,7 @@
                     </ul>
                 </div>
                 <div class="eb-illustration">
-                    <img src="{{ asset('uploads/images/icons/class.png') }}" alt="Classes">
+                    <img src="{{ asset('uploads/images/icons/class.png') }}" alt="Classes" fetchpriority="high" loading="eager" decoding="async">
                 </div>
             </div>
         </div>
@@ -434,7 +434,7 @@
                     </ul>
                 </div>
                 <div class="eb-illustration">
-                    <img src="{{ asset('uploads/images/icons/subject.png') }}" alt="Subjects">
+                    <img src="{{ asset('uploads/images/icons/subject.png') }}" alt="Subjects" fetchpriority="high" loading="eager" decoding="async">
                 </div>
             </div>
         </div>

@@ -31,7 +31,7 @@ Route::get('/', function () {
 Route::prefix('student')->name('student.')->group(function () {
 
     // Guest only
-    Route::middleware('guest')->group(function () {
+    Route::middleware('guest:student')->group(function () {
         Route::get('/welcome',   function () { return view('student.guest_dashboard'); })->name('welcome');
         Route::get('/login',     [StudentAuthController::class, 'showLogin'])->name('login');
         Route::post('/login',    [StudentAuthController::class, 'login'])->name('login.submit');
@@ -42,7 +42,7 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::post('/logout', [StudentAuthController::class, 'logout'])->name('logout');
 
     // Authenticated student
-    Route::middleware('auth')->group(function () {
+    Route::middleware('auth:student')->group(function () {
         Route::get('/dashboard',         [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/subjects',          [CourseController::class, 'index'])->name('courses.index');
@@ -61,6 +61,13 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::post('/ebooks/{id}/assign',   [EbookController::class, 'assign'])->name('ebooks.assign');
 
         Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile');
+        Route::get('/profile/change-password', [StudentProfileController::class, 'changePassword'])->name('profile.change_password');
+        Route::post('/profile/verify-otp', [StudentProfileController::class, 'verifyOtp'])->name('profile.verify_otp');
+        Route::post('/profile/resend-otp', [StudentProfileController::class, 'resendOtp'])->name('profile.resend_otp');
+        Route::post('/profile/update-password', [StudentProfileController::class, 'updatePassword'])->name('profile.update_password');
+        Route::post('/profile/avatar', [StudentProfileController::class, 'updateAvatar'])->name('profile.update_avatar');
+
+        Route::get('/terms-and-conditions', function () { return view('student.terms'); })->name('terms');
 
         Route::post('/attendance/mark', [DashboardController::class, 'markAttendance'])->name('attendance.mark');
     });

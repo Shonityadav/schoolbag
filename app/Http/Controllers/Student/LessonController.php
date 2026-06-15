@@ -18,7 +18,7 @@ class LessonController extends Controller
 
     public function show(int $id)
     {
-        $user   = Auth::user();
+        $user   = Auth::guard('student')->user();
         $lesson = Lesson::with('chapter.course')->findOrFail($id);
 
         // Guard: lesson must belong to student's class
@@ -129,7 +129,7 @@ class LessonController extends Controller
 
     public function complete(Request $request, int $id)
     {
-        $user   = Auth::user();
+        $user   = Auth::guard('student')->user();
         $lesson = Lesson::with('chapter.course')->findOrFail($id);
         abort_unless($lesson->chapter->course->class_id === $user->class_id || $lesson->chapter->course->user_id === $user->id, 403);
 
@@ -274,6 +274,14 @@ class LessonController extends Controller
                             ->orderBy('order')
                             ->first();
 
+        // Check if chapter was just completed
+        $unlockedAvatar = null;
+        if (!$nextLesson && $previousAttempts === 0) {
+            if ($lesson->chapter->isCompletedBy($user)) {
+                $unlockedAvatar = $user->awardChestDrop();
+            }
+        }
+
         if ($nextLesson) {
             if ($request->has('course_id') && $request->has('stage') && $request->has('chapter_id')) {
                 return redirect()->route('student.courses.stage', [
@@ -287,8 +295,14 @@ class LessonController extends Controller
                              ->with('success', '+' . $lesson->xp_reward . ' XP earned! 🌟');
         }
 
-        return redirect()->route('student.courses.show', $lesson->chapter->course_id)
+        $redirect = redirect()->route('student.courses.show', $lesson->chapter->course_id)
             ->with('success', 'Stage completed! ' . ($score !== null ? 'Your score: ' . $score . '/10' : ''));
+
+        if ($unlockedAvatar) {
+            $redirect->with('chest_unlocked', $unlockedAvatar);
+        }
+
+        return $redirect;
     }
 
     private function generateHardWordsFromGemini($pages)

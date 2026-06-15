@@ -1,17 +1,17 @@
 <div id="magic-splash-screen">
     <div class="scene">
         <div class="books-wrapper">
-            <img src="{{ asset('uploads/images/splash/book.png') }}" class="book">
+            <img src="{{ asset('uploads/images/splash/book.png') }}" class="book" fetchpriority="high" loading="eager" decoding="async">
         </div>
         <div class="bag-container">
             <div class="glow"></div>
             <div class="inside-shadow"></div>
-            <img src="{{ asset('uploads/images/splash/bag-body.png') }}" class="bag-body">
+            <img src="{{ asset('uploads/images/splash/bag-body.png') }}" class="bag-body" fetchpriority="high" loading="eager" decoding="async">
             <div class="flap-wrapper">
-                <img src="{{ asset('uploads/images/splash/png2.png') }}" class="flap flap-front">
-                <img src="{{ asset('uploads/images/splash/png1.png') }}" class="flap flap-back">
+                <img src="{{ asset('uploads/images/splash/png2.png') }}" class="flap flap-front" fetchpriority="high" loading="eager" decoding="async">
+                <img src="{{ asset('uploads/images/splash/png1.png') }}" class="flap flap-back" fetchpriority="high" loading="eager" decoding="async">
                 <div class="lock-wrap">
-                    <img src="{{ asset('uploads/images/splash/lock.png') }}" class="lock">
+                    <img src="{{ asset('uploads/images/splash/lock.png') }}" class="lock" fetchpriority="high" loading="eager" decoding="async">
                 </div>
             </div>
         </div>

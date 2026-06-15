@@ -269,7 +269,7 @@ function createLevels() {
             : ASSET_BASE + "pin.png";
 
         level.innerHTML = `
-            <img src="${pinSrc}" class="cjm-pin-img" alt="Chapter ${i+1}">
+            <img src="${pinSrc}" class="cjm-pin-img" alt="Chapter ${i+1}" fetchpriority="high" loading="eager" decoding="async">
             <span class="cjm-level-number">${i < completedLevels ? '' : (i + 1)}</span>
         `;
 
