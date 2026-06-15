@@ -87,6 +87,7 @@ use App\Http\Controllers\Admin\AdminAdminsController;
 use App\Http\Controllers\Admin\AdminClassController;
 use App\Http\Controllers\Admin\AdminAttendanceController;
 use App\Http\Controllers\Admin\AdminEbookAssignmentController;
+use App\Http\Controllers\Admin\AdminStaffCategoryController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
@@ -124,6 +125,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/staff/sample-csv',        [AdminStaffController::class, 'sampleCsv'])->middleware('permission:staff.edit')->name('staff.sample-csv');
         Route::post('/staff/import',           [AdminStaffController::class, 'importCsv'])->middleware('permission:staff.edit')->name('staff.import');
 
+        // Staff Categories
+        Route::resource('staff-categories', AdminStaffCategoryController::class)->except(['show']);
+
         // Admins CRUD
         Route::get('/admins',                   [AdminAdminsController::class, 'index'])->name('admins.index');
         Route::get('/admins/create',            [AdminAdminsController::class, 'create'])->name('admins.create');
@@ -153,39 +157,3 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/ebook-assignments/assign', [AdminEbookAssignmentController::class, 'assign'])->name('ebook_assignments.assign');
     });
 });
-
-Route::get('/run-db-fix', function() {
-    $output = [];
-    try {
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE lesson_progress ADD INDEX lesson_progress_user_id_index (user_id)");
-        $output[] = "Added index for user_id";
-    } catch (\Exception $e) { $output[] = $e->getMessage(); }
-
-    try {
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE lesson_progress DROP FOREIGN KEY lesson_progress_lesson_id_foreign");
-        $output[] = "Dropped FK lesson_progress_lesson_id_foreign";
-    } catch (\Exception $e) { $output[] = $e->getMessage(); }
-
-    try {
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE lesson_progress DROP INDEX lesson_progress_user_id_lesson_id_unique");
-        $output[] = "Dropped unique index";
-    } catch (\Exception $e) { $output[] = $e->getMessage(); }
-
-    try {
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE lesson_progress DROP INDEX lesson_progress_lesson_id_foreign");
-        $output[] = "Dropped lesson_id index";
-    } catch (\Exception $e) { $output[] = $e->getMessage(); }
-
-    try {
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE lesson_progress DROP COLUMN lesson_id");
-        $output[] = "Dropped column lesson_id";
-    } catch (\Exception $e) { $output[] = $e->getMessage(); }
-
-    try {
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE lesson_progress ADD UNIQUE lesson_progress_unique (user_id, chapter_id, stage_number)");
-        $output[] = "Added unique constraint for user/chapter/stage";
-    } catch (\Exception $e) { $output[] = $e->getMessage(); }
-
-    return implode("<br>", $output);
-});
-

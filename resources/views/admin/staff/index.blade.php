@@ -65,7 +65,7 @@
                     <th>Staff Member</th>
                     <th>Email</th>
                     <th>Phone</th>
-                    <th>Role</th>
+                    <th>Category</th>
                     <th>Permissions</th>
                     <th>Assigned Classes</th>
                     <th>Joined</th>
@@ -90,7 +90,7 @@
                     <td style="color:var(--sb-muted);">{{ $member->phone ?? '—' }}</td>
                     <td>
                         <span style="background:#F0FDF4;color:var(--sb-green);padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;">
-                            Administrator
+                            {{ $member->staff?->category?->name ?? 'N/A' }}
                         </span>
                     </td>
                     <td>

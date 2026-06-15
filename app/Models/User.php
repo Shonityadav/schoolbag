@@ -13,7 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password',
-        'class_id', 'role', 'user_type', 'institute_id', 'avatar',
+        'role', 'user_type', 'institute_id', 'avatar',
         'banner',
         'total_xp', 'streak_count', 'last_streak_date', 'phone',
         'unlocked_items'
@@ -200,5 +200,39 @@ class User extends Authenticatable
             'user_id',
             'class_id'
         )->withTimestamps();
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'created_for');
+    }
+
+    public function staff()
+    {
+        return $this->hasOne(
+            Staff::class,
+            'created_for'
+        );
+    }
+
+    public function managedCategories()
+    {
+        return $this->belongsToMany(
+            StaffCategory::class,
+            'staff_category_user',
+            'user_id',
+            'staff_category_id'
+        )->withTimestamps();
+    }
+
+    public function canManageCategory($categoryId)
+    {
+        if ($this->user_type == 1) {
+            return true;
+        }
+
+        return $this->managedCategories()
+            ->where('staff_categories.id', $categoryId)
+            ->exists();
     }
 }

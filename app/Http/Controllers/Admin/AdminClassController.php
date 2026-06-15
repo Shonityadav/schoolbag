@@ -111,4 +111,3 @@ class AdminClassController extends Controller
             ->with('success', 'Class deleted successfully.');
     }
 }
-

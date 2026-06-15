@@ -458,6 +458,10 @@
                 <i class="bi bi-building"></i> Classes
                 <span class="sb-nav-badge">{{ \App\Models\ClassModel::where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
+            <a href="{{ route('admin.staff-categories.index') }}" class="sb-nav-link @yield('admin_nav_staff_categories', '')">
+                <i class="bi bi-tags"></i> Staff Categories
+                <span class="sb-nav-badge">{{ \App\Models\StaffCategory::where('institute_id', auth()->user()->institute_id)->count() }}</span>
+            </a>
         </div>
 
         <div class="sb-nav-group">

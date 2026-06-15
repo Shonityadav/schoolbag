@@ -642,15 +642,15 @@ body {
                     </div>
                 </div>
                 {{-- Treasure Chest --}}
-                @if($chapterCompleted)
-                    <div class="treasure-box-img" style="height: 72px; animation: none; cursor: default;" title="Reward Claimed!">
+                <div class="treasure-box-container" style="position: absolute; top: -18px; right: -10px; z-index: 30; width: 72px; height: 72px;">
+                    <img id="static-chest-closed" src="{{ asset('uploads/images/stage/treasure box.png') }}" class="treasure-box-img" alt="Treasure Chest" style="width: 100%; height: 100%; position: relative; top: 0; right: 0;" fetchpriority="high" loading="eager" decoding="async">
+                    
+                    <div id="static-chest-opened" style="display: none; height: 72px; cursor: default; position: relative;" title="Reward Claimed!">
                         <img src="{{ asset('uploads/images/stage/star.png') }}" style="position: absolute; top: -15px; left: 50%; width: 50px; margin-left: -25px; z-index: 1; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.9));" alt="Star" fetchpriority="high" loading="eager" decoding="async">
                         <img src="{{ asset('uploads/images/stage/lower_chest.png') }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 2;" alt="Opened Chest" fetchpriority="high" loading="eager" decoding="async">
                         <img src="{{ asset('uploads/images/stage/upper_chest_opened.png') }}" style="position: absolute; top: -19%; left: -5%; width: 120%; height: 50%; object-fit: contain; z-index: 3;" alt="Lid" fetchpriority="high" loading="eager" decoding="async">
                     </div>
-                @else
-                    <img src="{{ asset('uploads/images/stage/treasure box.png') }}" class="treasure-box-img" alt="Treasure Chest" fetchpriority="high" loading="eager" decoding="async">
-                @endif
+                </div>
             </div>
         </div>
 
@@ -923,10 +923,23 @@ body {
         const chapterId = "{{ $activeChapter->id ?? 'unknown' }}";
         const storageKey = 'chest_opened_chapter_' + chapterId;
         
-        if (!localStorage.getItem(storageKey)) {
+        const staticChestClosed = document.getElementById('static-chest-closed');
+        const staticChestOpened = document.getElementById('static-chest-opened');
+        
+        if (localStorage.getItem(storageKey)) {
+            // Already claimed
+            staticChestClosed.style.display = 'none';
+            staticChestOpened.style.display = 'block';
+        } else {
+            // Make the closed chest clickable to open the overlay
+            staticChestClosed.style.cursor = 'pointer';
+            staticChestClosed.addEventListener('click', () => {
+                document.getElementById('chest-unlock-overlay').classList.add('show');
+            });
+            
+            // Auto show the popup once
             setTimeout(() => {
                 document.getElementById('chest-unlock-overlay').classList.add('show');
-                localStorage.setItem(storageKey, 'true');
             }, 1500); 
         }
     });

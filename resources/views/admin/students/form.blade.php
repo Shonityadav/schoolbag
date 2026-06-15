@@ -230,7 +230,7 @@
                         <div style="font-size:13px;color:#0C4A6E;line-height:1.6;">
                             <div class="fw-bold mb-1">CSV Format Guide</div>
                             Required columns: <code>name</code>, <code>email</code>, <code>password</code><br>
-                            Optional columns: <code>phone</code>, <code>class_name</code> (must match an existing class name)<br>
+                            Optional columns: <code>phone</code><br>
                             First row must be the header row. Passwords must be at least 6 characters.
                         </div>
                         <a href="{{ route('admin.students.sample-csv') }}"
@@ -269,7 +269,6 @@
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Phone</th>
-                                        <th>Class</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -283,6 +282,16 @@
                           enctype="multipart/form-data" id="csv-form-students">
                         @csrf
                         <input type="file" name="csv_file" id="csv-hidden-students" style="display:none;" accept=".csv">
+
+                        <div class="mb-3 mt-4" style="max-width:300px;">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Assign Class to Imported Students <span class="text-danger">*</span></label>
+                            <select name="class_id" class="form-select" style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;" required>
+                                <option value="">— Select Class —</option>
+                                @foreach($classes as $class)
+                                    <option value="{{ $class->id }}">{{ $class->standard }} - {{ $class->section }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="d-flex gap-2 mt-4 pt-3" style="border-top:1px solid var(--sb-border);">
                             <button type="submit" id="csv-submit-students"
                                     class="btn text-white d-flex align-items-center gap-2"
@@ -397,13 +406,12 @@ function initCsvDropzone(suffix) {
                 <td>${r.name || '<span style="color:var(--sb-red)">—</span>'}</td>
                 <td style="color:var(--sb-muted);">${r.email || '<span style="color:var(--sb-red)">—</span>'}</td>
                 <td style="color:var(--sb-muted);">${r.phone || '—'}</td>
-                <td style="color:var(--sb-muted);">${r.class_name || '—'}</td>
                 <td>${statusIcon}</td>
             </tr>`;
         });
 
         if (rows.length > 50) {
-            tbody.innerHTML += `<tr><td colspan="6" style="text-align:center;color:var(--sb-muted);font-size:12px;padding:10px;">
+            tbody.innerHTML += `<tr><td colspan="5" style="text-align:center;color:var(--sb-muted);font-size:12px;padding:10px;">
                 … and ${rows.length - 50} more rows (all will be imported)
             </td></tr>`;
         }

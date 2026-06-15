@@ -52,4 +52,3 @@ class ClassModel extends Model
         );
     }
 }
-

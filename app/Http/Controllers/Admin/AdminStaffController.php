@@ -4,12 +4,36 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Staff;
+use App\Models\Permission;
+use App\Models\ClassModel;
+use App\Models\StaffCategory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class AdminStaffController extends Controller
 {
+    private function canAccessStaff(User $staffUser)
+    {
+        $user = auth()->user();
+
+        if ($user->user_type == 1) {
+            return true;
+        }
+
+        // Must check if the requested staff user belongs to a category the current user manages
+        if (!$staffUser->staff) {
+            return false; // Or true if unassigned? Let's say false.
+        }
+
+        $assignedCategoryIds = $user->managedCategories()
+            ->pluck('staff_categories.id')
+            ->toArray();
+
+        return in_array($staffUser->staff->staff_category_id, $assignedCategoryIds);
+    }
     /**
      * List all staff with search + pagination.
      */
@@ -17,21 +41,43 @@ class AdminStaffController extends Controller
     {
         $query = User::where('user_type', 2)
             ->where('institute_id', auth()->user()->institute_id)
-            ->with(['permissions', 'classes'])
+            ->with([
+                'permissions',
+                'classes',
+                'staff.category'
+            ])
             ->latest();
 
+        // Category restriction
+        if (auth()->user()->user_type != 1) {
+
+            $categoryIds = auth()->user()
+                ->managedCategories
+                ->pluck('id')
+                ->toArray();
+
+            $query->whereHas('staff', function ($q) use ($categoryIds) {
+                $q->whereIn('staff_category_id', $categoryIds);
+            });
+        }
+
         if ($request->filled('search')) {
+
             $s = $request->search;
+
             $query->where(function ($q) use ($s) {
-                $q->where('name', 'like', "%$s%")
-                  ->orWhere('email', 'like', "%$s%")
-                  ->orWhere('phone', 'like', "%$s%");
+                $q->where('name', 'like', "%{$s}%")
+                    ->orWhere('email', 'like', "%{$s}%")
+                    ->orWhere('phone', 'like', "%{$s}%");
             });
         }
 
         $staff = $query->paginate(15)->withQueryString();
 
-        return view('admin.staff.index', compact('staff'));
+        return view(
+            'admin.staff.index',
+            compact('staff')
+        );
     }
 
     /**
@@ -39,13 +85,23 @@ class AdminStaffController extends Controller
      */
     public function create()
     {
-        $allPermissions = \App\Models\Permission::all();
-        $allClasses = \App\Models\ClassModel::orderBy('standard')->get();
-        
+        $allPermissions = Permission::all();
+
+        $allClasses = ClassModel::where(
+            'institute_id',
+            auth()->user()->institute_id
+        )->orderBy('standard')->get();
+
+        $categories = StaffCategory::where(
+            'institute_id',
+            auth()->user()->institute_id
+        )->orderBy('name')->get();
+
         return view('admin.staff.form', [
             'member' => null,
             'allPermissions' => $allPermissions,
-            'allClasses' => $allClasses
+            'allClasses' => $allClasses,
+            'categories' => $categories,
         ]);
     }
 
@@ -55,52 +111,100 @@ class AdminStaffController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'phone'    => 'nullable|string|max:20',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:6|confirmed',
+
+            'staff_category_id' => 'required|exists:staff_categories,id',
+            'designation' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
+
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
+
             'classes' => 'nullable|array',
             'classes.*' => 'exists:classes,id',
+            
+            'managed_categories' => 'nullable|array',
+            'managed_categories.*' => 'exists:staff_categories,id',
         ]);
 
-        $staff = User::create([
-            'institute_id' => auth()->user()->institute_id,
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'phone'    => $data['phone'] ?? null,
-            'password' => Hash::make($data['password']),
-            'role'     => 'staff',
-            'user_type'=> 2,
-        ]);
+        DB::transaction(function () use ($data) {
 
-        if (isset($data['permissions'])) {
-            $staff->permissions()->sync($data['permissions']);
-        }
-        
-        if (isset($data['classes'])) {
-            $staff->classes()->sync($data['classes']);
-        }
+            $staffUser = User::create([
+                'institute_id' => auth()->user()->institute_id,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'password' => Hash::make($data['password']),
+                'role' => 'staff',
+                'user_type' => 2,
+            ]);
 
-        return redirect()->route('admin.staff.index')
+            Staff::create([
+                'created_for' => $staffUser->id,
+                'institute_id' => auth()->user()->institute_id,
+                'staff_category_id' => $data['staff_category_id'],
+                'designation' => $data['designation'] ?? null,
+                'department' => $data['department'] ?? null,
+                'joining_date' => now(),
+            ]);
+
+            $staffUser->permissions()->sync(
+                $data['permissions'] ?? []
+            );
+
+            $staffUser->classes()->sync(
+                $data['classes'] ?? []
+            );
+
+            $staffUser->managedCategories()->sync(
+                $data['managed_categories'] ?? []
+            );
+        });
+
+        return redirect()
+            ->route('admin.staff.index')
             ->with('success', 'Staff member created successfully.');
     }
-
     /**
      * Show edit form.
      */
     public function edit(User $staff)
     {
-        abort_unless($staff->user_type == 2 && $staff->institute_id == auth()->user()->institute_id, 404);
-        
-        $allPermissions = \App\Models\Permission::all();
-        $allClasses = \App\Models\ClassModel::orderBy('standard')->get();
-        
+        abort_unless(
+            $staff->user_type == 2 &&
+            $staff->institute_id == auth()->user()->institute_id,
+            404
+        );
+
+        abort_unless(
+            $this->canAccessStaff($staff),
+            403
+        );
+
+        $allPermissions = Permission::all();
+
+        $allClasses = ClassModel::where(
+            'institute_id',
+            auth()->user()->institute_id
+        )->get();
+
+        $categories = StaffCategory::where(
+            'institute_id',
+            auth()->user()->institute_id
+        )->get();
+
         return view('admin.staff.form', [
-            'member' => $staff,
+            'member' => $staff->load([
+                'permissions',
+                'classes',
+                'staff'
+            ]),
             'allPermissions' => $allPermissions,
-            'allClasses' => $allClasses
+            'allClasses' => $allClasses,
+            'categories' => $categories,
         ]);
     }
 
@@ -111,8 +215,13 @@ class AdminStaffController extends Controller
     {
         abort_unless($staff->user_type == 2 && $staff->institute_id == auth()->user()->institute_id, 404);
 
+        abort_unless($this->canAccessStaff($staff), 403);
+
         $data = $request->validate([
             'name'     => 'required|string|max:255',
+            'staff_category_id' => 'required|exists:staff_categories,id',
+            'designation' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
             'email'    => ['required', 'email', Rule::unique('users')->ignore($staff->id)],
             'phone'    => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6|confirmed',
@@ -120,6 +229,8 @@ class AdminStaffController extends Controller
             'permissions.*' => 'exists:permissions,id',
             'classes' => 'nullable|array',
             'classes.*' => 'exists:classes,id',
+            'managed_categories' => 'nullable|array',
+            'managed_categories.*' => 'exists:staff_categories,id',
         ]);
 
         $staff->name  = $data['name'];
@@ -131,6 +242,25 @@ class AdminStaffController extends Controller
         }
 
         $staff->save();
+        if ($staff->staff) {
+
+            $staff->staff->update([
+                'staff_category_id' => $data['staff_category_id'],
+                'designation' => $data['designation'] ?? null,
+                'department' => $data['department'] ?? null,
+            ]);
+
+        } else {
+
+            Staff::create([
+                'created_for' => $staff->id,
+                'institute_id' => $staff->institute_id,
+                'staff_category_id' => $data['staff_category_id'],
+                'designation' => $data['designation'] ?? null,
+                'department' => $data['department'] ?? null,
+                'joining_date' => now(),
+            ]);
+        }
 
         if (isset($data['permissions'])) {
             $staff->permissions()->sync($data['permissions']);
@@ -144,6 +274,12 @@ class AdminStaffController extends Controller
             $staff->classes()->detach();
         }
 
+        if (isset($data['managed_categories'])) {
+            $staff->managedCategories()->sync($data['managed_categories']);
+        } else {
+            $staff->managedCategories()->detach();
+        }
+
         return redirect()->route('admin.staff.index')
             ->with('success', 'Staff member updated successfully.');
     }
@@ -154,6 +290,13 @@ class AdminStaffController extends Controller
     public function destroy(User $staff)
     {
         abort_unless($staff->user_type == 2 && $staff->institute_id == auth()->user()->institute_id, 404);
+
+        abort_unless($this->canAccessStaff($staff), 403);
+
+        if ($staff->staff) {
+            $staff->staff->delete();
+        }
+
         $staff->delete();
 
         return redirect()->route('admin.staff.index')
@@ -185,7 +328,10 @@ class AdminStaffController extends Controller
      */
     public function importCsv(Request $request)
     {
-        $request->validate(['csv_file' => 'required|file|mimes:csv,txt|max:2048']);
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+            'staff_category_id' => 'required|exists:staff_categories,id'
+        ]);
 
         $file    = $request->file('csv_file');
         $handle  = fopen($file->getPathname(), 'r');
@@ -219,7 +365,7 @@ class AdminStaffController extends Controller
                 continue;
             }
 
-            User::create([
+            $user = User::create([
                 'institute_id' => auth()->user()->institute_id,
                 'name'     => $name,
                 'email'    => $email,
@@ -227,6 +373,13 @@ class AdminStaffController extends Controller
                 'password' => Hash::make($password),
                 'role'     => 'staff',
                 'user_type'=> 2,
+            ]);
+
+            Staff::create([
+                'created_for' => $user->id,
+                'institute_id' => $user->institute_id,
+                'staff_category_id' => $request->staff_category_id,
+                'joining_date' => now(),
             ]);
             $imported++;
         }
