@@ -192,21 +192,21 @@ body {
         <!-- The 3 Div Cards - Side by Side on Mobile -->
             <div class="row g-2 g-md-3 mb-4" style="overflow: visible; padding-top: 8px;">
                 <div class="col-4">
-                    <a href="{{ route('student.courses.index') }}" class="s-card h-100 d-flex flex-column align-items-center text-center p-2 p-md-3" style="background: linear-gradient(160deg, #A8E8FF 0%, #8BDDFF 100%); border-radius: 20px; text-decoration: none; box-shadow: 0 10px 0 #4AADCC, 0 14px 28px rgba(70,160,200,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
+                    <a href="{{ route('student.assigned_ebooks.index') }}" class="s-card h-100 d-flex flex-column align-items-center text-center p-2 p-md-3" style="background: linear-gradient(160deg, #A8E8FF 0%, #8BDDFF 100%); border-radius: 20px; text-decoration: none; box-shadow: 0 10px 0 #4AADCC, 0 14px 28px rgba(70,160,200,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
                         <img src="{{ asset('uploads/images/owl teacher.png') }}" alt="Math Adventure" class="img-fluid mb-2" style="max-height: 80px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));" fetchpriority="high" loading="eager" decoding="async">
                         <div class="s-card-title text-white" style="font-family: 'Bubblegum Sans', cursive; font-size: clamp(14px, 4vw, 20px); font-weight: 900; line-height: 1.1; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Math Adventure</div>
                         <div class="s-card-desc text-white" style="font-size: clamp(9px, 2.5vw, 13px); line-height: 1.2; opacity: 0.9;">Solve equations and unlock treasure!</div>
                     </a>
                 </div>
                 <div class="col-4">
-                    <a href="{{ route('student.courses.index') }}" class="s-card h-100 d-flex flex-column align-items-center text-center p-2 p-md-3" style="background: linear-gradient(160deg, #BAEDAA 0%, #9DE182 100%); border-radius: 20px; text-decoration: none; box-shadow: 0 10px 0 #5CAA44, 0 14px 28px rgba(80,160,60,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
+                    <a href="{{ route('student.assigned_ebooks.index') }}" class="s-card h-100 d-flex flex-column align-items-center text-center p-2 p-md-3" style="background: linear-gradient(160deg, #BAEDAA 0%, #9DE182 100%); border-radius: 20px; text-decoration: none; box-shadow: 0 10px 0 #5CAA44, 0 14px 28px rgba(80,160,60,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
                         <img src="{{ asset('uploads/images/robot.png') }}" alt="Science Explorer" class="img-fluid mb-2" style="max-height: 80px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));" fetchpriority="high" loading="eager" decoding="async">
                         <div class="s-card-title text-white" style="font-family: 'Bubblegum Sans', cursive; font-size: clamp(14px, 4vw, 20px); font-weight: 900; line-height: 1.1; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Science Explorer</div>
                         <div class="s-card-desc text-white" style="font-size: clamp(9px, 2.5vw, 13px); line-height: 1.2; opacity: 0.9;">Discover the world with experiments!</div>
                     </a>
                 </div>
                 <div class="col-4">
-                    <a href="{{ route('student.courses.index') }}" class="s-card h-100 d-flex flex-column align-items-center text-center p-2 p-md-3" style="background: linear-gradient(160deg, #FFCC9E 0%, #FFB37C 100%); border-radius: 20px; text-decoration: none; box-shadow: 0 10px 0 #CC7A3C, 0 14px 28px rgba(200,120,60,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
+                    <a href="{{ route('student.assigned_ebooks.index') }}" class="s-card h-100 d-flex flex-column align-items-center text-center p-2 p-md-3" style="background: linear-gradient(160deg, #FFCC9E 0%, #FFB37C 100%); border-radius: 20px; text-decoration: none; box-shadow: 0 10px 0 #CC7A3C, 0 14px 28px rgba(200,120,60,0.3), inset 0 1px 0 rgba(255,255,255,0.5);">
                         <img src="{{ asset('uploads/images/test paper.png') }}" alt="English Storytime" class="img-fluid mb-2" style="max-height: 80px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2));" fetchpriority="high" loading="eager" decoding="async">
                         <div class="s-card-title text-white" style="font-family: 'Bubblegum Sans', cursive; font-size: clamp(14px, 4vw, 20px); font-weight: 900; line-height: 1.1; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">English Storytime</div>
                         <div class="s-card-desc text-white" style="font-size: clamp(9px, 2.5vw, 13px); line-height: 1.2; opacity: 0.9;">Read tales and grow your vocabulary!</div>

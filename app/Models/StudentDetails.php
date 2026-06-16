@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Student extends Model
+class StudentDetails extends Model
 {
-    protected $table = 'students';
+    use HasFactory;
+
+    protected $table = 'student_details';
 
     protected $fillable = [
         'created_for',      // FK → users.id (student login)

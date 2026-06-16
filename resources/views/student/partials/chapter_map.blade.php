@@ -177,7 +177,7 @@
 
 {{-- ── HTML (from map.html) ── --}}
 <div id="chapter-journey-map" style="{{ isset($requestedChapterId) && $requestedChapterId ? 'display: none; opacity: 0;' : '' }}">
-    <a href="{{ route('student.courses.index') }}" style="position: fixed; top: 20px; left: 10px; z-index: 9000; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Subjects">
+    <a href="{{ route('student.assigned_ebooks.index') }}" style="position: fixed; top: 20px; left: 10px; z-index: 9000; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Subjects">
         <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 52px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
     </a>
     <div id="cjm-map-container">

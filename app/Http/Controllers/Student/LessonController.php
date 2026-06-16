@@ -301,7 +301,7 @@ class LessonController extends Controller
 
         if ($nextLesson) {
             if ($request->has('course_id') && $request->has('stage') && $request->has('chapter_id')) {
-                return redirect()->route('student.courses.stage', [
+                return redirect()->route('student.assigned_ebooks.stage', [
                     'id' => $request->input('course_id'),
                     'stage' => $request->input('stage') + 1,
                     'chapter_id' => $request->input('chapter_id')
@@ -312,7 +312,7 @@ class LessonController extends Controller
                              ->with('success', '+' . $lesson->xp_reward . ' XP earned! 🌟');
         }
 
-        $redirect = redirect()->route('student.courses.show', $lesson->chapter->course_id)
+        $redirect = redirect()->route('student.assigned_ebooks.show', $lesson->chapter->course_id)
             ->with('success', 'Stage completed! ' . ($score !== null ? 'Your score: ' . $score . '/10' : ''));
 
         if ($unlockedAvatar) {

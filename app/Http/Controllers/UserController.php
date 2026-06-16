@@ -11,8 +11,8 @@ use DB;
 use Hash;
 use Auth;
 use Illuminate\Support\Arr;
-use App\Models\Staff;
-use App\Models\Students;
+use App\Models\StaffDetails;
+use App\Models\StudentDetailss;
     
 class UserController extends Controller
 {

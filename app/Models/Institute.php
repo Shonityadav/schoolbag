@@ -20,12 +20,12 @@ class Institute extends Model
 
     public function staff()
     {
-        return $this->hasMany(Staff::class, 'institute_id');
+        return $this->hasMany(StaffDetails::class, 'institute_id');
     }
 
     public function students()
     {
-        return $this->hasMany(Student::class, 'institute_id');
+        return $this->hasMany(StudentDetails::class, 'institute_id');
     }
 
     public function attendances()

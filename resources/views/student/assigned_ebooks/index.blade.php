@@ -27,7 +27,7 @@
 
     <div class="grid-3">
         @forelse($courses as $course)
-        <a href="{{ route('student.courses.show', $course->id) }}" class="subject-card" style="--c1:{{ $course->color }}33;--c2:{{ $course->color }}11">
+        <a href="{{ route('student.assigned_ebooks.show', $course->id) }}" class="subject-card" style="--c1:{{ $course->color }}33;--c2:{{ $course->color }}11">
             <div class="subject-badge">{{ $course->chapters_count }} chapters</div>
             <span class="subject-icon">{{ $course->icon }}</span>
             <div class="subject-name">{{ $course->title }}</div>

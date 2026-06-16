@@ -442,7 +442,7 @@
 
         <div class="sb-nav-group">
             <div class="sb-nav-label">People</div>
-            <a href="{{ route('admin.students.index') }}" class="sb-nav-link @yield('admin_nav_students', '')">
+            <a href="{{ route('admin.student_details.index') }}" class="sb-nav-link @yield('admin_nav_students', '')">
                 <i class="bi bi-people"></i> Students
                 <span class="sb-nav-badge">{{ \App\Models\User::where('user_type', 3)->where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
@@ -450,7 +450,7 @@
                 <i class="bi bi-shield-lock"></i> Admins
                 <span class="sb-nav-badge">{{ \App\Models\User::where('user_type', 1)->where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
-            <a href="{{ route('admin.staff.index') }}" class="sb-nav-link @yield('admin_nav_staff', '')">
+            <a href="{{ route('admin.staff_details.index') }}" class="sb-nav-link @yield('admin_nav_staff', '')">
                 <i class="bi bi-person-badge"></i> Staff
                 <span class="sb-nav-badge">{{ \App\Models\User::where('user_type', 2)->where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
-    protected $table = 'students';
+    protected $table = 'student_details';
 
     protected $fillable = [
         'created_for',      // FK → users.id (student login)

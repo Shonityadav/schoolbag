@@ -48,7 +48,7 @@
 @section('admin_content')
 
 <div class="d-flex align-items-center gap-3 mb-4">
-    <a href="{{ route('admin.staff.index') }}"
+    <a href="{{ route('admin.staff_details.index') }}"
        class="sb-icon-btn" style="width:34px;height:34px;border-radius:7px;font-size:16px;">
         <i class="bi bi-arrow-left"></i>
     </a>
@@ -108,7 +108,7 @@
             {{-- ── TAB 1: Single Form ── --}}
             <div class="sb-tab-pane active" id="tab-single">
                 <form method="POST"
-                      action="{{ $isEdit ? route('admin.staff.update', $member) : route('admin.staff.store') }}"
+                      action="{{ $isEdit ? route('admin.staff_details.update', $member) : route('admin.staff_details.store') }}"
                       class="p-4">
                     @csrf
                     @if($isEdit) @method('PUT') @endif
@@ -254,7 +254,7 @@
                             <i class="bi bi-{{ $isEdit ? 'check-lg' : 'person-plus' }}"></i>
                             {{ $isEdit ? 'Save Changes' : 'Create Staff Member' }}
                         </button>
-                        <a href="{{ route('admin.staff.index') }}"
+                        <a href="{{ route('admin.staff_details.index') }}"
                            class="btn btn-outline-secondary"
                            style="font-size:13.5px;border-radius:8px;padding:10px 20px;border-color:var(--sb-border);">
                             Cancel
@@ -276,7 +276,7 @@
                             Optional columns: <code>phone</code><br>
                             First row must be the header row. Passwords must be at least 6 characters.
                         </div>
-                        <a href="{{ route('admin.staff.sample-csv') }}"
+                        <a href="{{ route('admin.staff_details.sample-csv') }}"
                            class="btn btn-sm ms-auto flex-shrink-0 d-flex align-items-center gap-2"
                            style="font-size:12px;border-radius:7px;border:1px solid #BAE6FD;color:#0284C7;background:#fff;white-space:nowrap;padding:6px 12px;">
                             <i class="bi bi-download"></i> Sample CSV
@@ -312,7 +312,7 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('admin.staff.import') }}"
+                    <form method="POST" action="{{ route('admin.staff_details.import') }}"
                           enctype="multipart/form-data" id="csv-form-staff">
                         @csrf
                         <input type="file" name="csv_file" id="csv-hidden-staff" style="display:none;" accept=".csv">
@@ -332,7 +332,7 @@
                                     style="font-size:13.5px;border-radius:8px;background:var(--sb-accent);padding:10px 22px;" disabled>
                                 <i class="bi bi-cloud-upload"></i> Import Staff
                             </button>
-                            <a href="{{ route('admin.staff.index') }}"
+                            <a href="{{ route('admin.staff_details.index') }}"
                                class="btn btn-outline-secondary"
                                style="font-size:13.5px;border-radius:8px;padding:10px 20px;border-color:var(--sb-border);">
                                 Cancel
@@ -402,7 +402,7 @@ function initCsvDropzone(suffix, columns) {
                 ? '<span class="csv-row-ok"><i class="bi bi-check-circle-fill"></i> Ready</span>'
                 : '<span class="csv-row-err"><i class="bi bi-x-circle-fill"></i> ' +
                   (!r.name ? 'Missing name' : !r.email || !r.email.includes('@') ? 'Invalid email' : 'Password too short') + '</span>';
-            const extra = suffix === 'students' ? `<td style="color:var(--sb-muted);">${r.class_name||'—'}</td>` : '';
+            const extra = suffix === 'student_details' ? `<td style="color:var(--sb-muted);">${r.class_name||'—'}</td>` : '';
             tbody.innerHTML += `<tr>
                 <td style="color:var(--sb-muted);font-size:12px;">${r._row}</td>
                 <td>${r.name||'<span style="color:var(--sb-red)">—</span>'}</td>

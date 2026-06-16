@@ -109,7 +109,7 @@ class AdminClassController extends Controller
         abort_unless($class->institute_id == auth()->user()->institute_id, 404);
         if ($class->students()->count() > 0) {
             return redirect()->route('admin.classes.index')
-                ->with('error', 'Cannot delete class with existing students. Please reassign them first.');
+                ->with('error', 'Cannot delete class with existing student_details. Please reassign them first.');
         }
 
         $class->delete();

@@ -61,7 +61,7 @@
 
 {{-- Page Header --}}
 <div class="d-flex align-items-center gap-3 mb-4">
-    <a href="{{ route('admin.students.index') }}"
+    <a href="{{ route('admin.student_details.index') }}"
        class="sb-icon-btn" style="width:34px;height:34px;border-radius:7px;font-size:16px;">
         <i class="bi bi-arrow-left"></i>
     </a>
@@ -128,7 +128,7 @@
             {{-- ── TAB 1: Single Form ── --}}
             <div class="sb-tab-pane active" id="tab-single">
                 <form method="POST"
-                      action="{{ $isEdit ? route('admin.students.update', $student) : route('admin.students.store') }}"
+                      action="{{ $isEdit ? route('admin.student_details.update', $student) : route('admin.student_details.store') }}"
                       class="p-4">
                     @csrf
                     @if($isEdit) @method('PUT') @endif
@@ -209,7 +209,7 @@
                             <i class="bi bi-{{ $isEdit ? 'check-lg' : 'person-plus' }}"></i>
                             {{ $isEdit ? 'Save Changes' : 'Create Student' }}
                         </button>
-                        <a href="{{ route('admin.students.index') }}"
+                        <a href="{{ route('admin.student_details.index') }}"
                            class="btn btn-outline-secondary"
                            style="font-size:13.5px;border-radius:8px;padding:10px 20px;border-color:var(--sb-border);">
                             Cancel
@@ -233,7 +233,7 @@
                             Optional columns: <code>phone</code><br>
                             First row must be the header row. Passwords must be at least 6 characters.
                         </div>
-                        <a href="{{ route('admin.students.sample-csv') }}"
+                        <a href="{{ route('admin.student_details.sample-csv') }}"
                            class="btn btn-sm ms-auto flex-shrink-0 d-flex align-items-center gap-2"
                            style="font-size:12px;border-radius:7px;border:1px solid #BAE6FD;color:#0284C7;background:#fff;white-space:nowrap;padding:6px 12px;">
                             <i class="bi bi-download"></i> Sample CSV
@@ -241,22 +241,22 @@
                     </div>
 
                     {{-- Drop zone --}}
-                    <div class="csv-dropzone" id="csv-dropzone-students">
-                        <input type="file" id="csv-file-students" accept=".csv,text/csv">
+                    <div class="csv-dropzone" id="csv-dropzone-student_details">
+                        <input type="file" id="csv-file-student_details" accept=".csv,text/csv">
                         <div class="csv-dropzone-icon"><i class="bi bi-cloud-arrow-up"></i></div>
-                        <div class="csv-dropzone-title" id="csv-dz-title-students">
+                        <div class="csv-dropzone-title" id="csv-dz-title-student_details">
                             Drag &amp; drop your CSV file here
                         </div>
                         <div class="csv-dropzone-sub">or <u>click to browse</u> — .csv files only</div>
                     </div>
 
                     {{-- Preview --}}
-                    <div id="csv-preview-students" style="display:none;">
+                    <div id="csv-preview-student_details" style="display:none;">
                         <div class="d-flex align-items-center justify-content-between mt-4 mb-2">
                             <div style="font-size:13px;font-weight:600;">
-                                Preview — <span id="csv-count-students">0</span> rows found
+                                Preview — <span id="csv-count-student_details">0</span> rows found
                             </div>
-                            <button onclick="clearCsv('students')" class="btn btn-sm btn-outline-secondary"
+                            <button onclick="clearCsv('student_details')" class="btn btn-sm btn-outline-secondary"
                                     style="font-size:12px;border-radius:6px;padding:4px 10px;">
                                 <i class="bi bi-x"></i> Clear
                             </button>
@@ -272,16 +272,16 @@
                                         <th>Status</th>
                                     </tr>
                                 </thead>
-                                <tbody id="csv-tbody-students"></tbody>
+                                <tbody id="csv-tbody-student_details"></tbody>
                             </table>
                         </div>
                     </div>
 
                     {{-- Upload form --}}
-                    <form method="POST" action="{{ route('admin.students.import') }}"
-                          enctype="multipart/form-data" id="csv-form-students">
+                    <form method="POST" action="{{ route('admin.student_details.import') }}"
+                          enctype="multipart/form-data" id="csv-form-student_details">
                         @csrf
-                        <input type="file" name="csv_file" id="csv-hidden-students" style="display:none;" accept=".csv">
+                        <input type="file" name="csv_file" id="csv-hidden-student_details" style="display:none;" accept=".csv">
 
                         <div class="mb-3 mt-4" style="max-width:300px;">
                             <label class="form-label" style="font-size:13px;font-weight:600;">Assign Class to Imported Students <span class="text-danger">*</span></label>
@@ -293,12 +293,12 @@
                             </select>
                         </div>
                         <div class="d-flex gap-2 mt-4 pt-3" style="border-top:1px solid var(--sb-border);">
-                            <button type="submit" id="csv-submit-students"
+                            <button type="submit" id="csv-submit-student_details"
                                     class="btn text-white d-flex align-items-center gap-2"
                                     style="font-size:13.5px;border-radius:8px;background:var(--sb-accent);padding:10px 22px;" disabled>
                                 <i class="bi bi-cloud-upload"></i> Import Students
                             </button>
-                            <a href="{{ route('admin.students.index') }}"
+                            <a href="{{ route('admin.student_details.index') }}"
                                class="btn btn-outline-secondary"
                                style="font-size:13.5px;border-radius:8px;padding:10px 20px;border-color:var(--sb-border);">
                                 Cancel
@@ -429,6 +429,6 @@ function clearCsv(suffix) {
     document.getElementById('csv-file-' + suffix).value = '';
 }
 
-initCsvDropzone('students');
+initCsvDropzone('student_details');
 </script>
 @endpush

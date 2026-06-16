@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Chapter;
-use App\Models\Course;
+use App\Models\AssignedEbook;
 use Illuminate\Support\Facades\Auth;
 
-class CourseController extends Controller
+class AssignedEbookController extends Controller
 {
     public function __construct()
     {
@@ -18,7 +18,7 @@ class CourseController extends Controller
     public function index()
     {
         $user    = Auth::user();
-        $courses = Course::where(function($query) use ($user) {
+        $courses = AssignedEbook::where(function($query) use ($user) {
                              $query->where('class_id', $user->class_id)
                                    ->orWhere('user_id', $user->id);
                          })
@@ -27,14 +27,14 @@ class CourseController extends Controller
                          ->orderBy('order')
                          ->get();
 
-        return view('student.courses.index', compact('user', 'courses'));
+        return view('student.assigned_ebooks.index', compact('user', 'courses'));
     }
 
     /** Chapter islands for a single course */
     public function show(int $id)
     {
         $user    = Auth::user();
-        $course  = Course::where(function($query) use ($user) {
+        $course  = AssignedEbook::where(function($query) use ($user) {
                              $query->where('class_id', $user->class_id)
                                    ->orWhere('user_id', $user->id);
                          })->findOrFail($id);
@@ -51,13 +51,13 @@ class CourseController extends Controller
             ];
         });
 
-        return view('student.courses.show', compact('user', 'course', 'chaptersData'));
+        return view('student.assigned_ebooks.show', compact('user', 'course', 'chaptersData'));
     }
 
     public function stage(\Illuminate\Http\Request $request, int $id, int $chapter_id, int $stage)
     {
         $user = Auth::user();
-        $course = Course::where(function($query) use ($user) {
+        $course = AssignedEbook::where(function($query) use ($user) {
                              $query->where('class_id', $user->class_id)
                                    ->orWhere('user_id', $user->id);
                          })->findOrFail($id);

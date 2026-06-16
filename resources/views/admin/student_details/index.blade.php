@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Students')
+@section('title', 'student_details')
 @section('admin_nav_students', 'active')
-@section('admin_page_title', 'Students')
+@section('admin_page_title', 'student_details')
 
 @section('admin_content')
 
@@ -14,7 +14,7 @@
             {{ $students->total() }} total students registered
         </p>
     </div>
-    <a href="{{ route('admin.students.create') }}"
+    <a href="{{ route('admin.student_details.create') }}"
        class="btn btn-sm text-white d-flex align-items-center gap-2"
        style="font-size:13px;border-radius:7px;background:var(--sb-accent);padding:8px 16px;">
         <i class="bi bi-plus-lg"></i> Add Student
@@ -38,7 +38,7 @@
 {{-- Filters --}}
 <div class="sb-panel mb-4">
     <div class="p-3">
-        <form method="GET" action="{{ route('admin.students.index') }}" class="row g-2 align-items-end">
+        <form method="GET" action="{{ route('admin.student_details.index') }}" class="row g-2 align-items-end">
             <div class="col-12 col-md-5">
                 <label class="form-label" style="font-size:12px;font-weight:600;color:var(--sb-muted);">Search</label>
                 <div class="input-group" style="height:36px;">
@@ -67,7 +67,7 @@
                     <i class="bi bi-funnel"></i> Filter
                 </button>
                 @if(request()->hasAny(['search','class_id']))
-                    <a href="{{ route('admin.students.index') }}"
+                    <a href="{{ route('admin.student_details.index') }}"
                        class="btn btn-sm btn-outline-secondary flex-fill"
                        style="font-size:13px;border-radius:7px;height:36px;display:flex;align-items:center;justify-content:center;">
                         Clear
@@ -126,12 +126,12 @@
                     </td>
                     <td>
                         <div class="d-flex gap-1 justify-content-end">
-                            <a href="{{ route('admin.students.edit', $student) }}"
+                            <a href="{{ route('admin.student_details.edit', $student) }}"
                                class="sb-icon-btn" title="Edit"
                                style="width:32px;height:32px;font-size:14px;border-radius:6px;">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form method="POST" action="{{ route('admin.students.destroy', $student) }}"
+                            <form method="POST" action="{{ route('admin.student_details.destroy', $student) }}"
                                   onsubmit="return confirm('Delete {{ addslashes($student->name) }}? This cannot be undone.')">
                                 @csrf @method('DELETE')
                                 <button type="submit"
@@ -148,7 +148,7 @@
                     <td colspan="7" class="text-center py-5" style="color:var(--sb-muted);">
                         <i class="bi bi-people" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.3;"></i>
                         No students found.
-                        <a href="{{ route('admin.students.create') }}" style="color:var(--sb-accent);">Add the first one</a>
+                        <a href="{{ route('admin.student_details.create') }}" style="color:var(--sb-accent);">Add the first one</a>
                     </td>
                 </tr>
                 @endforelse

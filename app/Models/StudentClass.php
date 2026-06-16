@@ -15,7 +15,7 @@ class StudentClass extends Model
 
     public function courses()
     {
-        return $this->hasMany(Course::class, 'class_id');
+        return $this->hasMany(AssignedEbook::class, 'class_id');
     }
 
     public function students()

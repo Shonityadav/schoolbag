@@ -33,7 +33,7 @@ class StaffCategory extends Model
     public function staffs()
     {
         return $this->hasMany(
-            Staff::class,
+            StaffDetails::class,
             'staff_category_id'
         );
     }

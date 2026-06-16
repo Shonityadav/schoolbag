@@ -223,7 +223,7 @@
                     </div>
                     <div style="flex:1;">
                         <div class="sb-list-title">{{ $cls['name'] }}</div>
-                        <div class="sb-list-sub">{{ $cls['students'] }} students &nbsp;·&nbsp; {{ $cls['attendance'] }}% attendance</div>
+                        <div class="sb-list-sub">{{ $cls['student_details'] }} students &nbsp;·&nbsp; {{ $cls['attendance'] }}% attendance</div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <div class="sb-progress d-none d-sm-block">

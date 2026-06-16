@@ -1132,7 +1132,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
-    const exitBackUrl = "{{ route('student.courses.show', $lesson->chapter->course_id) }}?chapter_id={{ $lesson->chapter_id }}";
+    const exitBackUrl = "{{ route('student.assigned_ebooks.show', $lesson->chapter->course_id) }}?chapter_id={{ $lesson->chapter_id }}";
     function showExitPopup() {
         document.getElementById('exit-overlay').classList.add('show');
     }

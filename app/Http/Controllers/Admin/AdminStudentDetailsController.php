@@ -8,10 +8,10 @@ use App\Models\ClassModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use App\Models\Student;
+use App\Models\StudentDetails;
 use Illuminate\Support\Facades\DB;
 
-class AdminStudentController extends Controller
+class AdminStudentDetailsController extends Controller
 {
 
     private function canAccessStudent(User $studentUser)
@@ -26,7 +26,7 @@ class AdminStudentController extends Controller
             ->pluck('classes.id')
             ->toArray();
 
-        return Student::where(
+        return StudentDetails::where(
             'created_for',
             $studentUser->id
         )
@@ -39,14 +39,14 @@ class AdminStudentController extends Controller
     public function index(Request $request)
     {
         abort_unless(
-            auth()->user()->hasPermission('students.view'),
+            auth()->user()->hasPermission('student_details.view'),
             403
         );
 
         $user = auth()->user();
 
         $query = User::select('users.*')
-            ->join('students', 'users.id', '=', 'students.created_for')
+            ->join('student_details', 'users.id', '=', 'student_details.created_for')
             ->where('users.user_type', 3)
             ->where('users.institute_id', $user->institute_id)
             ->with(['student.class']);
@@ -85,7 +85,7 @@ class AdminStudentController extends Controller
             });
         }
 
-        $students = $query->orderBy('students.roll_no', 'asc')
+        $students = $query->orderBy('student_details.roll_no', 'asc')
             ->paginate(15)
             ->withQueryString();
 
@@ -107,7 +107,7 @@ class AdminStudentController extends Controller
                 ->get();
         }
         return view(
-            'admin.students.index',
+            'admin.student_details.index',
             compact('students', 'classes')
         );
     }
@@ -118,7 +118,7 @@ class AdminStudentController extends Controller
     public function create()
     {
         $classes = ClassModel::where('institute_id', auth()->user()->institute_id)->orderBy('standard')->get();
-        return view('admin.students.form', [
+        return view('admin.student_details.form', [
             'student' => null,
             'classes' => $classes,
         ]);
@@ -130,7 +130,7 @@ class AdminStudentController extends Controller
     public function store(Request $request)
     {
         abort_unless(
-            auth()->user()->hasPermission('students.create'),
+            auth()->user()->hasPermission('student_details.create'),
             403
         );
 
@@ -155,7 +155,7 @@ class AdminStudentController extends Controller
                 'user_type'    => 3,
             ]);
 
-            Student::create([
+            StudentDetails::create([
                 'created_for'  => $user->id,
                 'institute_id' => auth()->user()->institute_id,
                 'class_id'     => $data['class_id'],
@@ -164,7 +164,7 @@ class AdminStudentController extends Controller
         });
 
         return redirect()
-            ->route('admin.students.index')
+            ->route('admin.student_details.index')
             ->with('success', 'Student created successfully.');
     }
 
@@ -174,7 +174,7 @@ class AdminStudentController extends Controller
     public function edit(User $student)
     {
         abort_unless(
-            auth()->user()->hasPermission('students.edit'),
+            auth()->user()->hasPermission('student_details.edit'),
             403
         );
 
@@ -184,7 +184,7 @@ class AdminStudentController extends Controller
         );
         // abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
         $classes = ClassModel::where('institute_id', auth()->user()->institute_id)->orderBy('standard')->get();
-        return view('admin.students.form', compact('student', 'classes'));
+        return view('admin.student_details.form', compact('student', 'classes'));
     }
 
     /**
@@ -193,7 +193,7 @@ class AdminStudentController extends Controller
     public function update(Request $request, User $student)
 {
     abort_unless(
-        auth()->user()->hasPermission('students.edit'),
+        auth()->user()->hasPermission('student_details.edit'),
         403
     );
 
@@ -229,7 +229,7 @@ class AdminStudentController extends Controller
         $student->save();
 
         // Update Student table
-        Student::updateOrCreate(
+        StudentDetails::updateOrCreate(
             [
                 'created_for' => $student->id
             ],
@@ -242,7 +242,7 @@ class AdminStudentController extends Controller
     });
 
     return redirect()
-        ->route('admin.students.index')
+        ->route('admin.student_details.index')
         ->with('success', 'Student updated successfully.');
 }
 
@@ -252,7 +252,7 @@ class AdminStudentController extends Controller
     public function destroy(User $student)
     {
         abort_unless(
-            auth()->user()->hasPermission('students.edit'),
+            auth()->user()->hasPermission('student_details.edit'),
             403
         );
 
@@ -268,7 +268,7 @@ class AdminStudentController extends Controller
 
         $student->delete();
 
-        return redirect()->route('admin.students.index')
+        return redirect()->route('admin.student_details.index')
             ->with('success', 'Student deleted successfully.');
     }
 
@@ -279,10 +279,10 @@ class AdminStudentController extends Controller
     {
         $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="students_sample.csv"'];
         $rows = [
-            ['name', 'email', 'phone', 'password'],
-            ['Aarav Sharma',   'aarav@school.com',   '9876543210', 'pass1234'],
-            ['Priya Nair',     'priya@school.com',   '9876543211', 'pass1234'],
-            ['Rohan Mehta',    'rohan@school.com',   '',           'pass1234'],
+            ['name', 'email', 'phone', 'password', 'roll_no'],
+            ['Aarav Sharma',   'aarav@school.com',   '9876543210', 'pass1234', '101'],
+            ['Priya Nair',     'priya@school.com',   '9876543211', 'pass1234', '102'],
+            ['Rohan Mehta',    'rohan@school.com',   '',           'pass1234', '103'],
         ];
         $callback = function () use ($rows) {
             $out = fopen('php://output', 'w');
@@ -321,6 +321,7 @@ class AdminStudentController extends Controller
             $email    = trim($map['email']    ?? '');
             $phone    = trim($map['phone']    ?? '');
             $password = trim($map['password'] ?? '');
+            $roll_no  = trim($map['roll_no']  ?? '');
 
             if (!$name || !$email || strlen($password) < 6) {
                 $errors[] = ['row' => $row, 'message' => "Missing or invalid name/email/password for '{$email}'"];
@@ -343,16 +344,17 @@ class AdminStudentController extends Controller
                 'user_type'    => 3,
             ]);
 
-            Student::create([
+            StudentDetails::create([
                 'created_for'  => $user->id,
                 'institute_id' => auth()->user()->institute_id,
                 'class_id'     => $request->class_id,
+                'roll_no'      => $roll_no ?: null,
             ]);
             $imported++;
         }
         fclose($handle);
 
-        return redirect()->route('admin.students.create')
+        return redirect()->route('admin.student_details.create')
             ->with('import_result', compact('imported', 'skipped', 'errors'));
     }
 }

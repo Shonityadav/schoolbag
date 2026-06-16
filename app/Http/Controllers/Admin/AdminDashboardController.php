@@ -31,10 +31,10 @@ class AdminDashboardController extends Controller
         ];
 
         $topClasses = [
-            ['name' => 'Grade 7-A', 'students' => 42, 'attendance' => 96, 'progress' => 88],
-            ['name' => 'Grade 5-B', 'students' => 38, 'attendance' => 93, 'progress' => 82],
-            ['name' => 'Grade 3-A', 'students' => 40, 'attendance' => 90, 'progress' => 79],
-            ['name' => 'Grade 6-C', 'students' => 36, 'attendance' => 88, 'progress' => 75],
+            ['name' => 'Grade 7-A', 'student_details' => 42, 'attendance' => 96, 'progress' => 88],
+            ['name' => 'Grade 5-B', 'student_details' => 38, 'attendance' => 93, 'progress' => 82],
+            ['name' => 'Grade 3-A', 'student_details' => 40, 'attendance' => 90, 'progress' => 79],
+            ['name' => 'Grade 6-C', 'student_details' => 36, 'attendance' => 88, 'progress' => 75],
         ];
 
         $recentStudents = [

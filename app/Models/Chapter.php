@@ -13,7 +13,7 @@ class Chapter extends Model
 
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(AssignedEbook::class);
     }
 
     public function lessons()

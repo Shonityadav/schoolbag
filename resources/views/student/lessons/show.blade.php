@@ -21,7 +21,7 @@
 @endpush
 
 @section('content')
-<a href="{{ route('student.courses.show', $lesson->chapter->course_id) }}" class="back-link">← {{ $lesson->chapter->course->title }}</a>
+<a href="{{ route('student.assigned_ebooks.show', $lesson->chapter->course_id) }}" class="back-link">← {{ $lesson->chapter->course->title }}</a>
 
 <div class="lesson-card">
     <div class="lesson-header">
