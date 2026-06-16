@@ -15,6 +15,25 @@ use Illuminate\Validation\Rule;
 
 class AdminStaffController extends Controller
 {
+    private function canAccessStaff(User $staffUser)
+    {
+        $user = auth()->user();
+
+        if ($user->user_type == 1) {
+            return true;
+        }
+
+        // Must check if the requested staff user belongs to a category the current user manages
+        if (!$staffUser->staff) {
+            return false; // Or true if unassigned? Let's say false.
+        }
+
+        $assignedCategoryIds = $user->managedCategories()
+            ->pluck('staff_categories.id')
+            ->toArray();
+
+        return in_array($staffUser->staff->staff_category_id, $assignedCategoryIds);
+    }
     /**
      * List all staff with search + pagination.
      */
@@ -106,6 +125,9 @@ class AdminStaffController extends Controller
 
             'classes' => 'nullable|array',
             'classes.*' => 'exists:classes,id',
+            
+            'managed_categories' => 'nullable|array',
+            'managed_categories.*' => 'exists:staff_categories,id',
         ]);
 
         DB::transaction(function () use ($data) {
@@ -136,6 +158,10 @@ class AdminStaffController extends Controller
             $staffUser->classes()->sync(
                 $data['classes'] ?? []
             );
+
+            $staffUser->managedCategories()->sync(
+                $data['managed_categories'] ?? []
+            );
         });
 
         return redirect()
@@ -151,6 +177,11 @@ class AdminStaffController extends Controller
             $staff->user_type == 2 &&
             $staff->institute_id == auth()->user()->institute_id,
             404
+        );
+
+        abort_unless(
+            $this->canAccessStaff($staff),
+            403
         );
 
         $allPermissions = Permission::all();
@@ -184,6 +215,8 @@ class AdminStaffController extends Controller
     {
         abort_unless($staff->user_type == 2 && $staff->institute_id == auth()->user()->institute_id, 404);
 
+        abort_unless($this->canAccessStaff($staff), 403);
+
         $data = $request->validate([
             'name'     => 'required|string|max:255',
             'staff_category_id' => 'required|exists:staff_categories,id',
@@ -196,6 +229,8 @@ class AdminStaffController extends Controller
             'permissions.*' => 'exists:permissions,id',
             'classes' => 'nullable|array',
             'classes.*' => 'exists:classes,id',
+            'managed_categories' => 'nullable|array',
+            'managed_categories.*' => 'exists:staff_categories,id',
         ]);
 
         $staff->name  = $data['name'];
@@ -239,6 +274,12 @@ class AdminStaffController extends Controller
             $staff->classes()->detach();
         }
 
+        if (isset($data['managed_categories'])) {
+            $staff->managedCategories()->sync($data['managed_categories']);
+        } else {
+            $staff->managedCategories()->detach();
+        }
+
         return redirect()->route('admin.staff.index')
             ->with('success', 'Staff member updated successfully.');
     }
@@ -249,6 +290,13 @@ class AdminStaffController extends Controller
     public function destroy(User $staff)
     {
         abort_unless($staff->user_type == 2 && $staff->institute_id == auth()->user()->institute_id, 404);
+
+        abort_unless($this->canAccessStaff($staff), 403);
+
+        if ($staff->staff) {
+            $staff->staff->delete();
+        }
+
         $staff->delete();
 
         return redirect()->route('admin.staff.index')
@@ -280,7 +328,10 @@ class AdminStaffController extends Controller
      */
     public function importCsv(Request $request)
     {
-        $request->validate(['csv_file' => 'required|file|mimes:csv,txt|max:2048']);
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+            'staff_category_id' => 'required|exists:staff_categories,id'
+        ]);
 
         $file    = $request->file('csv_file');
         $handle  = fopen($file->getPathname(), 'r');
@@ -314,7 +365,7 @@ class AdminStaffController extends Controller
                 continue;
             }
 
-            User::create([
+            $user = User::create([
                 'institute_id' => auth()->user()->institute_id,
                 'name'     => $name,
                 'email'    => $email,
@@ -322,6 +373,13 @@ class AdminStaffController extends Controller
                 'password' => Hash::make($password),
                 'role'     => 'staff',
                 'user_type'=> 2,
+            ]);
+
+            Staff::create([
+                'created_for' => $user->id,
+                'institute_id' => $user->institute_id,
+                'staff_category_id' => $request->staff_category_id,
+                'joining_date' => now(),
             ]);
             $imported++;
         }

@@ -84,12 +84,11 @@
         <table class="sb-table">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th>Roll No</th>
                     <th>Student</th>
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Class</th>
-                    <th>XP</th>
                     <th>Joined</th>
                     <th style="text-align:right;">Actions</th>
                 </tr>
@@ -97,8 +96,8 @@
             <tbody>
                 @forelse($students as $student)
                 <tr>
-                    <td style="color:var(--sb-muted);font-size:12px;">
-                        {{ ($students->currentPage() - 1) * $students->perPage() + $loop->iteration }}
+                    <td style="color:var(--sb-muted);font-size:13px;font-weight:600;">
+                        {{ $student->student->roll_no ?? '—' }}
                     </td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
@@ -121,10 +120,7 @@
                             <span style="color:var(--sb-muted);">—</span>
                         @endif
                     </td>
-                    <td>
-                        <span style="font-weight:600;color:var(--sb-text);">{{ number_format($student->total_xp) }}</span>
-                        <span style="font-size:11px;color:var(--sb-muted);"> XP</span>
-                    </td>
+
                     <td style="color:var(--sb-muted);font-size:12px;white-space:nowrap;">
                         {{ $student->created_at->format('d M Y') }}
                     </td>
@@ -149,7 +145,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center py-5" style="color:var(--sb-muted);">
+                    <td colspan="7" class="text-center py-5" style="color:var(--sb-muted);">
                         <i class="bi bi-people" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.3;"></i>
                         No students found.
                         <a href="{{ route('admin.students.create') }}" style="color:var(--sb-accent);">Add the first one</a>

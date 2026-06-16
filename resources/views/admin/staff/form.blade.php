@@ -148,12 +148,40 @@
                                    style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
                             @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Staff Category <span class="text-danger">*</span></label>
+                            <select name="staff_category_id" class="form-select @error('staff_category_id') is-invalid @enderror" style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                                <option value="">Select Category</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}" {{ old('staff_category_id', $member?->staff?->staff_category_id) == $cat->id ? 'selected' : '' }}>
+                                        {{ $cat->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('staff_category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Designation</label>
+                            <input type="text" name="designation" value="{{ old('designation', $member?->staff?->designation) }}"
+                                   class="form-control @error('designation') is-invalid @enderror"
+                                   placeholder="e.g. Senior Teacher"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('designation')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-12">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Department</label>
+                            <input type="text" name="department" value="{{ old('department', $member?->staff?->department) }}"
+                                   class="form-control @error('department') is-invalid @enderror"
+                                   placeholder="e.g. Mathematics"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('department')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                         <div class="col-12">
                             <div style="border-top:1px solid var(--sb-border);padding-top:16px;font-size:13px;font-weight:600;">
                                 Access & Assignments
                             </div>
                         </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
                             <label class="form-label" style="font-size:13px;font-weight:600;">Permissions</label>
                             <div class="d-flex flex-wrap gap-3">
                                 @php $assignedPerms = $isEdit ? $member->permissions->pluck('id')->toArray() : []; @endphp
@@ -168,7 +196,7 @@
                                 @endforeach
                             </div>
                         </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
                             <label class="form-label" style="font-size:13px;font-weight:600;">Assigned Classes</label>
                             <div class="d-flex flex-wrap gap-3">
                                 @php $assignedClasses = $isEdit ? $member->classes->pluck('id')->toArray() : []; @endphp
@@ -178,6 +206,21 @@
                                             {{ in_array($cls->id, old('classes', $assignedClasses)) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="cls_{{ $cls->id }}">
                                             {{ $cls->standard }} {{ $cls->section ? '- ' . $cls->section : '' }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Managed Categories</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                @php $managedCats = $isEdit ? $member->managedCategories->pluck('id')->toArray() : []; @endphp
+                                @foreach($categories as $cat)
+                                    <div class="form-check form-switch" style="font-size:13px;">
+                                        <input class="form-check-input" type="checkbox" name="managed_categories[]" value="{{ $cat->id }}" id="mcat_{{ $cat->id }}"
+                                            {{ in_array($cat->id, old('managed_categories', $managedCats)) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="mcat_{{ $cat->id }}">
+                                            {{ $cat->name }}
                                         </label>
                                     </div>
                                 @endforeach
@@ -273,6 +316,16 @@
                           enctype="multipart/form-data" id="csv-form-staff">
                         @csrf
                         <input type="file" name="csv_file" id="csv-hidden-staff" style="display:none;" accept=".csv">
+
+                        <div class="mb-3 mt-4" style="max-width:300px;">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Assign Category to Imported Staff <span class="text-danger">*</span></label>
+                            <select name="staff_category_id" class="form-select" style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;" required>
+                                <option value="">Select Category</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="d-flex gap-2 mt-4 pt-3" style="border-top:1px solid var(--sb-border);">
                             <button type="submit" id="csv-submit-staff"
                                     class="btn text-white d-flex align-items-center gap-2"

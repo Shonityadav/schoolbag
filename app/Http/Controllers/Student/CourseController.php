@@ -84,137 +84,141 @@ class CourseController extends Controller
         
         if ($stage == 2) {
             // Stage 2: Hard Words -> MCQs
-            $ebookId = $course->ebook_id ?? 2;
-            $ebookChapter = \App\Models\EbookChapter::where('ebook_id', $ebookId)
-                ->where('chapter_number', $chapter->order + 1)
-                ->first();
-
-            if ($ebookChapter) {
-                $ebookChapterStage = \App\Models\EbookChapterStage::where('ebook_chapter_id', $ebookChapter->id)
-                    ->where('stage_number', 2)
+            $mcqs = [];
+            $ebookId = $course->getResolvedEbookId();
+            
+            if ($ebookId) {
+                $ebookChapter = \App\Models\EbookChapter::where('ebook_id', $ebookId)
+                    ->where('chapter_number', $chapter->order + 1)
                     ->first();
 
-                if ($ebookChapterStage) {
-                    $quesType = \App\Models\QuestionType::where('type', 'Hard Word')->first();
-                    $quesTypeId = $quesType ? $quesType->id : null;
+                if ($ebookChapter) {
+                    $ebookChapterStage = \App\Models\EbookChapterStage::where('ebook_chapter_id', $ebookChapter->id)
+                        ->where('stage_number', 2)
+                        ->first();
 
-                    $dbQuestions = \App\Models\EbookQuestion::where('ebook_id', $ebookId)
-                        ->where('chapter_id', $ebookChapter->id)
-                        ->where('stage_id', $ebookChapterStage->id)
-                        ->get();
+                    if ($ebookChapterStage) {
+                        $quesType = \App\Models\QuestionType::where('type', 'like', '%Multiple%')->orWhere('type', 'MCQ')->first();
+                        $quesTypeId = $quesType ? $quesType->id : null;
 
-                    if ($dbQuestions->isNotEmpty()) {
-                        $mcqs = $dbQuestions->map(function ($q) {
-                            $parsed = json_decode($q->question, true);
-                            return [
-                                'question' => $parsed['question'] ?? $q->question,
-                                'options' => $parsed['options'] ?? [],
-                                'correct' => (int) $q->answer
-                            ];
-                        })->toArray();
-                    } else {
-                        $pages = \Illuminate\Support\Facades\DB::table('ebook_pages')
-                            ->where('ebook_id', $ebookId)
-                            ->whereBetween('position', [$ebookChapter->start_page, $ebookChapter->end_page ?? $ebookChapter->start_page])
+                        $dbQuestions = \App\Models\EbookQuestion::where('ebook_id', $ebookId)
+                            ->where('chapter_id', $ebookChapter->id)
+                            ->where('stage_id', $ebookChapterStage->id)
                             ->get();
 
-                        $generatedMcqs = $this->generateHardWordsFromGemini($pages);
+                        if ($dbQuestions->isNotEmpty()) {
+                            $mcqs = $dbQuestions->map(function ($q) {
+                                $qData = is_string($q->question) ? json_decode($q->question, true) : $q->question;
+                                return [
+                                    'question' => $qData['question'] ?? 'Question missing',
+                                    'options' => $qData['options'] ?? [],
+                                    'correct' => (int) $q->answer
+                                ];
+                            })->toArray();
+                        } else {
+                            $pages = \Illuminate\Support\Facades\DB::table('ebook_pages')
+                                ->where('ebook_id', $ebookId)
+                                ->whereBetween('position', [$ebookChapter->start_page, $ebookChapter->end_page ?? $ebookChapter->start_page])
+                                ->get();
 
-                        if ($generatedMcqs && is_array($generatedMcqs)) {
-                            \Illuminate\Support\Facades\Log::info('Gemini generated ' . count($generatedMcqs) . ' questions successfully.');
-                            $mcqs = $generatedMcqs;
+                            $generatedMcqs = $this->generateHardWordsFromGemini($pages);
 
-                            foreach ($mcqs as $mcq) {
-                                $questionJson = json_encode([
-                                    'question' => $mcq['question'],
-                                    'options' => $mcq['options']
-                                ]);
+                            if ($generatedMcqs && is_array($generatedMcqs)) {
+                                \Illuminate\Support\Facades\Log::info('Gemini generated ' . count($generatedMcqs) . ' questions successfully.');
+                                $mcqs = $generatedMcqs;
 
-                                \App\Models\EbookQuestion::create([
-                                    'ebook_id' => $ebookId,
-                                    'chapter_id' => $ebookChapter->id,
-                                    'stage_id' => $ebookChapterStage->id,
-                                    'ques_type_id' => $quesTypeId,
-                                    'question' => $questionJson,
-                                    'answer' => (string) $mcq['correct'],
-                                    'subject' => $course->title
-                                ]);
+                                foreach ($mcqs as $mcq) {
+                                    \App\Models\EbookQuestion::create([
+                                        'ebook_id' => $ebookId,
+                                        'chapter_id' => $ebookChapter->id,
+                                        'stage_id' => $ebookChapterStage->id,
+                                        'ques_type_id' => $quesTypeId,
+                                        'question' => json_encode([
+                                            'question' => $mcq['question'],
+                                            'options' => $mcq['options']
+                                        ]),
+                                        'answer' => (string) $mcq['correct'],
+                                        'subject' => $course->title
+                                    ]);
+                                }
+                            } else {
+                                \Illuminate\Support\Facades\Log::error('Gemini generated null or invalid array.');
                             }
                         }
+                    } else {
+                        \Illuminate\Support\Facades\Log::error('EbookChapterStage not found for chapter ' . $ebookChapter->id);
                     }
+                } else {
+                    \Illuminate\Support\Facades\Log::error('EbookChapter not found for ebook ' . $ebookId . ' and chapter_number ' . ($chapter->order + 1));
                 }
-            }
-
-            if (empty($mcqs)) {
-                $mcqs = \App\Models\Lesson::getHardWordsMcqs();
             }
         } elseif ($stage == 3) {
             // Stage 3: Activity Mission -> Match the Following
             $matchPairs = [];
-            $ebookId = $course->ebook_id ?? 2;
-            $ebookChapter = \App\Models\EbookChapter::where('ebook_id', $ebookId)
-                ->where('chapter_number', $chapter->order + 1)
-                ->first();
-
-            if ($ebookChapter) {
-                $ebookChapterStage = \App\Models\EbookChapterStage::where('ebook_chapter_id', $ebookChapter->id)
-                    ->where('stage_number', 3)
+            $ebookId = $course->getResolvedEbookId();
+            
+            if ($ebookId) {
+                $ebookChapter = \App\Models\EbookChapter::where('ebook_id', $ebookId)
+                    ->where('chapter_number', $chapter->order + 1)
                     ->first();
 
-                if ($ebookChapterStage) {
-                    $quesType = \App\Models\QuestionType::where('type', 'like', '%Match%')->orWhere('type', 'Activity')->first();
-                    $quesTypeId = $quesType ? $quesType->id : null;
+                if ($ebookChapter) {
+                    $ebookChapterStage = \App\Models\EbookChapterStage::where('ebook_chapter_id', $ebookChapter->id)
+                        ->where('stage_number', 3)
+                        ->first();
 
-                    $dbQuestions = \App\Models\EbookQuestion::where('ebook_id', $ebookId)
-                        ->where('chapter_id', $ebookChapter->id)
-                        ->where('stage_id', $ebookChapterStage->id)
-                        ->get();
+                    if ($ebookChapterStage) {
+                        $quesType = \App\Models\QuestionType::where('type', 'like', '%Match%')->orWhere('type', 'Activity')->first();
+                        $quesTypeId = $quesType ? $quesType->id : null;
 
-                    if ($dbQuestions->isNotEmpty()) {
-                        $matchPairs = $dbQuestions->map(function ($q) {
-                            return [
-                                'left' => $q->question,
-                                'right' => $q->answer
-                            ];
-                        })->toArray();
-                    } else {
-                        $pages = \Illuminate\Support\Facades\DB::table('ebook_pages')
-                            ->where('ebook_id', $ebookId)
-                            ->whereBetween('position', [$ebookChapter->start_page, $ebookChapter->end_page ?? $ebookChapter->start_page])
+                        $dbQuestions = \App\Models\EbookQuestion::where('ebook_id', $ebookId)
+                            ->where('chapter_id', $ebookChapter->id)
+                            ->where('stage_id', $ebookChapterStage->id)
                             ->get();
 
-                        $generatedPairs = $this->generateActivityFromGemini($pages);
+                        if ($dbQuestions->isNotEmpty()) {
+                            $matchPairs = $dbQuestions->map(function ($q) {
+                                return [
+                                    'left' => $q->question,
+                                    'right' => $q->answer
+                                ];
+                            })->toArray();
+                        } else {
+                            $pages = \Illuminate\Support\Facades\DB::table('ebook_pages')
+                                ->where('ebook_id', $ebookId)
+                                ->whereBetween('position', [$ebookChapter->start_page, $ebookChapter->end_page ?? $ebookChapter->start_page])
+                                ->get();
 
-                        if ($generatedPairs && is_array($generatedPairs)) {
-                            \Illuminate\Support\Facades\Log::info('Gemini generated ' . count($generatedPairs) . ' match pairs successfully.');
-                            $matchPairs = $generatedPairs;
+                            $generatedPairs = $this->generateActivityFromGemini($pages);
 
-                            foreach ($matchPairs as $pair) {
-                                \App\Models\EbookQuestion::create([
-                                    'ebook_id' => $ebookId,
-                                    'chapter_id' => $ebookChapter->id,
-                                    'stage_id' => $ebookChapterStage->id,
-                                    'ques_type_id' => $quesTypeId,
-                                    'question' => $pair['left'],
-                                    'answer' => $pair['right'],
-                                    'subject' => $course->title
-                                ]);
+                            if ($generatedPairs && is_array($generatedPairs)) {
+                                \Illuminate\Support\Facades\Log::info('Gemini generated ' . count($generatedPairs) . ' match pairs successfully.');
+                                $matchPairs = $generatedPairs;
+
+                                foreach ($matchPairs as $pair) {
+                                    \App\Models\EbookQuestion::create([
+                                        'ebook_id' => $ebookId,
+                                        'chapter_id' => $ebookChapter->id,
+                                        'stage_id' => $ebookChapterStage->id,
+                                        'ques_type_id' => $quesTypeId,
+                                        'question' => $pair['left'],
+                                        'answer' => $pair['right'],
+                                        'subject' => $course->title
+                                    ]);
+                                }
                             }
                         }
                     }
                 }
             }
-
-            if (empty($matchPairs)) {
-                $matchPairs = \App\Models\Lesson::getActivityMatchPairs();
-            }
         } else {
             // Other Stages -> Ebook Pages
-            $query = \Illuminate\Support\Facades\DB::table('ebook_pages')
-                            ->where('ebook_id', $course->ebook_id ?? 2);
-
-            if ($course->ebook_id) {
-                $ebookChapter = \App\Models\EbookChapter::where('ebook_id', $course->ebook_id)
+            $ebookId = $course->getResolvedEbookId();
+            $query = \Illuminate\Support\Facades\DB::table('ebook_pages');
+            
+            if ($ebookId) {
+                $query->where('ebook_id', $ebookId);
+                $ebookChapter = \App\Models\EbookChapter::where('ebook_id', $ebookId)
                                     ->where('chapter_number', $chapter->order + 1)
                                     ->first();
 
@@ -226,6 +230,9 @@ class CourseController extends Controller
                         $query->where('position', '>=', $start);
                     }
                 }
+            } else {
+                // If no ebook resolved, don't show any pages
+                $query->where('id', -1);
             }
 
             $ebookPages = $query->orderBy('position')->get();

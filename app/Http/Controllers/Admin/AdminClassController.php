@@ -59,6 +59,13 @@ class AdminClassController extends Controller
             'description'  => $data['description'],
         ]);
 
+        ChatRoom::create([
+            'institute_id' => auth()->user()->institute_id,
+            'name' => $class->standard.' '.$class->section,
+            'type' => 'class',
+            'class_id' => $class->id,
+        ]);
+
         return redirect()->route('admin.classes.index')
             ->with('success', 'Class created successfully.');
     }

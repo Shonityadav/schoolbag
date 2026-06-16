@@ -235,4 +235,57 @@ class User extends Authenticatable
             ->where('staff_categories.id', $categoryId)
             ->exists();
     }
+
+    public function canAccessChatRoom($room)
+    {
+        if ($this->user_type == 1) {
+            return true;
+        }
+
+        /*
+        STUDENT
+        */
+
+        if (
+            $this->user_type == 3 &&
+            $room->type == 'class'
+        ) {
+
+            return optional(
+                $this->student
+            )->class_id == $room->class_id;
+        }
+
+        /*
+        STAFF -> CLASS CHAT
+        */
+
+        if (
+            $this->user_type == 2 &&
+            $room->type == 'class'
+        ) {
+
+            return $this->classes()
+                ->where(
+                    'classes.id',
+                    $room->class_id
+                )
+                ->exists();
+        }
+
+        /*
+        STAFF CATEGORY CHAT
+        */
+
+        if (
+            $room->type == 'staff_category'
+        ) {
+
+            return $this->canManageCategory(
+                $room->staff_category_id
+            );
+        }
+
+        return false;
+    }
 }

@@ -56,6 +56,12 @@ class AdminStaffCategoryController extends Controller
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
         ]);
+        ChatRoom::create([
+            'institute_id' => auth()->user()->institute_id,
+            'name' => $category->name,
+            'type' => 'staff_category',
+            'staff_category_id' => $category->id,
+        ]);
 
         return redirect()
             ->route('admin.staff-categories.index')

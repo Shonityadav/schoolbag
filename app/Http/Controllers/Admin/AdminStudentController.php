@@ -45,8 +45,10 @@ class AdminStudentController extends Controller
 
         $user = auth()->user();
 
-        $query = User::where('user_type', 3)
-            ->where('institute_id', $user->institute_id)
+        $query = User::select('users.*')
+            ->join('students', 'users.id', '=', 'students.created_for')
+            ->where('users.user_type', 3)
+            ->where('users.institute_id', $user->institute_id)
             ->with(['student.class']);
 
         // Staff can only see assigned classes
@@ -67,9 +69,9 @@ class AdminStudentController extends Controller
 
             $query->where(function ($q) use ($search) {
 
-                $q->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%");
+                $q->where('users.name', 'like', "%{$search}%")
+                ->orWhere('users.email', 'like', "%{$search}%")
+                ->orWhere('users.phone', 'like', "%{$search}%");
 
             });
         }
@@ -83,7 +85,7 @@ class AdminStudentController extends Controller
             });
         }
 
-        $students = $query->latest()
+        $students = $query->orderBy('students.roll_no', 'asc')
             ->paginate(15)
             ->withQueryString();
 
@@ -258,7 +260,12 @@ class AdminStudentController extends Controller
             $this->canAccessStudent($student),
             403
         );
-        // abort_unless($student->role === 'student' && $student->institute_id == auth()->user()->institute_id, 404);
+
+        // Delete associated student record to prevent orphan data
+        if ($student->student) {
+            $student->student->delete();
+        }
+
         $student->delete();
 
         return redirect()->route('admin.students.index')
@@ -272,10 +279,10 @@ class AdminStudentController extends Controller
     {
         $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="students_sample.csv"'];
         $rows = [
-            ['name', 'email', 'phone', 'class_name', 'password'],
-            ['Aarav Sharma',   'aarav@school.com',   '9876543210', 'Class 1', 'pass1234'],
-            ['Priya Nair',     'priya@school.com',   '9876543211', 'Class 2', 'pass1234'],
-            ['Rohan Mehta',    'rohan@school.com',   '',           '',        'pass1234'],
+            ['name', 'email', 'phone', 'password'],
+            ['Aarav Sharma',   'aarav@school.com',   '9876543210', 'pass1234'],
+            ['Priya Nair',     'priya@school.com',   '9876543211', 'pass1234'],
+            ['Rohan Mehta',    'rohan@school.com',   '',           'pass1234'],
         ];
         $callback = function () use ($rows) {
             $out = fopen('php://output', 'w');
@@ -290,13 +297,14 @@ class AdminStudentController extends Controller
      */
     public function importCsv(Request $request)
     {
-        $request->validate(['csv_file' => 'required|file|mimes:csv,txt|max:2048']);
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+            'class_id' => 'required|exists:classes,id',
+        ]);
 
         $file    = $request->file('csv_file');
         $handle  = fopen($file->getPathname(), 'r');
         $headers = array_map(fn($h) => strtolower(trim($h)), fgetcsv($handle));
-
-        $classes = ClassModel::where('institute_id', auth()->user()->institute_id)->pluck('id', 'standard')->all();
         $imported = 0;
         $skipped  = 0;
         $errors   = [];
@@ -312,7 +320,6 @@ class AdminStudentController extends Controller
             $name     = trim($map['name']     ?? '');
             $email    = trim($map['email']    ?? '');
             $phone    = trim($map['phone']    ?? '');
-            $classNm  = trim($map['class_name'] ?? '');
             $password = trim($map['password'] ?? '');
 
             if (!$name || !$email || strlen($password) < 6) {
@@ -339,9 +346,7 @@ class AdminStudentController extends Controller
             Student::create([
                 'created_for'  => $user->id,
                 'institute_id' => auth()->user()->institute_id,
-                'class_id'     => ($classNm && isset($classes[$classNm]))
-                                    ? $classes[$classNm]
-                                    : null,
+                'class_id'     => $request->class_id,
             ]);
             $imported++;
         }

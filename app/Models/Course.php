@@ -37,4 +37,26 @@ class Course extends Model
     {
         return $this->hasOne(Chapter::class)->orderBy('order');
     }
+
+    public function getResolvedEbookId()
+    {
+        if ($this->ebook_id) {
+            return $this->ebook_id;
+        }
+
+        // Try to find an ebook with chapters that matches the course title
+        $ebook = \Illuminate\Support\Facades\DB::table('ebooks')
+            ->whereExists(function ($query) {
+                $query->select(\Illuminate\Support\Facades\DB::raw(1))
+                      ->from('ebook_chapters')
+                      ->whereColumn('ebook_chapters.ebook_id', 'ebooks.id');
+            })
+            ->where(function($q) {
+                $q->where('name', 'like', '%' . $this->title . '%')
+                  ->orWhere('subject', 'like', '%' . $this->title . '%');
+            })
+            ->first();
+
+        return $ebook ? $ebook->id : null;
+    }
 }

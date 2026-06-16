@@ -87,6 +87,8 @@ use App\Http\Controllers\Admin\AdminAdminsController;
 use App\Http\Controllers\Admin\AdminClassController;
 use App\Http\Controllers\Admin\AdminAttendanceController;
 use App\Http\Controllers\Admin\AdminEbookAssignmentController;
+use App\Http\Controllers\Admin\AdminStaffCategoryController;
+use App\Http\Controllers\Admin\AdminChatController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
@@ -124,6 +126,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/staff/sample-csv',        [AdminStaffController::class, 'sampleCsv'])->middleware('permission:staff.edit')->name('staff.sample-csv');
         Route::post('/staff/import',           [AdminStaffController::class, 'importCsv'])->middleware('permission:staff.edit')->name('staff.import');
 
+        // Staff Categories
+        Route::resource('staff-categories', AdminStaffCategoryController::class)->except(['show']);
+
         // Admins CRUD
         Route::get('/admins',                   [AdminAdminsController::class, 'index'])->name('admins.index');
         Route::get('/admins/create',            [AdminAdminsController::class, 'create'])->name('admins.create');
@@ -148,9 +153,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/attendance/{id}/mark',  [AdminAttendanceController::class, 'mark'])->name('attendance.mark');
         Route::post('/attendance/{id}/unmark',[AdminAttendanceController::class, 'unmark'])->name('attendance.unmark');
 
+        // Chat
+        Route::get('/chat',[AdminChatController::class,'index'])->name('chat.index');
+        Route::get( '/chat/{room}',[AdminChatController::class,'show'])->name('chat.show');
+        Route::post('/chat/{room}/send',[AdminChatController::class,'send'])->name('chat.send');
+
         // Ebook Assignments
         Route::get('/ebook-assignments',        [AdminEbookAssignmentController::class, 'index'])->name('ebook_assignments.index');
         Route::post('/ebook-assignments/assign', [AdminEbookAssignmentController::class, 'assign'])->name('ebook_assignments.assign');
     });
 });
-

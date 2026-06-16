@@ -177,8 +177,8 @@
 
 {{-- ── HTML (from map.html) ── --}}
 <div id="chapter-journey-map" style="{{ isset($requestedChapterId) && $requestedChapterId ? 'display: none; opacity: 0;' : '' }}">
-    <a href="{{ route('student.courses.index') }}" class="btn-back d-flex align-items-center justify-content-center text-decoration-none" style="position: fixed; z-index: 9000;" title="Back to Subjects">
-        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
+    <a href="{{ route('student.courses.index') }}" style="position: fixed; top: 20px; left: 10px; z-index: 9000; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Subjects">
+        <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 52px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
     </a>
     <div id="cjm-map-container">
         <div class="top-fade"></div>
@@ -450,14 +450,26 @@ function buildDecorations() {
 // ── GSAP animations ────────────────────────────────────
 gsap.to(".cloud-1", { y: -20, duration: 4, repeat: -1, yoyo: true, ease: "sine.inOut" });
 gsap.to(".cloud-2", { y: -15, duration: 5, repeat: -1, yoyo: true, ease: "sine.inOut" });
-gsap.to(".cjm-level.cjm-active", { scale: 1.08, duration: 1, repeat: -1, yoyo: true, stagger: 0.08, ease: "sine.inOut" });
+let activeLevelTween = null;
+function initMapLayout() {
+    createLevels();
+    updateProgress();
+    buildDecorations();
+    
+    if (activeLevelTween) activeLevelTween.kill();
+    activeLevelTween = gsap.to(".cjm-level.cjm-active", { scale: 1.08, duration: 1, repeat: -1, yoyo: true, stagger: 0.08, ease: "sine.inOut" });
+}
 
 // ── Init ──────────────────────────────────────────────
-createLevels();
-updateProgress();
-buildDecorations();
+if (document.getElementById("chapter-journey-map").style.display !== "none") {
+    initMapLayout();
+}
 
-window.addEventListener("resize", () => { createLevels(); updateProgress(); buildDecorations(); });
+window.addEventListener("resize", () => { 
+    if (document.getElementById("chapter-journey-map").style.display !== "none") {
+        initMapLayout();
+    }
+});
 
 // ── Auto scroll to current ────────────────────────────
 setTimeout(() => {
@@ -483,6 +495,10 @@ window.closeCjm = function(callback) {
 window.openCjm = function() {
     const map = document.getElementById("chapter-journey-map");
     map.style.display = "block";
+    
+    // Recalculate dimensions now that it is visible
+    initMapLayout();
+
     gsap.to(map, {
         opacity: 1, duration: 0.5, ease: "power2.inOut"
     });
