@@ -41,8 +41,9 @@
                                 Class: {{ $room->schoolClass->standard ?? '' }} {{ $room->schoolClass->section ?? '' }}
                             </span>
                             
-                            <div class="mt-4 w-100 border-top pt-3 text-muted" style="font-size: 12px; font-weight: 500;">
-                                <i class="bi bi-chat-dots me-1"></i> Open Chat
+                            <div class="mt-4 w-100 border-top pt-3 text-muted d-flex justify-content-between align-items-center" style="font-size: 12px; font-weight: 500;">
+                                <span><i class="bi bi-chat-dots me-1"></i> Open Chat</span>
+                                <span class="badge bg-danger rounded-pill" id="unread-badge-{{ $room->id }}" style="display: none;">0</span>
                             </div>
                         </div>
                     </a>
@@ -67,8 +68,9 @@
                                 Category: {{ $room->category->name ?? '' }}
                             </span>
                             
-                            <div class="mt-4 w-100 border-top pt-3 text-muted" style="font-size: 12px; font-weight: 500;">
-                                <i class="bi bi-chat-dots me-1"></i> Open Chat
+                            <div class="mt-4 w-100 border-top pt-3 text-muted d-flex justify-content-between align-items-center" style="font-size: 12px; font-weight: 500;">
+                                <span><i class="bi bi-chat-dots me-1"></i> Open Chat</span>
+                                <span class="badge bg-danger rounded-pill" id="unread-badge-{{ $room->id }}" style="display: none;">0</span>
                             </div>
                         </div>
                     </a>
@@ -80,3 +82,33 @@
 @endif
 
 @endsection
+
+@push('admin-scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function syncSidebar() {
+            $.ajax({
+                url: `{{ route('admin.chat.sidebar_sync') }}`,
+                method: 'GET',
+                success: function(res) {
+                    if (res.counts) {
+                        for (const roomId in res.counts) {
+                            const count = res.counts[roomId];
+                            const badge = $(`#unread-badge-${roomId}`);
+                            if (count > 0) {
+                                badge.text(count).show();
+                            } else {
+                                badge.hide();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Poll every 5 seconds on the index page
+        setInterval(syncSidebar, 5000);
+        syncSidebar(); // initial call
+    });
+</script>
+@endpush

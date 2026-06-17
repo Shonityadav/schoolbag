@@ -161,8 +161,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Chat
         Route::get('/chat',[AdminChatController::class,'index'])->name('chat.index');
+        Route::get('/chat/sidebar-sync',[AdminChatController::class,'sidebarSync'])->name('chat.sidebar_sync');
         Route::get( '/chat/{room}',[AdminChatController::class,'show'])->name('chat.show');
         Route::post('/chat/{room}/send',[AdminChatController::class,'send'])->name('chat.send');
+        Route::get('/chat/{room}/sync',[AdminChatController::class,'sync'])->name('chat.sync');
+        Route::post('/chat/{room}/typing',[AdminChatController::class,'typing'])->name('chat.typing');
+        Route::get('/chat/message/{message}/info',[AdminChatController::class,'messageInfo'])->name('chat.message_info');
 
         // Ebook Assignments
         Route::get('/ebook-assignments',        [AdminEbookAssignmentController::class, 'index'])->name('ebook_assignments.index');

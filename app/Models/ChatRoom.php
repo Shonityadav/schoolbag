@@ -37,4 +37,17 @@ class ChatRoom extends Model
             'staff_category_id'
         );
     }
+
+    public function userStates()
+    {
+        return $this->hasMany(ChatUserState::class);
+    }
+
+    public function unreadCountForUser($userId)
+    {
+        $state = $this->userStates()->where('user_id', $userId)->first();
+        $lastReadId = $state ? $state->last_read_message_id : 0;
+
+        return $this->messages()->where('id', '>', $lastReadId)->count();
+    }
 }

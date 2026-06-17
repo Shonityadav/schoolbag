@@ -25,7 +25,21 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'last_streak_date'  => 'date',
         'unlocked_items'    => 'array',
+        'last_active_at'    => 'datetime',
     ];
+
+    public function chatStates()
+    {
+        return $this->hasMany(ChatUserState::class);
+    }
+
+    public function isOnline()
+    {
+        if (!$this->last_active_at) {
+            return false;
+        }
+        return $this->last_active_at->diffInMinutes(now()) <= 2;
+    }
 
     // ── Relationships ──────────────────────────────────────────
     public function studentClass()    { return $this->belongsTo(ClassModel::class, 'class_id'); }
@@ -238,6 +252,10 @@ class User extends Authenticatable
 
     public function canAccessChatRoom($room)
     {
+        if (!$room) {
+            return false;
+        }
+
         if ($this->user_type == 1) {
             return true;
         }

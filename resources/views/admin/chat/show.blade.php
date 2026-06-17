@@ -157,45 +157,35 @@
             </div>
         </div>
         
-        <div class="ms-auto">
-            <button onclick="window.location.reload();" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-clockwise me-1"></i> Refresh Chat
-            </button>
+        <div class="ms-auto d-flex align-items-center">
+            <span id="chatHeaderStatus" class="badge bg-light text-secondary border me-3">
+                <i class="bi bi-circle-fill text-success" style="font-size: 8px; margin-right: 4px; vertical-align: middle;"></i>
+                <span id="onlineCountText">Checking...</span>
+            </span>
         </div>
     </div>
 
     <div class="chat-messages" id="chatMessagesBox">
         @forelse($messages as $msg)
-            @php
-                $isMe = $msg->sender_id === auth()->id();
-            @endphp
-            <div class="chat-bubble-row {{ $isMe ? 'me' : '' }}">
-                <div class="chat-bubble-wrapper">
-                    @if(!$isMe)
-                        <div class="chat-sender-name">{{ $msg->sender->name ?? 'Unknown' }}</div>
-                    @endif
-                    <div class="chat-bubble">
-                        {{ $msg->message }}
-                        <div class="chat-timestamp">
-                            {{ $msg->created_at->format('h:i A') }}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @include('admin.chat.partials.message', ['msg' => $msg])
         @empty
-            <div class="text-center text-muted my-auto">
+            <div class="text-center text-muted my-auto" id="noMessagesMsg">
                 <i class="bi bi-chat-dots" style="font-size: 40px; opacity: 0.5;"></i>
                 <p class="mt-2">No messages yet. Be the first to say hi!</p>
             </div>
         @endforelse
     </div>
 
+    <div id="typingIndicator" class="text-muted small px-4 py-2 bg-light border-top" style="display: none; font-style: italic;">
+        Someone is typing...
+    </div>
+
     <div class="chat-input-area">
-        <form action="{{ route('admin.chat.send', $room) }}" method="POST" class="m-0">
+        <form id="chatForm" class="m-0" method="POST" action="{{ route('admin.chat.send', $room->id) }}">
             @csrf
             <div class="chat-input-wrapper shadow-sm">
-                <input type="text" name="message" placeholder="Type a message..." required autocomplete="off" autofocus>
-                <button type="submit" class="btn-send shadow-sm">
+                <input type="text" name="message" id="chatInput" placeholder="Type a message..." required autocomplete="off" autofocus>
+                <button type="submit" class="btn-send shadow-sm" id="btnSend">
                     <i class="bi bi-send-fill" style="margin-left:-2px;"></i>
                 </button>
             </div>
@@ -207,9 +197,177 @@
 
 @push('admin-scripts')
 <script>
+    const roomId = {{ $room->id }};
+    const syncUrl = `{{ route('admin.chat.sync', $room->id) }}`;
+    const typingUrl = `{{ route('admin.chat.typing', $room->id) }}`;
+    const sendUrl = `{{ route('admin.chat.send', $room->id) }}`;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : document.querySelector('input[name="_token"]').value;
+
+    let syncInterval;
+    let typingTimeout;
+
+    function scrollToBottom() {
+        const box = document.getElementById('chatMessagesBox');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function initPopovers() {
+        // Initialize Bootstrap Popovers for read receipts
+        $('[data-bs-toggle="popover"]').popover({
+            html: true,
+            sanitize: false,
+            placement: 'left',
+            container: 'body',
+            content: function() {
+                return `<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-muted" role="status"></div></div>`;
+            }
+        }).on('inserted.bs.popover', function() {
+            var $trigger = $(this);
+            var id = $trigger.data('msg-id');
+            var popoverId = $trigger.attr('aria-describedby');
+            var $popoverBody = $('#' + popoverId).find('.popover-body');
+            
+            // Fetch seen by info
+            $.ajax({
+                url: `/admin/chat/message/${id}/info`,
+                method: 'GET',
+                success: function(res) {
+                    let html = '<div class="small">';
+                    if (res.seen_by.length === 0) {
+                        html += '<span class="text-muted">Not seen yet</span>';
+                    } else {
+                        html += '<strong>Seen by:</strong><ul class="list-unstyled mb-0 mt-1">';
+                        res.seen_by.forEach(p => {
+                            html += `<li><i class="bi bi-check2-all text-info me-1"></i> ${p.name} <span class="text-muted" style="font-size:10px;">${p.time}</span></li>`;
+                        });
+                        html += '</ul>';
+                    }
+                    html += '</div>';
+                    $popoverBody.html(html);
+                },
+                error: function() {
+                    $popoverBody.html('<div class="small text-danger">Failed to load</div>');
+                }
+            });
+        });
+    }
+
+    function syncChat() {
+        const messageRows = document.querySelectorAll('.chat-bubble-row');
+        let currentMaxId = 0;
+        if (messageRows.length > 0) {
+            currentMaxId = parseInt(messageRows[messageRows.length - 1].getAttribute('data-id'));
+        }
+
+        $.ajax({
+            url: syncUrl,
+            method: 'GET',
+            data: {
+                last_fetched_id: currentMaxId,
+                current_max_id: currentMaxId
+            },
+            success: function(response) {
+                // 1. Append New Messages
+                if (response.html.trim() !== '') {
+                    $('#noMessagesMsg').remove();
+                    $('#chatMessagesBox').append(response.html);
+                    scrollToBottom();
+                    initPopovers();
+                }
+
+                // 2. Update Typing Indicator
+                if (response.typists && response.typists.length > 0) {
+                    let text = response.typists.length === 1 
+                        ? `${response.typists[0]} is typing...`
+                        : `${response.typists.join(', ')} are typing...`;
+                    $('#typingIndicator').text(text).slideDown(150);
+                } else {
+                    $('#typingIndicator').slideUp(150);
+                }
+
+                // 3. Update Online Status Header
+                if (response.online_count > 0) {
+                    $('#onlineCountText').text(`${response.online_count} online now`);
+                } else {
+                    $('#onlineCountText').text('Offline');
+                }
+
+                // 4. Update Read Receipts
+                if (response.seen_messages && response.seen_messages.length > 0) {
+                    response.seen_messages.forEach(id => {
+                        let icon = $(`.read-receipt[data-msg-id="${id}"] i`);
+                        icon.removeClass('bi-check2 text-light')
+                            .addClass('bi-check2-all text-info') // double blue tick
+                            .css('opacity', '1');
+                    });
+                }
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        const chatBox = document.getElementById('chatMessagesBox');
-        chatBox.scrollTop = chatBox.scrollHeight;
+        try { scrollToBottom(); } catch (e) { console.error('Error scrolling:', e); }
+        try { initPopovers(); } catch (e) { console.error('Error initializing popovers:', e); }
+
+        // Start polling
+        syncInterval = setInterval(syncChat, 3000);
+
+        // Typing event
+        $('#chatInput').on('keyup', function() {
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                $.ajax({
+                    url: typingUrl,
+                    method: 'POST',
+                    data: { _token: csrfToken }
+                });
+            }, 500); // Debounce typing ping to 500ms
+        });
+
+        // AJAX Message Send
+        $('#chatForm').on('submit', function(e) {
+            e.preventDefault();
+            const btn = $('#btnSend');
+            const input = $('#chatInput');
+            const message = input.val().trim();
+            if (!message) return;
+
+            btn.prop('disabled', true);
+            
+            $.ajax({
+                url: sendUrl,
+                method: 'POST',
+                data: {
+                    _token: csrfToken,
+                    message: message
+                },
+                success: function(res) {
+                    if (res.success) {
+                        input.val('');
+                        $('#noMessagesMsg').remove();
+                        $('#chatMessagesBox').append(res.html);
+                        scrollToBottom();
+                        initPopovers();
+                        
+                        // Force a sync immediately after sending to update the watermark
+                        syncChat();
+                    }
+                },
+                complete: function() {
+                    btn.prop('disabled', false);
+                    input.focus();
+                }
+            });
+        });
+
+        // Hide popovers when clicking outside
+        $('body').on('click', function (e) {
+            $('[data-bs-toggle="popover"]').each(function () {
+                if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+                    $(this).popover('hide');
+                }
+            });
+        });
     });
 </script>
 @endpush
