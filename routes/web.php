@@ -10,6 +10,8 @@ use App\Http\Controllers\Student\LessonController;
 use App\Http\Controllers\Student\EbookController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 
+use App\Http\Controllers\Student\WorkspaceController;
+
 use App\Http\Controllers\Admin\AdminDashboardController;
 
 /*
@@ -44,6 +46,10 @@ Route::prefix('student')->name('student.')->group(function () {
     // Authenticated student
     Route::middleware('auth:student')->group(function () {
         Route::get('/dashboard',         [DashboardController::class, 'index'])->name('dashboard');
+        
+        // Workspace
+        Route::get('/workspace', [WorkspaceController::class, 'index'])->name('workspace');
+        Route::get('/workspace/profile', [WorkspaceController::class, 'profile'])->name('workspace.profile');
 
         Route::get('/assigned-ebooks',          [AssignedEbookController::class, 'index'])->name('assigned_ebooks.index');
         Route::get('/assigned-ebooks/{id}',     [AssignedEbookController::class, 'show'])->name('assigned_ebooks.show');

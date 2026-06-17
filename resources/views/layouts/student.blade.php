@@ -352,6 +352,9 @@
         <a href="{{ route('student.dashboard') }}"   class="nav-item @yield('nav_dashboard', '')">
             <span class="icon"><img src="{{ asset('uploads/images/buttons/home button.png') }}" alt="Dashboard" style="width:30px;height:32px;object-fit:contain;"></span><span class="label">Dashboard</span>
         </a>
+        <a href="{{ route('student.workspace') }}"   class="nav-item @yield('nav_workspace', '')">
+            <span class="icon"><img src="{{ asset('uploads/images/workspace/Preset.png') }}" alt="Workspace" style="width:30px;height:32px;object-fit:contain;"></span><span class="label">Workspace</span>
+        </a>
         <a href="{{ route('student.assigned_ebooks.index') }}" class="nav-item @yield('nav_courses', '')">
             <span class="icon"><img src="{{ asset('uploads/images/icons/game.png') }}" alt="Subjects" style="width:30px;height:32px;object-fit:contain;"></span><span class="label">Subjects</span>
         </a>

@@ -32,12 +32,12 @@ class AssignedEbook extends Model
 
     public function chapters()
     {
-        return $this->hasMany(Chapter::class)->orderBy('order');
+        return $this->hasMany(Chapter::class, 'course_id')->orderBy('order');
     }
 
     public function firstChapter()
     {
-        return $this->hasOne(Chapter::class)->orderBy('order');
+        return $this->hasOne(Chapter::class, 'course_id')->orderBy('order');
     }
 
     public function getResolvedEbookId()

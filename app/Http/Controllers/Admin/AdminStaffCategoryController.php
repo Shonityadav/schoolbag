@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\StaffCategory;
+use App\Models\ChatRoom;
 use Illuminate\Http\Request;
 
 class AdminStaffCategoryController extends Controller
@@ -51,7 +52,7 @@ class AdminStaffCategoryController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        StaffCategory::create([
+        $category = StaffCategory::create([
             'institute_id' => auth()->user()->institute_id,
             'name' => $data['name'],
             'description' => $data['description'] ?? null,

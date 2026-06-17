@@ -438,6 +438,9 @@
             <a href="{{ route('admin.dashboard') }}" class="sb-nav-link @yield('admin_nav_dashboard', '')">
                 <i class="bi bi-speedometer2"></i> Dashboard
             </a>
+            <a href="{{ route('admin.chat.index') }}" class="sb-nav-link @yield('admin_nav_chat', '')">
+                <i class="bi bi-chat-dots"></i> Chat
+            </a>
         </div>
 
         <div class="sb-nav-group">

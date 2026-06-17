@@ -281,9 +281,10 @@ class User extends Authenticatable
             $room->type == 'staff_category'
         ) {
 
-            return $this->canManageCategory(
-                $room->staff_category_id
-            );
+            $belongsToCategory = optional($this->staff)->staff_category_id == $room->staff_category_id;
+            $managesCategory = $this->canManageCategory($room->staff_category_id);
+
+            return $belongsToCategory || $managesCategory;
         }
 
         return false;

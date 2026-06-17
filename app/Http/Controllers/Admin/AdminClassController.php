@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassModel;
+use App\Models\ChatRoom;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -52,7 +53,7 @@ class AdminClassController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        ClassModel::create([
+        $class = ClassModel::create([
             'institute_id' => Auth::user()->institute_id ?? 1,
             'standard'     => $data['standard'],
             'section'      => $data['section'],
