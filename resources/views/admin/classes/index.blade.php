@@ -46,15 +46,12 @@
                         <i class="bi bi-search"></i>
                     </span>
                     <input type="text" name="search" value="{{ request('search') }}"
-                           class="form-control" placeholder="Search by class name..."
+                           class="form-control" placeholder="Search and press enter..."
                            style="font-size:13px;border-color:var(--sb-border);">
                 </div>
             </div>
             <div class="col-12 col-md-5 d-flex gap-2">
-                <button type="submit" class="btn btn-sm text-white flex-fill"
-                        style="font-size:13px;border-radius:7px;background:var(--sb-accent);height:36px;">
-                    <i class="bi bi-funnel"></i> Search
-                </button>
+                <!-- Search button removed for automatic submission -->
                 @if(request('search'))
                     <a href="{{ route('admin.classes.index') }}"
                        class="btn btn-sm btn-outline-secondary flex-fill"

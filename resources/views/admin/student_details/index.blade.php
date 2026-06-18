@@ -46,13 +46,13 @@
                         <i class="bi bi-search"></i>
                     </span>
                     <input type="text" name="search" value="{{ request('search') }}"
-                           class="form-control" placeholder="Name, email or phone…"
+                           class="form-control" placeholder="Search and press enter..."
                            style="font-size:13px;border-color:var(--sb-border);">
                 </div>
             </div>
             <div class="col-12 col-md-4">
                 <label class="form-label" style="font-size:12px;font-weight:600;color:var(--sb-muted);">Class</label>
-                <select name="class_id" class="form-select" style="font-size:13px;border-color:var(--sb-border);height:36px;padding-top:6px;padding-bottom:6px;">
+                <select name="class_id" class="form-select" onchange="this.form.submit()" style="font-size:13px;border-color:var(--sb-border);height:36px;padding-top:6px;padding-bottom:6px;">
                     <option value="">All Classes</option>
                     @foreach($classes as $class)
                         <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>
@@ -62,10 +62,7 @@
                 </select>
             </div>
             <div class="col-12 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-sm text-white flex-fill"
-                        style="font-size:13px;border-radius:7px;background:var(--sb-accent);height:36px;">
-                    <i class="bi bi-funnel"></i> Filter
-                </button>
+                <!-- Filter button removed for automatic submission -->
                 @if(request()->hasAny(['search','class_id']))
                     <a href="{{ route('admin.student_details.index') }}"
                        class="btn btn-sm btn-outline-secondary flex-fill"
