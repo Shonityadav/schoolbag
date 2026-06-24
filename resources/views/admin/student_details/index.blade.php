@@ -82,10 +82,13 @@
             <thead>
                 <tr>
                     <th>Roll No</th>
+                    <th>Adm. No</th>
                     <th>Student</th>
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Class</th>
+                    <th>Fee (Rs.)</th>
+                    <th>Period</th>
                     <th>Joined</th>
                     <th style="text-align:right;">Actions</th>
                 </tr>
@@ -95,6 +98,9 @@
                 <tr>
                     <td style="color:var(--sb-muted);font-size:13px;font-weight:600;">
                         {{ $student->student->roll_no ?? '—' }}
+                    </td>
+                    <td style="color:var(--sb-muted);font-size:13px;">
+                        {{ $student->student->admission_number ?? '—' }}
                     </td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
@@ -117,6 +123,10 @@
                             <span style="color:var(--sb-muted);">—</span>
                         @endif
                     </td>
+                    <td style="color:var(--sb-text);font-weight:600;font-size:13px;">
+                        {{ $student->student && $student->student->fee ? '₹' . number_format($student->student->fee, 2) : '—' }}
+                    </td>
+                    <td style="color:var(--sb-muted);">{{ $student->student?->fee_period ?? '—' }}</td>
 
                     <td style="color:var(--sb-muted);font-size:12px;white-space:nowrap;">
                         {{ $student->created_at->format('d M Y') }}
@@ -142,7 +152,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center py-5" style="color:var(--sb-muted);">
+                    <td colspan="10" class="text-center py-5" style="color:var(--sb-muted);">
                         <i class="bi bi-people" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.3;"></i>
                         No students found.
                         <a href="{{ route('admin.student_details.create') }}" style="color:var(--sb-accent);">Add the first one</a>

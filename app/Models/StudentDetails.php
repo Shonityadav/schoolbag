@@ -15,6 +15,7 @@ class StudentDetails extends Model
         'created_for',      // FK → users.id (student login)
         'institute_id',     // FK → schools.id
         'class_id',         // FK → classes.id
+        'admission_number',
         'roll_no',
         'fee',
         'fee_period',

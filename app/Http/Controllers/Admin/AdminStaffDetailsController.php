@@ -119,6 +119,8 @@ class AdminStaffDetailsController extends Controller
             'staff_category_id' => 'required|exists:staff_categories,id',
             'designation' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
+            'employ_id' => 'nullable|string|max:50',
+            'salary' => 'nullable|numeric|min:0',
 
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
@@ -148,6 +150,8 @@ class AdminStaffDetailsController extends Controller
                 'staff_category_id' => $data['staff_category_id'],
                 'designation' => $data['designation'] ?? null,
                 'department' => $data['department'] ?? null,
+                'employ_id' => $data['employ_id'] ?? null,
+                'salary' => $data['salary'] ?? null,
                 'joining_date' => now(),
             ]);
 
@@ -222,6 +226,8 @@ class AdminStaffDetailsController extends Controller
             'staff_category_id' => 'required|exists:staff_categories,id',
             'designation' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
+            'employ_id' => 'nullable|string|max:50',
+            'salary' => 'nullable|numeric|min:0',
             'email'    => ['required', 'email', Rule::unique('users')->ignore($staff->id)],
             'phone'    => 'nullable|string|max:20',
             'password' => 'nullable|string|min:6|confirmed',
@@ -248,6 +254,8 @@ class AdminStaffDetailsController extends Controller
                 'staff_category_id' => $data['staff_category_id'],
                 'designation' => $data['designation'] ?? null,
                 'department' => $data['department'] ?? null,
+                'employ_id' => $data['employ_id'] ?? null,
+                'salary' => $data['salary'] ?? null,
             ]);
 
         } else {
@@ -258,6 +266,8 @@ class AdminStaffDetailsController extends Controller
                 'staff_category_id' => $data['staff_category_id'],
                 'designation' => $data['designation'] ?? null,
                 'department' => $data['department'] ?? null,
+                'employ_id' => $data['employ_id'] ?? null,
+                'salary' => $data['salary'] ?? null,
                 'joining_date' => now(),
             ]);
         }
@@ -310,10 +320,10 @@ class AdminStaffDetailsController extends Controller
     {
         $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="staff_sample.csv"'];
         $rows = [
-            ['name', 'email', 'phone', 'password'],
-            ['Priya Sharma',  'priya@school.com',  '9876543210', 'pass1234'],
-            ['Ravi Kumar',    'ravi@school.com',   '9876543211', 'pass1234'],
-            ['Meena Iyer',    'meena@school.com',  '',           'pass1234'],
+            ['name', 'email', 'phone', 'password', 'employ_id', 'salary'],
+            ['Priya Sharma',  'priya@school.com',  '9876543210', 'pass1234', 'EMP-001', '50000.00'],
+            ['Ravi Kumar',    'ravi@school.com',   '9876543211', 'pass1234', 'EMP-002', '45000.00'],
+            ['Meena Iyer',    'meena@school.com',  '',           'pass1234', 'EMP-003', '48000.00'],
         ];
         $callback = function () use ($rows) {
             $out = fopen('php://output', 'w');
@@ -353,6 +363,8 @@ class AdminStaffDetailsController extends Controller
             $email    = trim($map['email']    ?? '');
             $phone    = trim($map['phone']    ?? '');
             $password = trim($map['password'] ?? '');
+            $employ_id= trim($map['employ_id']?? '');
+            $salary   = trim($map['salary']   ?? '');
 
             if (!$name || !$email || strlen($password) < 6) {
                 $errors[] = ['row' => $row, 'message' => "Missing or invalid name/email/password for '{$email}'"];
@@ -379,6 +391,8 @@ class AdminStaffDetailsController extends Controller
                 'created_for' => $user->id,
                 'institute_id' => $user->institute_id,
                 'staff_category_id' => $request->staff_category_id,
+                'employ_id' => $employ_id ?: null,
+                'salary' => $salary !== '' ? floatval($salary) : null,
                 'joining_date' => now(),
             ]);
             $imported++;

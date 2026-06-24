@@ -168,13 +168,29 @@
                                    style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
                             @error('designation')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-12 col-md-12">
+                        <div class="col-12 col-md-6">
                             <label class="form-label" style="font-size:13px;font-weight:600;">Department</label>
                             <input type="text" name="department" value="{{ old('department', $member?->staff?->department) }}"
                                    class="form-control @error('department') is-invalid @enderror"
                                    placeholder="e.g. Mathematics"
                                    style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
                             @error('department')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Employee ID</label>
+                            <input type="text" name="employ_id" value="{{ old('employ_id', $member?->staff?->employ_id) }}"
+                                   class="form-control @error('employ_id') is-invalid @enderror"
+                                   placeholder="e.g. EMP-001"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('employ_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Salary (₹)</label>
+                            <input type="number" step="0.01" min="0" name="salary" value="{{ old('salary', $member?->staff?->salary) }}"
+                                   class="form-control @error('salary') is-invalid @enderror"
+                                   placeholder="e.g. 50000.00"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('salary')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-12">
                             <div style="border-top:1px solid var(--sb-border);padding-top:16px;font-size:13px;font-weight:600;">
@@ -273,7 +289,7 @@
                         <div style="font-size:13px;color:#0C4A6E;line-height:1.6;">
                             <div class="fw-bold mb-1">CSV Format Guide</div>
                             Required columns: <code>name</code>, <code>email</code>, <code>password</code><br>
-                            Optional columns: <code>phone</code><br>
+                            Optional columns: <code>phone</code>, <code>employ_id</code>, <code>salary</code><br>
                             First row must be the header row. Passwords must be at least 6 characters.
                         </div>
                         <a href="{{ route('admin.staff_details.sample-csv') }}"
@@ -304,7 +320,7 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Row</th><th>Name</th><th>Email</th><th>Phone</th><th>Status</th>
+                                        <th>Row</th><th>Name</th><th>Email</th><th>Phone</th><th>Emp. ID</th><th>Salary</th><th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="csv-tbody-staff"></tbody>
@@ -402,7 +418,7 @@ function initCsvDropzone(suffix, columns) {
                 ? '<span class="csv-row-ok"><i class="bi bi-check-circle-fill"></i> Ready</span>'
                 : '<span class="csv-row-err"><i class="bi bi-x-circle-fill"></i> ' +
                   (!r.name ? 'Missing name' : !r.email || !r.email.includes('@') ? 'Invalid email' : 'Password too short') + '</span>';
-            const extra = suffix === 'student_details' ? `<td style="color:var(--sb-muted);">${r.class_name||'—'}</td>` : '';
+            const extra = suffix === 'student_details' ? `<td style="color:var(--sb-muted);">${r.class_name||'—'}</td>` : `<td style="color:var(--sb-muted);">${r.employ_id||'—'}</td><td style="color:var(--sb-muted);">${r.salary||'—'}</td>`;
             tbody.innerHTML += `<tr>
                 <td style="color:var(--sb-muted);font-size:12px;">${r._row}</td>
                 <td>${r.name||'<span style="color:var(--sb-red)">—</span>'}</td>
@@ -411,7 +427,7 @@ function initCsvDropzone(suffix, columns) {
                 ${extra}<td>${statusIcon}</td>
             </tr>`;
         });
-        if (rows.length > 50) tbody.innerHTML += `<tr><td colspan="6" style="text-align:center;color:var(--sb-muted);font-size:12px;padding:10px;">… and ${rows.length-50} more rows</td></tr>`;
+        if (rows.length > 50) tbody.innerHTML += `<tr><td colspan="7" style="text-align:center;color:var(--sb-muted);font-size:12px;padding:10px;">… and ${rows.length-50} more rows</td></tr>`;
         preview.style.display = 'block';
         submit.disabled = rows.length === 0;
     }

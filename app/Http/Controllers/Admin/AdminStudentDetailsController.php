@@ -139,7 +139,10 @@ class AdminStudentDetailsController extends Controller
             'email'    => 'required|email|unique:users,email',
             'phone'    => 'nullable|string|max:20',
             'class_id' => 'required|exists:classes,id',
+            'admission_number' => 'nullable|string|max:50',
             'roll_no'  => 'nullable|string|max:50',
+            'fee'      => 'nullable|numeric|min:0',
+            'fee_period' => 'nullable|string|max:255',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
@@ -159,7 +162,10 @@ class AdminStudentDetailsController extends Controller
                 'created_for'  => $user->id,
                 'institute_id' => auth()->user()->institute_id,
                 'class_id'     => $data['class_id'],
+                'admission_number' => $data['admission_number'] ?? null,
                 'roll_no'      => $data['roll_no'] ?? null,
+                'fee'          => $data['fee'] ?? null,
+                'fee_period'   => $data['fee_period'] ?? null,
             ]);
         });
 
@@ -211,7 +217,10 @@ class AdminStudentDetailsController extends Controller
             Rule::exists('classes', 'id')
                 ->where('institute_id', auth()->user()->institute_id)
         ],
+        'admission_number' => 'nullable|string|max:50',
         'roll_no'  => 'nullable|string|max:50',
+        'fee'      => 'nullable|numeric|min:0',
+        'fee_period' => 'nullable|string|max:255',
         'password' => 'nullable|string|min:6|confirmed',
     ]);
 
@@ -236,7 +245,10 @@ class AdminStudentDetailsController extends Controller
             [
                 'institute_id' => $student->institute_id,
                 'class_id'     => $data['class_id'],
+                'admission_number' => $data['admission_number'] ?? null,
                 'roll_no'      => $data['roll_no'] ?? null,
+                'fee'          => $data['fee'] ?? null,
+                'fee_period'   => $data['fee_period'] ?? null,
             ]
         );
     });
@@ -279,10 +291,10 @@ class AdminStudentDetailsController extends Controller
     {
         $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="students_sample.csv"'];
         $rows = [
-            ['name', 'email', 'phone', 'password', 'roll_no'],
-            ['Aarav Sharma',   'aarav@school.com',   '9876543210', 'pass1234', '101'],
-            ['Priya Nair',     'priya@school.com',   '9876543211', 'pass1234', '102'],
-            ['Rohan Mehta',    'rohan@school.com',   '',           'pass1234', '103'],
+            ['name', 'email', 'phone', 'password', 'admission_number', 'roll_no', 'fee', 'fee_period'],
+            ['Aarav Sharma',   'aarav@school.com',   '9876543210', 'pass1234', 'ADM-001', '101', '5000', 'Monthly'],
+            ['Priya Nair',     'priya@school.com',   '9876543211', 'pass1234', 'ADM-002', '102', '15000', 'Quarterly'],
+            ['Rohan Mehta',    'rohan@school.com',   '',           'pass1234', 'ADM-003', '103', '60000', 'Yearly'],
         ];
         $callback = function () use ($rows) {
             $out = fopen('php://output', 'w');
@@ -320,8 +332,11 @@ class AdminStudentDetailsController extends Controller
             $name     = trim($map['name']     ?? '');
             $email    = trim($map['email']    ?? '');
             $phone    = trim($map['phone']    ?? '');
-            $password = trim($map['password'] ?? '');
-            $roll_no  = trim($map['roll_no']  ?? '');
+            $password   = trim($map['password']   ?? '');
+            $admission_number = trim($map['admission_number'] ?? '');
+            $roll_no    = trim($map['roll_no']    ?? '');
+            $fee        = trim($map['fee']        ?? '');
+            $fee_period = trim($map['fee_period'] ?? '');
 
             if (!$name || !$email || strlen($password) < 6) {
                 $errors[] = ['row' => $row, 'message' => "Missing or invalid name/email/password for '{$email}'"];
@@ -348,7 +363,10 @@ class AdminStudentDetailsController extends Controller
                 'created_for'  => $user->id,
                 'institute_id' => auth()->user()->institute_id,
                 'class_id'     => $request->class_id,
+                'admission_number' => $admission_number ?: null,
                 'roll_no'      => $roll_no ?: null,
+                'fee'          => $fee !== '' ? floatval($fee) : null,
+                'fee_period'   => $fee_period ?: null,
             ]);
             $imported++;
         }

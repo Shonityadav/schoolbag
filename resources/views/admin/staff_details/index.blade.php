@@ -59,10 +59,12 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>Emp. ID</th>
                     <th>Staff Member</th>
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Category</th>
+                    <th>Salary</th>
                     <th>Permissions</th>
                     <th>Assigned Classes</th>
                     <th>Joined</th>
@@ -74,6 +76,9 @@
                 <tr>
                     <td style="color:var(--sb-muted);font-size:12px;">
                         {{ ($staff->currentPage() - 1) * $staff->perPage() + $loop->iteration }}
+                    </td>
+                    <td style="color:var(--sb-muted);font-size:13px;font-weight:600;">
+                        {{ $member->staff->employ_id ?? '—' }}
                     </td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
@@ -89,6 +94,9 @@
                         <span style="background:#F0FDF4;color:var(--sb-green);padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;">
                             {{ $member->staff?->category?->name ?? 'N/A' }}
                         </span>
+                    </td>
+                    <td style="color:var(--sb-text);font-weight:600;font-size:13px;">
+                        {{ $member->staff && $member->staff->salary ? '₹' . number_format($member->staff->salary, 2) : '—' }}
                     </td>
                     <td>
                         <div class="d-flex flex-wrap gap-1">
@@ -136,7 +144,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" class="text-center py-5" style="color:var(--sb-muted);">
+                    <td colspan="11" class="text-center py-5" style="color:var(--sb-muted);">
                         <i class="bi bi-person-badge" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.3;"></i>
                         No staff members found.
                         <a href="{{ route('admin.staff_details.create') }}" style="color:var(--sb-accent);">Add the first one</a>

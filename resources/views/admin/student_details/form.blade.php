@@ -174,12 +174,47 @@
                                     style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
                                 <option value="">— No class assigned —</option>
                                 @foreach($classes as $class)
-                                    <option value="{{ $class->id }}" {{ old('class_id', $student?->class_id) == $class->id ? 'selected' : '' }}>
+                                    <option value="{{ $class->id }}" {{ old('class_id', $student?->student?->class_id) == $class->id ? 'selected' : '' }}>
                                         {{ $class->standard }} - {{ $class->section }}
                                     </option>
                                 @endforeach
                             </select>
                             @error('class_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Admission Number</label>
+                            <input type="text" name="admission_number" value="{{ old('admission_number', $student?->student?->admission_number) }}"
+                                   class="form-control @error('admission_number') is-invalid @enderror"
+                                   placeholder="e.g. ADM-2026-001"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('admission_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Roll Number</label>
+                            <input type="text" name="roll_no" value="{{ old('roll_no', $student?->student?->roll_no) }}"
+                                   class="form-control @error('roll_no') is-invalid @enderror"
+                                   placeholder="e.g. 101"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('roll_no')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6"></div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Fee Amount (₹)</label>
+                            <input type="number" step="0.01" min="0" name="fee" value="{{ old('fee', $student?->student?->fee) }}"
+                                   class="form-control @error('fee') is-invalid @enderror"
+                                   placeholder="e.g. 15000"
+                                   style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                            @error('fee')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Fee Period</label>
+                            <select name="fee_period" class="form-select @error('fee_period') is-invalid @enderror" style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
+                                <option value="">— Select Period —</option>
+                                @foreach(['Monthly', 'Quarterly', 'Half-Yearly', 'Yearly'] as $period)
+                                    <option value="{{ $period }}" {{ old('fee_period', $student?->student?->fee_period) == $period ? 'selected' : '' }}>{{ $period }}</option>
+                                @endforeach
+                            </select>
+                            @error('fee_period')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-12">
                             <div style="border-top:1px solid var(--sb-border);padding-top:16px;font-size:13px;font-weight:600;">
@@ -230,7 +265,7 @@
                         <div style="font-size:13px;color:#0C4A6E;line-height:1.6;">
                             <div class="fw-bold mb-1">CSV Format Guide</div>
                             Required columns: <code>name</code>, <code>email</code>, <code>password</code><br>
-                            Optional columns: <code>phone</code><br>
+                            Optional columns: <code>phone</code>, <code>admission_number</code>, <code>roll_no</code>, <code>fee</code>, <code>fee_period</code><br>
                             First row must be the header row. Passwords must be at least 6 characters.
                         </div>
                         <a href="{{ route('admin.student_details.sample-csv') }}"
@@ -269,6 +304,9 @@
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Phone</th>
+                                        <th>Adm. No</th>
+                                        <th>Fee</th>
+                                        <th>Period</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -406,12 +444,15 @@ function initCsvDropzone(suffix) {
                 <td>${r.name || '<span style="color:var(--sb-red)">—</span>'}</td>
                 <td style="color:var(--sb-muted);">${r.email || '<span style="color:var(--sb-red)">—</span>'}</td>
                 <td style="color:var(--sb-muted);">${r.phone || '—'}</td>
+                <td style="color:var(--sb-muted);">${r.admission_number || '—'}</td>
+                <td style="color:var(--sb-muted);">${r.fee || '—'}</td>
+                <td style="color:var(--sb-muted);">${r.fee_period || '—'}</td>
                 <td>${statusIcon}</td>
             </tr>`;
         });
 
         if (rows.length > 50) {
-            tbody.innerHTML += `<tr><td colspan="5" style="text-align:center;color:var(--sb-muted);font-size:12px;padding:10px;">
+            tbody.innerHTML += `<tr><td colspan="7" style="text-align:center;color:var(--sb-muted);font-size:12px;padding:10px;">
                 … and ${rows.length - 50} more rows (all will be imported)
             </td></tr>`;
         }
