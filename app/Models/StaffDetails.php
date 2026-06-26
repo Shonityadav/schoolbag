@@ -15,7 +15,7 @@ class StaffDetails extends Model
         'staff_category_id',
         'designation',
         'department',
-        'employ_id',
+        'employee_id',
         'salary',
         'joining_date',
     ];

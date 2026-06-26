@@ -495,6 +495,18 @@
                 <i class="bi bi-bar-chart-line"></i> Reports
             </a>
         </div>
+        <div class="sb-nav-group">
+            <div class="sb-nav-label">ID Cards</div>
+            <a href="{{ route('admin.id_cards.index') }}" class="sb-nav-link @yield('admin_nav_idcards', '')">
+                <i class="bi bi-person-badge"></i> ID Card Studio
+            </a>
+            <a href="{{ route('admin.id_cards.downloads') }}" class="sb-nav-link @yield('admin_nav_idcards_downloads', '')">
+                <i class="bi bi-download"></i> Download Center
+            </a>
+            <a href="{{ route('admin.id_cards.settings') }}" class="sb-nav-link @yield('admin_nav_idcards_settings', '')">
+                <i class="bi bi-sliders"></i> Card Settings
+            </a>
+        </div>
 
         <div class="sb-nav-group">
             <div class="sb-nav-label">System</div>

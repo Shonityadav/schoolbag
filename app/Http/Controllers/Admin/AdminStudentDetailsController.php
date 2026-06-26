@@ -177,6 +177,13 @@ class AdminStudentDetailsController extends Controller
     /**
      * Show edit form.
      */
+    public function show(User $student)
+    {
+        abort_unless(in_array($student->user_type, [1, 3]) && $student->institute_id == auth()->user()->institute_id, 404);
+        $student->load('student.class');
+        return view('admin.student_details.show', compact('student'));
+    }
+
     public function edit(User $student)
     {
         abort_unless(
@@ -222,9 +229,10 @@ class AdminStudentDetailsController extends Controller
         'fee'      => 'nullable|numeric|min:0',
         'fee_period' => 'nullable|string|max:255',
         'password' => 'nullable|string|min:6|confirmed',
+        'user_img' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
     ]);
 
-    DB::transaction(function () use ($student, $data) {
+    DB::transaction(function () use ($student, $data, $request) {
 
         // Update User table
         $student->name  = $data['name'];
@@ -233,6 +241,19 @@ class AdminStudentDetailsController extends Controller
 
         if (!empty($data['password'])) {
             $student->password = Hash::make($data['password']);
+        }
+
+        if ($request->hasFile('user_img')) {
+            $instituteId = auth()->user()->institute_id;
+            $uploadDir = public_path("uploads/institute-{$instituteId}/user");
+            if (!\Illuminate\Support\Facades\File::exists($uploadDir)) {
+                \Illuminate\Support\Facades\File::makeDirectory($uploadDir, 0755, true);
+            }
+            $file = $request->file('user_img');
+            $studentDetail = $student->student;
+            $filename = ($studentDetail->admission_number ?? $student->id) . '.' . $file->getClientOriginalExtension();
+            $file->move($uploadDir, $filename);
+            $student->user_img = "uploads/institute-{$instituteId}/user/{$filename}";
         }
 
         $student->save();
@@ -374,6 +395,168 @@ class AdminStudentDetailsController extends Controller
 
         return redirect()->route('admin.student_details.create')
             ->with('import_result', compact('imported', 'skipped', 'errors'));
+    }
+
+    public function uploadPhotosForm()
+    {
+        $students = StudentDetails::with('user')
+            ->where('institute_id', auth()->user()->institute_id)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->user->id,
+                    'name' => $s->user->name,
+                    'admission_number' => $s->admission_number,
+                    'has_image' => !empty($s->user->user_img)
+                ];
+            });
+
+        return view('admin.student_details.upload_photos', compact('students'));
+    }
+
+    public function processUploadPhotos(Request $request)
+    {
+        $request->validate([
+            'upload_type' => 'required|in:single,bulk',
+        ]);
+
+        $instituteId = auth()->user()->institute_id;
+        $uploadDir = public_path("uploads/institute-{$instituteId}/user");
+        if (!\Illuminate\Support\Facades\File::exists($uploadDir)) {
+            \Illuminate\Support\Facades\File::makeDirectory($uploadDir, 0755, true);
+        }
+
+        if ($request->upload_type === 'single') {
+            $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'photo' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            ]);
+
+            $user = User::where('id', $request->user_id)->where('institute_id', $instituteId)->firstOrFail();
+            
+            $file = $request->file('photo');
+            $studentDetail = $user->student;
+            $filename = ($studentDetail->admission_number ?? $user->id) . '.' . $file->getClientOriginalExtension();
+            
+            $file->move($uploadDir, $filename);
+            
+            $user->user_img = "uploads/institute-{$instituteId}/user/{$filename}";
+            $user->save();
+
+            return redirect()->back()->with('success', 'Photo uploaded successfully.');
+        }
+
+        if ($request->upload_type === 'bulk') {
+            $request->validate([
+                'zip_file' => 'required|mimes:zip|max:51200', // max 50MB
+            ]);
+
+            $zipFile = $request->file('zip_file');
+            $zip = new \ZipArchive;
+            if ($zip->open($zipFile->getPathname()) === TRUE) {
+                $tempDir = storage_path('app/temp_zip_extract_' . time());
+                $zip->extractTo($tempDir);
+                $zip->close();
+
+                $files = \Illuminate\Support\Facades\File::allFiles($tempDir);
+                $imported = 0;
+                $skipped = 0;
+
+                foreach ($files as $file) {
+                    $ext = strtolower($file->getExtension());
+                    if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
+                        $skipped++;
+                        continue;
+                    }
+
+                    $filenameWithoutExt = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                    
+                    // Match admission_number
+                    $student = StudentDetails::where('institute_id', $instituteId)
+                        ->where('admission_number', $filenameWithoutExt)
+                        ->first();
+
+                    if ($student && $student->user) {
+                        if (!empty($student->user->user_img) && !$request->has('overwrite_existing')) {
+                            $skipped++;
+                            continue;
+                        }
+
+                        $newFilename = $filenameWithoutExt . '.' . $ext;
+                        \Illuminate\Support\Facades\File::copy($file->getPathname(), $uploadDir . '/' . $newFilename);
+                        
+                        $student->user->user_img = "uploads/institute-{$instituteId}/user/{$newFilename}";
+                        $student->user->save();
+                        $imported++;
+                    } else {
+                        $skipped++;
+                    }
+                }
+
+                \Illuminate\Support\Facades\File::deleteDirectory($tempDir);
+
+                return redirect()->back()->with('success', "Bulk upload completed. $imported photos imported, $skipped skipped.");
+            } else {
+                return redirect()->back()->with('error', 'Failed to open the ZIP file.');
+            }
+        }
+    }
+
+    public function previewZipUpload(Request $request)
+    {
+        $request->validate([
+            'zip_file' => 'required|mimes:zip|max:51200', // max 50MB
+        ]);
+
+        $zipFile = $request->file('zip_file');
+        $zip = new \ZipArchive;
+        if ($zip->open($zipFile->getPathname()) === TRUE) {
+            $matched = [];
+            $unmatched = [];
+
+            $instituteId = auth()->user()->institute_id;
+
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $filename = $zip->getNameIndex($i);
+                $info = pathinfo($filename);
+                
+                // Skip directories
+                if (!isset($info['extension'])) continue;
+
+                $ext = strtolower($info['extension']);
+                if (!in_array($ext, ['jpg', 'jpeg', 'png'])) continue;
+
+                // Base filename without extension is the admission number
+                $admNo = $info['filename'];
+
+                // Query database
+                $student = StudentDetails::with('user')
+                    ->where('institute_id', $instituteId)
+                    ->where('admission_number', $admNo)
+                    ->first();
+
+                if ($student && $student->user) {
+                    $matched[] = [
+                        'filename' => $info['basename'],
+                        'admission_number' => $admNo,
+                        'name' => $student->user->name,
+                        'has_existing' => !empty($student->user->user_img),
+                    ];
+                } else {
+                    $unmatched[] = $info['basename'];
+                }
+            }
+
+            $zip->close();
+
+            return response()->json([
+                'success' => true,
+                'matched' => $matched,
+                'unmatched' => $unmatched
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Failed to open ZIP file.'], 400);
     }
 }
 

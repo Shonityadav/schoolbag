@@ -109,7 +109,7 @@
             <div class="sb-tab-pane active" id="tab-single">
                 <form method="POST"
                       action="{{ $isEdit ? route('admin.staff_details.update', $member) : route('admin.staff_details.store') }}"
-                      class="p-4">
+                      class="p-4" enctype="multipart/form-data">
                     @csrf
                     @if($isEdit) @method('PUT') @endif
 
@@ -131,6 +131,18 @@
                                    placeholder="e.g. Priya Sharma"
                                    style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Profile Photo</label>
+                            @if($isEdit && !empty($member->user_img))
+                                <div class="mb-2">
+                                    <img src="{{ asset($member->user_img) }}" alt="Photo" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--sb-border);">
+                                </div>
+                            @endif
+                            <input type="file" name="user_img" class="form-control @error('user_img') is-invalid @enderror" style="font-size:13px;" accept="image/jpeg,image/png,image/jpg">
+                            <div class="form-text" style="font-size:11.5px;">Max size 5MB (JPEG, PNG, JPG). Optional.</div>
+                            @error('user_img') <div class="invalid-feedback" style="font-size:12px;">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label" style="font-size:13px;font-weight:600;">Email Address <span class="text-danger">*</span></label>
@@ -178,11 +190,11 @@
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label" style="font-size:13px;font-weight:600;">Employee ID</label>
-                            <input type="text" name="employ_id" value="{{ old('employ_id', $member?->staff?->employ_id) }}"
-                                   class="form-control @error('employ_id') is-invalid @enderror"
+                            <input type="text" name="employee_id" value="{{ old('employee_id', $member?->staff?->employee_id) }}"
+                                   class="form-control @error('employee_id') is-invalid @enderror"
                                    placeholder="e.g. EMP-001"
                                    style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
-                            @error('employ_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            @error('employee_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label" style="font-size:13px;font-weight:600;">Salary (₹)</label>
@@ -289,7 +301,7 @@
                         <div style="font-size:13px;color:#0C4A6E;line-height:1.6;">
                             <div class="fw-bold mb-1">CSV Format Guide</div>
                             Required columns: <code>name</code>, <code>email</code>, <code>password</code><br>
-                            Optional columns: <code>phone</code>, <code>employ_id</code>, <code>salary</code><br>
+                            Optional columns: <code>phone</code>, <code>employee_id</code>, <code>salary</code><br>
                             First row must be the header row. Passwords must be at least 6 characters.
                         </div>
                         <a href="{{ route('admin.staff_details.sample-csv') }}"
@@ -418,7 +430,7 @@ function initCsvDropzone(suffix, columns) {
                 ? '<span class="csv-row-ok"><i class="bi bi-check-circle-fill"></i> Ready</span>'
                 : '<span class="csv-row-err"><i class="bi bi-x-circle-fill"></i> ' +
                   (!r.name ? 'Missing name' : !r.email || !r.email.includes('@') ? 'Invalid email' : 'Password too short') + '</span>';
-            const extra = suffix === 'student_details' ? `<td style="color:var(--sb-muted);">${r.class_name||'—'}</td>` : `<td style="color:var(--sb-muted);">${r.employ_id||'—'}</td><td style="color:var(--sb-muted);">${r.salary||'—'}</td>`;
+            const extra = suffix === 'student_details' ? `<td style="color:var(--sb-muted);">${r.class_name||'—'}</td>` : `<td style="color:var(--sb-muted);">${r.employee_id||'—'}</td><td style="color:var(--sb-muted);">${r.salary||'—'}</td>`;
             tbody.innerHTML += `<tr>
                 <td style="color:var(--sb-muted);font-size:12px;">${r._row}</td>
                 <td>${r.name||'<span style="color:var(--sb-red)">—</span>'}</td>

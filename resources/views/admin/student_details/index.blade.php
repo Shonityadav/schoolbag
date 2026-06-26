@@ -14,11 +14,18 @@
             {{ $students->total() }} total students registered
         </p>
     </div>
-    <a href="{{ route('admin.student_details.create') }}"
-       class="btn btn-sm text-white d-flex align-items-center gap-2"
-       style="font-size:13px;border-radius:7px;background:var(--sb-accent);padding:8px 16px;">
-        <i class="bi bi-plus-lg"></i> Add Student
-    </a>
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ route('admin.student_details.upload-photos') }}"
+           class="btn btn-sm text-white d-flex align-items-center gap-2"
+           style="font-size:13px;border-radius:7px;background:var(--sb-accent);padding:8px 16px;">
+            <i class="bi bi-file-image"></i> Upload Photos
+        </a>
+        <a href="{{ route('admin.student_details.create') }}"
+           class="btn btn-sm text-white d-flex align-items-center gap-2"
+           style="font-size:13px;border-radius:7px;background:var(--sb-accent);padding:8px 16px;">
+            <i class="bi bi-plus-lg"></i> Add Student
+        </a>
+    </div>
 </div>
 
 {{-- Alerts --}}
@@ -81,7 +88,10 @@
         <table class="sb-table">
             <thead>
                 <tr>
-                    <th>Roll No</th>
+                    <th style="width: 40px; text-align: center;">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                    </th>
+                    <th>Photo</th>
                     <th>Adm. No</th>
                     <th>Student</th>
                     <th>Email</th>
@@ -96,8 +106,17 @@
             <tbody>
                 @forelse($students as $student)
                 <tr>
-                    <td style="color:var(--sb-muted);font-size:13px;font-weight:600;">
-                        {{ $student->student->roll_no ?? '—' }}
+                    <td style="text-align: center; vertical-align: middle;">
+                        <input class="form-check-input student-checkbox" type="checkbox" value="{{ $student->id }}">
+                    </td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        @if(!empty($student->user_img))
+                            <img src="{{ asset($student->user_img) }}" alt="Photo" style="width:38px;height:38px;object-fit:cover;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+                        @else
+                            <div style="width:38px;height:38px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:16px;margin:auto;">
+                                <i class="bi bi-person"></i>
+                            </div>
+                        @endif
                     </td>
                     <td style="color:var(--sb-muted);font-size:13px;">
                         {{ $student->student->admission_number ?? '—' }}
@@ -133,6 +152,11 @@
                     </td>
                     <td>
                         <div class="d-flex gap-1 justify-content-end">
+                            <a href="{{ route('admin.student_details.show', $student) }}"
+                               class="sb-icon-btn" title="View Details"
+                               style="width:32px;height:32px;font-size:14px;border-radius:6px;background:#F0FDF4;color:#16A34A;border:1px solid #BBF7D0;">
+                                <i class="bi bi-eye"></i>
+                            </a>
                             <a href="{{ route('admin.student_details.edit', $student) }}"
                                class="sb-icon-btn" title="Edit"
                                style="width:32px;height:32px;font-size:14px;border-radius:6px;">
@@ -202,5 +226,110 @@
     </div>
     @endif
 </div>
+
+{{-- Bulk Action Bar --}}
+<div id="bulkActionBar" class="position-fixed bottom-0 start-50 translate-middle-x mb-4 bg-white shadow-lg rounded-pill px-4 py-3 d-none align-items-center gap-3" style="z-index: 1050; border: 1px solid var(--sb-border);">
+    <span class="fw-semibold text-dark"><span id="selectedCount">0</span> selected</span>
+    <div style="width: 1px; height: 20px; background: var(--sb-border);"></div>
+    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" onclick="openGenerateModal()">
+        <i class="bi bi-person-badge"></i> Generate ID Cards
+    </button>
+</div>
+
+{{-- Generate ID Card Modal --}}
+<div class="modal fade" id="generateIdCardModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form action="{{ route('admin.id_cards.bulkPrint') }}" method="POST" class="modal-content">
+            @csrf
+            <input type="hidden" name="user_ids" id="modalUserIds">
+            <input type="hidden" name="type" value="student">
+            
+            <div class="modal-header">
+                <h5 class="modal-title">Generate ID Cards</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info py-2" style="font-size:13.5px;">
+                    <i class="bi bi-info-circle"></i> You are generating ID cards for <strong id="modalSelectedCount">0</strong> student(s).
+                </div>
+                
+                @php
+                    $templates = \App\Models\IdCardTemplate::where('institute_id', auth()->user()->institute_id)
+                        ->where('status', 'Published')
+                        ->where('type', 'student')
+                        ->get();
+                @endphp
+                
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Select Template</label>
+                    <select name="template_id" class="form-select" required>
+                        <option value="">-- Choose Template --</option>
+                        @foreach($templates as $tpl)
+                            <option value="{{ $tpl->id }}">{{ $tpl->name }}</option>
+                        @endforeach
+                    </select>
+                    @if($templates->isEmpty())
+                        <div class="form-text text-danger">No published templates available for students. Please create and publish one first.</div>
+                    @endif
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Export Format</label>
+                    <select name="export_type" class="form-select" required>
+                        <option value="single_pdf">Single PDF (Multiple cards per page for printing)</option>
+                        <option value="zip">ZIP Archive (Individual image files)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" {{ $templates->isEmpty() ? 'disabled' : '' }}>Generate & Download</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    const bulkActionBar = document.getElementById('bulkActionBar');
+    const selectedCount = document.getElementById('selectedCount');
+
+    function updateBulkAction() {
+        const checked = document.querySelectorAll('.student-checkbox:checked');
+        if(checked.length > 0) {
+            bulkActionBar.classList.remove('d-none');
+            bulkActionBar.classList.add('d-flex');
+            selectedCount.innerText = checked.length;
+        } else {
+            bulkActionBar.classList.add('d-none');
+            bulkActionBar.classList.remove('d-flex');
+        }
+        
+        selectAll.checked = (checked.length === checkboxes.length && checkboxes.length > 0);
+    }
+
+    if(selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateBulkAction();
+        });
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateBulkAction);
+    });
+});
+
+function openGenerateModal() {
+    const checked = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
+    document.getElementById('modalUserIds').value = checked.join(',');
+    document.getElementById('modalSelectedCount').innerText = checked.length;
+    
+    var myModal = new bootstrap.Modal(document.getElementById('generateIdCardModal'));
+    myModal.show();
+}
+</script>
 
 @endsection

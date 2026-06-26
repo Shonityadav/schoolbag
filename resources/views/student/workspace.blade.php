@@ -307,5 +307,7 @@
             </div>
         </div>
     </div>
+</div>
 
+@include('student.partials.chat_widget')
 @endsection

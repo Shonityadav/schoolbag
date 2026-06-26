@@ -129,7 +129,7 @@
             <div class="sb-tab-pane active" id="tab-single">
                 <form method="POST"
                       action="{{ $isEdit ? route('admin.student_details.update', $student) : route('admin.student_details.store') }}"
-                      class="p-4">
+                      class="p-4" enctype="multipart/form-data">
                     @csrf
                     @if($isEdit) @method('PUT') @endif
 
@@ -151,6 +151,18 @@
                                    placeholder="e.g. Aarav Sharma"
                                    style="font-size:13.5px;border-color:var(--sb-border);border-radius:8px;">
                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label" style="font-size:13px;font-weight:600;">Profile Photo</label>
+                            @if($isEdit && !empty($student->user_img))
+                                <div class="mb-2">
+                                    <img src="{{ asset($student->user_img) }}" alt="Photo" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--sb-border);">
+                                </div>
+                            @endif
+                            <input type="file" name="user_img" class="form-control @error('user_img') is-invalid @enderror" style="font-size:13px;" accept="image/jpeg,image/png,image/jpg">
+                            <div class="form-text" style="font-size:11.5px;">Max size 5MB (JPEG, PNG, JPG). Optional.</div>
+                            @error('user_img') <div class="invalid-feedback" style="font-size:12px;">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label" style="font-size:13px;font-weight:600;">Email Address <span class="text-danger">*</span></label>

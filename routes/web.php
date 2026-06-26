@@ -11,6 +11,7 @@ use App\Http\Controllers\Student\EbookController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 
 use App\Http\Controllers\Student\WorkspaceController;
+use App\Http\Controllers\Student\StudentChatController;
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 
@@ -24,6 +25,10 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 Route::get('/', function () {
     return redirect()->route('student.welcome');
 });
+
+// Public ID Card Verification
+use App\Http\Controllers\IdCardVerificationController;
+Route::get('/verify/{token}', [IdCardVerificationController::class, 'verify'])->name('idcard.verify');
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +81,11 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::get('/terms-and-conditions', function () { return view('student.terms'); })->name('terms');
 
         Route::post('/attendance/mark', [DashboardController::class, 'markAttendance'])->name('attendance.mark');
+
+        // Chat Widget Routes
+        Route::get('/chat/rooms', [StudentChatController::class, 'fetchRooms'])->name('chat.rooms');
+        Route::get('/chat/rooms/{room}/messages', [StudentChatController::class, 'fetchMessages'])->name('chat.messages');
+        Route::post('/chat/rooms/{room}/send', [StudentChatController::class, 'sendMessage'])->name('chat.send');
     });
 });
 
@@ -95,6 +105,7 @@ use App\Http\Controllers\Admin\AdminAttendanceController;
 use App\Http\Controllers\Admin\AdminEbookAssignmentController;
 use App\Http\Controllers\Admin\AdminStaffCategoryController;
 use App\Http\Controllers\Admin\AdminChatController;
+use App\Http\Controllers\Admin\AdminIdCardController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
@@ -115,18 +126,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Students CRUD
         Route::get('/student-details',                [AdminStudentDetailsController::class, 'index'])->middleware('permission:student_details.view')->name('student_details.index');
         Route::get('/student-details/create',         [AdminStudentDetailsController::class, 'create'])->middleware('permission:student_details.create')->name('student_details.create');
+        Route::get('/student-details/upload-photos',  [AdminStudentDetailsController::class, 'uploadPhotosForm'])->middleware('permission:student_details.create')->name('student_details.upload-photos');
+        Route::post('/student-details/upload-photos', [AdminStudentDetailsController::class, 'processUploadPhotos'])->middleware('permission:student_details.create')->name('student_details.upload-photos.submit');
+        Route::post('/student-details/upload-photos/preview', [AdminStudentDetailsController::class, 'previewZipUpload'])->middleware('permission:student_details.create')->name('student_details.upload-photos.preview');
         Route::post('/student-details',               [AdminStudentDetailsController::class, 'store'])->middleware('permission:student_details.create')->name('student_details.store');
         Route::get('/student-details/{student}/edit', [AdminStudentDetailsController::class, 'edit'])->middleware('permission:student_details.edit')->name('student_details.edit');
+        Route::get('/student-details/{student}',      [AdminStudentDetailsController::class, 'show'])->middleware('permission:student_details.view')->name('student_details.show');
         Route::put('/student-details/{student}',      [AdminStudentDetailsController::class, 'update'])->middleware('permission:student_details.edit')->name('student_details.update');
         Route::delete('/student-details/{student}',   [AdminStudentDetailsController::class, 'destroy'])->middleware('permission:student_details.delete')->name('student_details.destroy');
         Route::get('/student-details/sample-csv',     [AdminStudentDetailsController::class, 'sampleCsv'])->middleware('permission:student_details.edit')->name('student_details.sample-csv');
         Route::post('/student-details/import',        [AdminStudentDetailsController::class, 'importCsv'])->middleware('permission:student_details.edit')->name('student_details.import');
 
         // Staff CRUD
-        Route::get('/staff-details',                   [AdminStaffDetailsController::class, 'index'])->middleware('permission:staff.view')->name('staff_details.index');
-        Route::get('/staff-details/create',            [AdminStaffDetailsController::class, 'create'])->middleware('permission:staff.create')->name('staff_details.create');
-        Route::post('/staff-details',                  [AdminStaffDetailsController::class, 'store'])->middleware('permission:staff.create')->name('staff_details.store');
+        Route::get('/staff-details',                  [AdminStaffDetailsController::class, 'index'])->middleware('permission:staff.view')->name('staff_details.index');
+        Route::get('/staff-details/create',           [AdminStaffDetailsController::class, 'create'])->middleware('permission:staff.create')->name('staff_details.create');
+        Route::get('/staff-details/upload-photos',    [AdminStaffDetailsController::class, 'uploadPhotosForm'])->middleware('permission:staff.create')->name('staff_details.upload-photos');
+        Route::post('/staff-details/upload-photos',   [AdminStaffDetailsController::class, 'processUploadPhotos'])->middleware('permission:staff.create')->name('staff_details.upload-photos.submit');
+        Route::post('/staff-details/upload-photos/preview', [AdminStaffDetailsController::class, 'previewZipUpload'])->middleware('permission:staff.create')->name('staff_details.upload-photos.preview');
+        Route::post('/staff-details',                 [AdminStaffDetailsController::class, 'store'])->middleware('permission:staff.create')->name('staff_details.store');
         Route::get('/staff-details/{staff}/edit',      [AdminStaffDetailsController::class, 'edit'])->middleware('permission:staff.edit')->name('staff_details.edit');
+        Route::get('/staff-details/{staff}',           [AdminStaffDetailsController::class, 'show'])->middleware('permission:staff.view')->name('staff_details.show');
         Route::put('/staff-details/{staff}',           [AdminStaffDetailsController::class, 'update'])->middleware('permission:staff.edit')->name('staff_details.update');
         Route::delete('/staff-details/{staff}',        [AdminStaffDetailsController::class, 'destroy'])->middleware('permission:staff.delete')->name('staff_details.destroy');
         Route::get('/staff-details/sample-csv',        [AdminStaffDetailsController::class, 'sampleCsv'])->middleware('permission:staff.edit')->name('staff_details.sample-csv');
@@ -162,7 +181,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Chat
         Route::get('/chat',[AdminChatController::class,'index'])->name('chat.index');
         Route::get('/chat/sidebar-sync',[AdminChatController::class,'sidebarSync'])->name('chat.sidebar_sync');
-        Route::get( '/chat/{room}',[AdminChatController::class,'show'])->name('chat.show');
+        Route::get('/chat/{room}',[AdminChatController::class,'show'])->name('chat.show');
         Route::post('/chat/{room}/send',[AdminChatController::class,'send'])->name('chat.send');
         Route::get('/chat/{room}/sync',[AdminChatController::class,'sync'])->name('chat.sync');
         Route::post('/chat/{room}/typing',[AdminChatController::class,'typing'])->name('chat.typing');
@@ -171,5 +190,38 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Ebook Assignments
         Route::get('/ebook-assignments',        [AdminEbookAssignmentController::class, 'index'])->name('ebook_assignments.index');
         Route::post('/ebook-assignments/assign', [AdminEbookAssignmentController::class, 'assign'])->name('ebook_assignments.assign');
+
+        // ID Card Management
+        Route::prefix('id-cards')->name('id_cards.')->group(function() {
+            Route::get('/', [AdminIdCardController::class, 'index'])->middleware('permission:idcard.view')->name('index');
+            Route::get('/create', [AdminIdCardController::class, 'create'])->middleware('permission:idcard.edit')->name('create');
+            Route::post('/', [AdminIdCardController::class, 'store'])->middleware('permission:idcard.edit')->name('store');
+            Route::get('/{template}/edit', [AdminIdCardController::class, 'edit'])->middleware('permission:idcard.edit')->name('edit');
+            Route::put('/{template}', [AdminIdCardController::class, 'update'])->middleware('permission:idcard.edit')->name('update');
+            Route::delete('/{template}', [AdminIdCardController::class, 'destroy'])->middleware('permission:idcard.edit')->name('destroy');
+            
+            // Designer routes
+            Route::get('/{template}/designer', [AdminIdCardController::class, 'designer'])->middleware('permission:idcard.edit')->name('designer');
+            Route::post('/{template}/save-layout', [AdminIdCardController::class, 'saveLayout'])->middleware('permission:idcard.edit')->name('save_layout');
+            Route::post('/{template}/preview', [AdminIdCardController::class, 'preview'])->middleware('permission:idcard.view')->name('preview');
+            Route::post('/{template}/publish', [AdminIdCardController::class, 'publish'])->middleware('permission:idcard.edit')->name('publish');
+            Route::post('/{template}/duplicate', [AdminIdCardController::class, 'duplicate'])->middleware('permission:idcard.edit')->name('duplicate');
+            Route::post('/{template}/archive', [AdminIdCardController::class, 'archive'])->middleware('permission:idcard.edit')->name('archive');
+            
+            // Assets
+            Route::post('/assets/upload', [AdminIdCardController::class, 'uploadAsset'])->middleware('permission:idcard.edit')->name('assets.upload');
+            Route::delete('/assets/{asset}', [AdminIdCardController::class, 'deleteAsset'])->middleware('permission:idcard.edit')->name('assets.destroy');
+            
+            // Settings
+            Route::get('/settings', [AdminIdCardController::class, 'settings'])->middleware('permission:idcard.settings')->name('settings');
+            Route::post('/settings', [AdminIdCardController::class, 'updateSettings'])->middleware('permission:idcard.settings')->name('settings.update');
+            
+            // Downloads and Bulk Print
+            Route::get('/downloads', [AdminIdCardController::class, 'downloads'])->middleware('permission:idcard.bulk_print')->name('downloads');
+            Route::post('/bulk-print', [AdminIdCardController::class, 'bulkPrint'])->middleware('permission:idcard.bulk_print')->name('bulkPrint');
+            
+            // Revoke Card
+            Route::post('/revoke/{card}', [AdminIdCardController::class, 'revokeCard'])->middleware('permission:idcard.edit')->name('revoke');
+        });
     });
 });

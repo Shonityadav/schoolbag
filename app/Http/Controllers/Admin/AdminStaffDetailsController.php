@@ -119,7 +119,7 @@ class AdminStaffDetailsController extends Controller
             'staff_category_id' => 'required|exists:staff_categories,id',
             'designation' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
-            'employ_id' => 'nullable|string|max:50',
+            'employee_id' => 'nullable|string|max:50',
             'salary' => 'nullable|numeric|min:0',
 
             'permissions' => 'nullable|array',
@@ -150,7 +150,7 @@ class AdminStaffDetailsController extends Controller
                 'staff_category_id' => $data['staff_category_id'],
                 'designation' => $data['designation'] ?? null,
                 'department' => $data['department'] ?? null,
-                'employ_id' => $data['employ_id'] ?? null,
+                'employee_id' => $data['employee_id'] ?? null,
                 'salary' => $data['salary'] ?? null,
                 'joining_date' => now(),
             ]);
@@ -175,6 +175,13 @@ class AdminStaffDetailsController extends Controller
     /**
      * Show edit form.
      */
+    public function show(User $staff)
+    {
+        abort_unless($staff->user_type == 2 && $staff->institute_id == auth()->user()->institute_id, 404);
+        $staff->load('staff.category', 'classes', 'permissions');
+        return view('admin.staff_details.show', compact('staff'));
+    }
+
     public function edit(User $staff)
     {
         abort_unless(
@@ -226,7 +233,7 @@ class AdminStaffDetailsController extends Controller
             'staff_category_id' => 'required|exists:staff_categories,id',
             'designation' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
-            'employ_id' => 'nullable|string|max:50',
+            'employee_id' => 'nullable|string|max:50',
             'salary' => 'nullable|numeric|min:0',
             'email'    => ['required', 'email', Rule::unique('users')->ignore($staff->id)],
             'phone'    => 'nullable|string|max:20',
@@ -237,6 +244,7 @@ class AdminStaffDetailsController extends Controller
             'classes.*' => 'exists:classes,id',
             'managed_categories' => 'nullable|array',
             'managed_categories.*' => 'exists:staff_categories,id',
+            'user_img' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         $staff->name  = $data['name'];
@@ -247,6 +255,19 @@ class AdminStaffDetailsController extends Controller
             $staff->password = Hash::make($data['password']);
         }
 
+        if ($request->hasFile('user_img')) {
+            $instituteId = auth()->user()->institute_id;
+            $uploadDir = public_path("uploads/institute-{$instituteId}/user");
+            if (!\Illuminate\Support\Facades\File::exists($uploadDir)) {
+                \Illuminate\Support\Facades\File::makeDirectory($uploadDir, 0755, true);
+            }
+            $file = $request->file('user_img');
+            $staffDetail = $staff->staff;
+            $filename = ($staffDetail->employee_id ?? $staff->id) . '.' . $file->getClientOriginalExtension();
+            $file->move($uploadDir, $filename);
+            $staff->user_img = "uploads/institute-{$instituteId}/user/{$filename}";
+        }
+
         $staff->save();
         if ($staff->staff) {
 
@@ -254,7 +275,7 @@ class AdminStaffDetailsController extends Controller
                 'staff_category_id' => $data['staff_category_id'],
                 'designation' => $data['designation'] ?? null,
                 'department' => $data['department'] ?? null,
-                'employ_id' => $data['employ_id'] ?? null,
+                'employee_id' => $data['employee_id'] ?? null,
                 'salary' => $data['salary'] ?? null,
             ]);
 
@@ -266,7 +287,7 @@ class AdminStaffDetailsController extends Controller
                 'staff_category_id' => $data['staff_category_id'],
                 'designation' => $data['designation'] ?? null,
                 'department' => $data['department'] ?? null,
-                'employ_id' => $data['employ_id'] ?? null,
+                'employee_id' => $data['employee_id'] ?? null,
                 'salary' => $data['salary'] ?? null,
                 'joining_date' => now(),
             ]);
@@ -320,7 +341,7 @@ class AdminStaffDetailsController extends Controller
     {
         $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => 'attachment; filename="staff_sample.csv"'];
         $rows = [
-            ['name', 'email', 'phone', 'password', 'employ_id', 'salary'],
+            ['name', 'email', 'phone', 'password', 'employee_id', 'salary'],
             ['Priya Sharma',  'priya@school.com',  '9876543210', 'pass1234', 'EMP-001', '50000.00'],
             ['Ravi Kumar',    'ravi@school.com',   '9876543211', 'pass1234', 'EMP-002', '45000.00'],
             ['Meena Iyer',    'meena@school.com',  '',           'pass1234', 'EMP-003', '48000.00'],
@@ -363,7 +384,7 @@ class AdminStaffDetailsController extends Controller
             $email    = trim($map['email']    ?? '');
             $phone    = trim($map['phone']    ?? '');
             $password = trim($map['password'] ?? '');
-            $employ_id= trim($map['employ_id']?? '');
+            $employee_id= trim($map['employee_id']?? '');
             $salary   = trim($map['salary']   ?? '');
 
             if (!$name || !$email || strlen($password) < 6) {
@@ -391,7 +412,7 @@ class AdminStaffDetailsController extends Controller
                 'created_for' => $user->id,
                 'institute_id' => $user->institute_id,
                 'staff_category_id' => $request->staff_category_id,
-                'employ_id' => $employ_id ?: null,
+                'employee_id' => $employee_id ?: null,
                 'salary' => $salary !== '' ? floatval($salary) : null,
                 'joining_date' => now(),
             ]);
@@ -401,6 +422,171 @@ class AdminStaffDetailsController extends Controller
 
         return redirect()->route('admin.staff_details.create')
             ->with('import_result', compact('imported', 'skipped', 'errors'));
+    }
+
+    public function uploadPhotosForm()
+    {
+        $staffMembers = User::where('user_type', 2)
+            ->where('institute_id', auth()->user()->institute_id)
+            ->with('staff')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'employee_id' => $s->staff->employee_id ?? null,
+                    'has_image' => !empty($s->user_img),
+                ];
+            });
+
+        return view('admin.staff_details.upload_photos', compact('staffMembers'));
+    }
+
+    public function processUploadPhotos(Request $request)
+    {
+        $request->validate([
+            'upload_type' => 'required|in:single,bulk',
+            'user_id' => 'required_if:upload_type,single|exists:users,id',
+            'photo' => 'required_if:upload_type,single|image|mimes:jpg,jpeg,png|max:5120', // 5MB
+            'zip_file' => 'required_if:upload_type,bulk|mimes:zip|max:51200', // 50MB
+        ]);
+
+        $instituteId = auth()->user()->institute_id;
+        $uploadType = $request->upload_type;
+
+        if ($uploadType === 'single') {
+            $user = User::findOrFail($request->user_id);
+            if ($user->institute_id != $instituteId || $user->user_type != 2) {
+                abort(403);
+            }
+
+            $file = $request->file('photo');
+            $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = public_path("uploads/institute-{$instituteId}/user");
+            
+            if (!file_exists($path)) {
+                mkdir($path, 0777, true);
+            }
+
+            $file->move($path, $filename);
+
+            $user->user_img = "uploads/institute-{$instituteId}/user/{$filename}";
+            $user->save();
+
+            return redirect()->route('admin.staff_details.index')->with('success', 'Staff photo uploaded successfully.');
+        }
+
+        if ($uploadType === 'bulk') {
+            $zipFile = $request->file('zip_file');
+            
+            $zip = new \ZipArchive;
+            if ($zip->open($zipFile->getPathname()) === TRUE) {
+                $extractPath = storage_path('app/temp/zip_' . time());
+                $zip->extractTo($extractPath);
+                $zip->close();
+
+                $files = \Illuminate\Support\Facades\File::allFiles($extractPath);
+                $imported = 0;
+                $skipped = 0;
+
+                foreach ($files as $file) {
+                    $ext = strtolower($file->getExtension());
+                    if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
+                        $skipped++;
+                        continue;
+                    }
+
+                    $filenameWithoutExt = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                    
+                    $staff = StaffDetails::where('institute_id', $instituteId)
+                        ->where('employee_id', $filenameWithoutExt)
+                        ->first();
+
+                    if ($staff && $staff->user) {
+                        if (!empty($staff->user->user_img) && !$request->has('overwrite_existing')) {
+                            $skipped++;
+                            continue;
+                        }
+
+                        $newFilename = $staff->user->id . '_' . time() . '.' . $ext;
+                        $destPath = public_path("uploads/institute-{$instituteId}/user");
+                        
+                        if (!file_exists($destPath)) {
+                            mkdir($destPath, 0777, true);
+                        }
+
+                        \Illuminate\Support\Facades\File::copy($file->getPathname(), $destPath . '/' . $newFilename);
+
+                        $staff->user->user_img = "uploads/institute-{$instituteId}/user/{$newFilename}";
+                        $staff->user->save();
+                        $imported++;
+                    } else {
+                        $skipped++;
+                    }
+                }
+
+                \Illuminate\Support\Facades\File::deleteDirectory($extractPath);
+
+                return redirect()->route('admin.staff_details.index')->with('success', "Bulk upload completed. {$imported} photos imported, {$skipped} skipped.");
+            } else {
+                return back()->with('error', 'Failed to open ZIP file.');
+            }
+        }
+    }
+
+    public function previewZipUpload(Request $request)
+    {
+        $request->validate([
+            'zip_file' => 'required|mimes:zip|max:51200', // max 50MB
+        ]);
+
+        $zipFile = $request->file('zip_file');
+        $zip = new \ZipArchive;
+        if ($zip->open($zipFile->getPathname()) === TRUE) {
+            $matched = [];
+            $unmatched = [];
+
+            $instituteId = auth()->user()->institute_id;
+
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $filename = $zip->getNameIndex($i);
+                $info = pathinfo($filename);
+                
+                if (!isset($info['extension'])) continue;
+
+                $ext = strtolower($info['extension']);
+                if (!in_array($ext, ['jpg', 'jpeg', 'png'])) continue;
+
+                $empId = $info['filename'];
+
+                $staff = StaffDetails::with('user')
+                    ->where('institute_id', $instituteId)
+                    ->where('employee_id', $empId)
+                    ->first();
+
+                if ($staff && $staff->user) {
+                    $matched[] = [
+                        'filename' => $info['basename'],
+                        'employee_id' => $empId,
+                        'name' => $staff->user->name,
+                        'has_existing' => !empty($staff->user->user_img),
+                    ];
+                } else {
+                    $unmatched[] = $info['basename'];
+                }
+            }
+
+            $zip->close();
+
+            return response()->json([
+                'success' => true,
+                'matched' => $matched,
+                'unmatched' => $unmatched
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Failed to open ZIP file.'], 400);
     }
 }
 
