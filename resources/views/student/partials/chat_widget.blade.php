@@ -194,6 +194,7 @@
         display: flex;
         flex-direction: column;
         height: 100%;
+        min-height: 0;
     }
 
     #scw-chat-header {
@@ -220,6 +221,7 @@
         flex-direction: column;
         gap: 16px;
         background: #F9FAFB;
+        min-height: 0;
     }
 
     .scw-msg {
@@ -470,12 +472,12 @@
         }
     });
 
-    // Polling logic
+    // Polling logic for messages when chat is open
     function scwStartPolling() {
         if(scwPollInterval) clearInterval(scwPollInterval);
         scwPollInterval = setInterval(() => {
             if (scwCurrentRoom) {
-                scwLoadMessages(); // In a production app, we'd only fetch NEW messages to save bandwidth, but this is fine for now
+                scwLoadMessages();
             }
         }, 5000);
     }
@@ -487,21 +489,31 @@
         }
     }
 
-    // Initial background poll for unread badge
-    setTimeout(() => {
+    // Global background poll for unread badge notification
+    function scwCheckUnreadNotifications() {
         if(!scwIsOpen) {
             fetch("{{ route('student.chat.rooms') }}")
                 .then(res => res.json())
                 .then(data => {
                     let totalUnread = 0;
-                    data.rooms.forEach(r => totalUnread += r.unread_count);
+                    if(data.rooms) {
+                        data.rooms.forEach(r => totalUnread += r.unread_count);
+                    }
                     const badge = document.getElementById('scw-badge');
                     if (totalUnread > 0) {
                         badge.textContent = totalUnread;
                         badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
                     }
-                });
+                })
+                .catch(err => console.error("Notification poll error:", err));
         }
-    }, 2000);
+    }
+
+    // Initial check after 2 seconds
+    setTimeout(scwCheckUnreadNotifications, 2000);
+    // Continue checking every 10 seconds
+    setInterval(scwCheckUnreadNotifications, 10000);
 
 </script>

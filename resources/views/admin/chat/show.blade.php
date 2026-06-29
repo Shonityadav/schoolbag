@@ -270,9 +270,24 @@
                 // 1. Append New Messages
                 if (response.html.trim() !== '') {
                     $('#noMessagesMsg').remove();
-                    $('#chatMessagesBox').append(response.html);
-                    scrollToBottom();
-                    initPopovers();
+                    
+                    // Parse the HTML and only append rows that don't exist
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = response.html;
+                    let appended = false;
+                    
+                    tempDiv.querySelectorAll('.chat-bubble-row').forEach(row => {
+                        const id = row.getAttribute('data-id');
+                        if (document.querySelectorAll('.chat-bubble-row[data-id="' + id + '"]').length === 0) {
+                            document.getElementById('chatMessagesBox').appendChild(row);
+                            appended = true;
+                        }
+                    });
+
+                    if (appended) {
+                        scrollToBottom();
+                        initPopovers();
+                    }
                 }
 
                 // 2. Update Typing Indicator
@@ -324,15 +339,20 @@
             }, 500); // Debounce typing ping to 500ms
         });
 
+        let isSending = false;
         // AJAX Message Send
         $('#chatForm').on('submit', function(e) {
             e.preventDefault();
+            if (isSending) return;
+
             const btn = $('#btnSend');
             const input = $('#chatInput');
             const message = input.val().trim();
             if (!message) return;
 
+            isSending = true;
             btn.prop('disabled', true);
+            input.val(''); // Clear immediately to prevent visual double-submit
             
             $.ajax({
                 url: sendUrl,
@@ -343,17 +363,20 @@
                 },
                 success: function(res) {
                     if (res.success) {
-                        input.val('');
                         $('#noMessagesMsg').remove();
-                        $('#chatMessagesBox').append(res.html);
-                        scrollToBottom();
-                        initPopovers();
+                        // Only append if it doesn't already exist (prevent race condition with sync)
+                        if ($('.chat-bubble-row[data-id="' + res.id + '"]').length === 0) {
+                            $('#chatMessagesBox').append(res.html);
+                            scrollToBottom();
+                            initPopovers();
+                        }
                         
                         // Force a sync immediately after sending to update the watermark
                         syncChat();
                     }
                 },
                 complete: function() {
+                    isSending = false;
                     btn.prop('disabled', false);
                     input.focus();
                 }
