@@ -493,9 +493,15 @@ body::before {
                             </div>
                         @endforeach
                     @else
-                        <!-- Fallback if no images -->
-                        <div class="page-image-wrapper" style="z-index: 1;">
-                            <h3 style="color: #8D7E6A; font-family: 'Quicksand', sans-serif;">No content available.</h3>
+                        <!-- Fallback if no images or generation error -->
+                        <div class="page-image-wrapper" style="z-index: 1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+                            @if(isset($generationError) && $generationError)
+                                <h3 style="color: #E04444; font-family: 'Quicksand', sans-serif; font-weight: bold; margin-bottom: 10px;">Oops!</h3>
+                                <p style="color: #8D7E6A; font-family: 'Quicksand', sans-serif; font-size: 1.1rem; max-width: 80%;">{{ $generationError }}</p>
+                                <a href="javascript:void(0)" onclick="location.reload()" style="margin-top: 20px; padding: 10px 24px; background: #FF9800; color: #FFF; border-radius: 8px; font-family: 'Quicksand', sans-serif; font-weight: bold; text-decoration: none; display: inline-block;">Retry Generation</a>
+                            @else
+                                <h3 style="color: #8D7E6A; font-family: 'Quicksand', sans-serif;">No content available.</h3>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -658,7 +664,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hide next button if on the last page
         if (currentPage >= totalPages - 1) {
             nextBtn.style.visibility = 'hidden';
-            submitContainer.style.display = 'block';
+            @if(isset($generationError) && $generationError)
+                submitContainer.style.display = 'none';
+            @else
+                submitContainer.style.display = 'block';
+            @endif
         } else {
             nextBtn.style.visibility = 'visible';
             submitContainer.style.display = 'none';

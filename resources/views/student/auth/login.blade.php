@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — Little Learner</title>
+    {{-- PWA Setup --}}
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="theme-color" content="#2563EB">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
@@ -176,7 +182,7 @@
     <!-- Mascot & Title -->
     <div class="mascot-wrap">
         <div class="mascot-inner">
-            <img src="{{ asset('uploads/images/lion.png') }}" alt="Little Learner Lion">
+            <img src="{{ asset('uploads/images/lion.png') }}" alt="Little Learner Lion" fetchpriority="high" loading="eager" decoding="async">
         </div>
     </div>
     <div class="page-title">Welcome Back! 🎒</div>
@@ -210,5 +216,17 @@
 
     <a href="{{ route('student.welcome') }}" class="back-link">← Back to home</a>
 
+    {{-- PWA Service Worker Registration --}}
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>

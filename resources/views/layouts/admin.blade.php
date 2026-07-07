@@ -6,6 +6,12 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin') | SchoolBag Admin</title>
 
+    {{-- PWA Setup --}}
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="theme-color" content="#2563EB">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     {{-- Bootstrap 5 --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     {{-- Bootstrap Icons --}}
@@ -616,8 +622,77 @@
             const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
             toast.show();
         });
+
+        // Type-to-search AJAX filtering for admin lists
+        const searchInputs = document.querySelectorAll('input[name="search"]');
+        searchInputs.forEach(input => {
+            let debounceTimer;
+            input.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    const form = this.closest('form');
+                    if (form) {
+                        const url = new URL(form.action);
+                        const formData = new FormData(form);
+                        for (const [key, value] of formData) {
+                            url.searchParams.set(key, value);
+                        }
+                        
+                        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(res => res.text())
+                            .then(html => {
+                                const parser = new DOMParser();
+                                const doc = parser.parseFromString(html, 'text/html');
+                                
+                                // Replace table and pagination container
+                                const newTable = doc.querySelector('.table-responsive');
+                                const currentTable = document.querySelector('.table-responsive');
+                                
+                                if (newTable && currentTable) {
+                                    currentTable.parentElement.innerHTML = newTable.parentElement.innerHTML;
+                                }
+                                
+                                // Update record count (assumes it's in a <p class="mb-0">)
+                                const newCount = doc.querySelector('p.mb-0');
+                                const currentCount = document.querySelector('p.mb-0');
+                                if (newCount && currentCount) {
+                                    currentCount.innerHTML = newCount.innerHTML;
+                                }
+
+                                // Update Clear button
+                                const newClearBtn = doc.querySelector('form a.btn-outline-secondary');
+                                const currentClearBtn = form.querySelector('a.btn-outline-secondary');
+                                
+                                if (newClearBtn && !currentClearBtn) {
+                                    const btnContainer = form.querySelector('.d-flex.gap-2');
+                                    if(btnContainer) btnContainer.appendChild(newClearBtn);
+                                } else if (!newClearBtn && currentClearBtn) {
+                                    currentClearBtn.remove();
+                                } else if (newClearBtn && currentClearBtn) {
+                                    currentClearBtn.href = newClearBtn.href;
+                                }
+                                
+                                window.history.pushState({}, '', url);
+                            });
+                    }
+                }, 400); // 400ms debounce
+            });
+        });
     });
 </script>
 @stack('admin-scripts')
+
+{{-- PWA Service Worker Registration --}}
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+    }
+</script>
 </body>
 </html>

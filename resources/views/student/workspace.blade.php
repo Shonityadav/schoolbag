@@ -296,7 +296,7 @@
         <div class="section-subtitle">Work assigned by teachers</div>
         
         <div class="notice-board-container mt-4">
-            <img src="{{ asset('uploads/images/workspace/notice board.png') }}" alt="Notice Board" class="notice-board-bg">
+            <img src="{{ asset('uploads/images/workspace/notice board.png') }}" alt="Notice Board" class="notice-board-bg" fetchpriority="high" loading="eager" decoding="async">
             
             <div class="notice-board-content">
                 <div class="notice-date">{{ date('d F Y') }}</div>

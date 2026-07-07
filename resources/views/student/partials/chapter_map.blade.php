@@ -291,7 +291,7 @@ function createLevels() {
             if (chapter.id === activeChapterId) {
                 closeCjm();
             } else {
-                const url = `/student/subjects/${courseId}?chapter_id=${chapter.id}`;
+                const url = `/student/assigned-ebooks/${courseId}?chapter_id=${chapter.id}`;
                 closeCjm(() => { window.location.href = url; });
             }
         });

@@ -72,11 +72,23 @@ class AdminStaffDetailsController extends Controller
             });
         }
 
+        if ($request->filled('category_id')) {
+            $query->whereHas('staff', function($q) use ($request) {
+                $q->where('staff_category_id', $request->category_id);
+            });
+        }
+
         $staff = $query->paginate(15)->withQueryString();
+
+        $categoriesQuery = \App\Models\StaffCategory::where('institute_id', auth()->user()->institute_id)->orderBy('name');
+        if (auth()->user()->user_type != 1 && isset($categoryIds)) {
+             $categoriesQuery->whereIn('id', $categoryIds);
+        }
+        $categories = $categoriesQuery->get();
 
         return view(
             'admin.staff_details.index',
-            compact('staff')
+            compact('staff', 'categories')
         );
     }
 

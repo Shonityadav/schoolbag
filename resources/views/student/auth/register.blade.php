@@ -223,7 +223,7 @@
     <!-- Mascot & Title -->
     <div class="mascot-wrap">
         <div class="mascot-inner">
-            <img src="{{ asset('uploads/images/lion.png') }}" alt="Little Learner Lion">
+            <img src="{{ asset('uploads/images/lion.png') }}" alt="Little Learner Lion" fetchpriority="high" loading="eager" decoding="async">
         </div>
     </div>
     <div class="page-title">Join the Adventure! 🌟</div>

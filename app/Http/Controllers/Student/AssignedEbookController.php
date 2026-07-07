@@ -81,6 +81,7 @@ class AssignedEbookController extends Controller
         $ebookPages = [];
         $mcqs = [];
         $matchPairs = [];
+        $generationError = null;
         
         if ($stage == 2) {
             // Stage 2: Hard Words -> MCQs
@@ -143,6 +144,7 @@ class AssignedEbookController extends Controller
                                 }
                             } else {
                                 \Illuminate\Support\Facades\Log::error('Gemini generated null or invalid array.');
+                                $generationError = "Our AI is currently taking a break! Please try refreshing the page in a few moments to generate the Hard Words.";
                             }
                         }
                     } else {
@@ -206,6 +208,8 @@ class AssignedEbookController extends Controller
                                         'subject' => $course->title
                                     ]);
                                 }
+                            } else {
+                                $generationError = "Our AI is currently taking a break! Please try refreshing the page in a few moments to generate the Activity.";
                             }
                         }
                     }
@@ -239,7 +243,7 @@ class AssignedEbookController extends Controller
         }
 
         // Pass course_id and stage for the next buttons
-        return view('student.lessons.showdetails', compact('user', 'lesson', 'isCompleted', 'nextLesson', 'course', 'stage', 'chapter_id', 'ebookPages', 'mcqs', 'matchPairs'));
+        return view('student.lessons.showdetails', compact('user', 'lesson', 'isCompleted', 'nextLesson', 'course', 'stage', 'chapter_id', 'ebookPages', 'mcqs', 'matchPairs', 'generationError'));
     }
 
     private function generateHardWordsFromGemini($pages)

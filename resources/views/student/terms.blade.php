@@ -136,7 +136,7 @@ html, body {
 
     <div class="tc-card mx-auto">
         <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 320px; text-align: center; z-index: 5;">
-            <img src="{{ asset('uploads/images/stage1/banner-2.png') }}" alt="Banner" style="width: 100%; height: auto; drop-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <img src="{{ asset('uploads/images/stage1/banner-2.png') }}" alt="Banner" style="width: 100%; height: auto; drop-shadow: 0 4px 6px rgba(0,0,0,0.1);" fetchpriority="high" loading="eager" decoding="async">
             <h2 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Quicksand', sans-serif; font-weight: 900; font-size: clamp(18px, 5vw, 24px); color: #1E1E35; margin: 0; white-space: nowrap;">Term & Condition</h2>
         </div>
 

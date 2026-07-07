@@ -34,20 +34,30 @@
 <div class="sb-panel mb-4">
     <div class="p-3">
         <form method="GET" action="{{ route('admin.staff_details.index') }}" class="row g-2 align-items-end">
-            <div class="col-12 col-md-7">
+            <div class="col-12 col-md-6">
                 <label class="form-label" style="font-size:12px;font-weight:600;color:var(--sb-muted);">Search</label>
                 <div class="input-group" style="height:36px;">
                     <span class="input-group-text" style="background:var(--sb-bg);border-color:var(--sb-border);color:var(--sb-muted);font-size:13px;">
                         <i class="bi bi-search"></i>
                     </span>
                     <input type="text" name="search" value="{{ request('search') }}"
-                           class="form-control" placeholder="Search and press enter..."
+                           class="form-control" placeholder="Search staff members..."
                            style="font-size:13px;border-color:var(--sb-border);">
                 </div>
             </div>
-            <div class="col-12 col-md-5 d-flex gap-2">
-                <!-- Search button removed for automatic submission -->
-                @if(request('search'))
+            <div class="col-12 col-md-4">
+                <label class="form-label" style="font-size:12px;font-weight:600;color:var(--sb-muted);">Category</label>
+                <select name="category_id" class="form-select" style="font-size:13px;border-color:var(--sb-border);height:36px;" onchange="const el = this.form.querySelector('input[name=search]'); if(el) el.dispatchEvent(new Event('input'));">
+                    <option value="">All Categories</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                @if(request('search') || request('category_id'))
                     <a href="{{ route('admin.staff_details.index') }}"
                        class="btn btn-sm btn-outline-secondary flex-fill"
                        style="font-size:13px;border-radius:7px;height:36px;display:flex;align-items:center;justify-content:center;">

@@ -674,15 +674,15 @@
                     <div class="att-summary-title">This Month summary</div>
                     <div class="att-summary-cards">
                         <div class="att-sum-card green">
-                            <img src="{{ asset('uploads/images/workspace/Preset.png') }}" alt="Preset">
+                            <img src="{{ asset('uploads/images/workspace/Preset.png') }}" alt="Preset" fetchpriority="high" loading="eager" decoding="async">
                             <div class="att-sum-val">Preset<br><span id="sumPreset">0 Days</span></div>
                         </div>
                         <div class="att-sum-card red">
-                            <img src="{{ asset('uploads/images/workspace/Absent.png') }}" alt="Absent">
+                            <img src="{{ asset('uploads/images/workspace/Absent.png') }}" alt="Absent" fetchpriority="high" loading="eager" decoding="async">
                             <div class="att-sum-val">Absent<br><span id="sumAbsent">0 Days</span></div>
                         </div>
                         <div class="att-sum-card yellow">
-                            <img src="{{ asset('uploads/images/workspace/Holiday.png') }}" alt="Holiday">
+                            <img src="{{ asset('uploads/images/workspace/Holiday.png') }}" alt="Holiday" fetchpriority="high" loading="eager" decoding="async">
                             <div class="att-sum-val">Holiday<br><span id="sumHoliday">0 Days</span></div>
                         </div>
                     </div>
@@ -747,21 +747,21 @@
                 </div>
                 <div class="fees-summary-box">
                     <div class="fees-sum-card blue">
-                        <img src="{{ asset('uploads/images/workspace/total amount.png') }}" alt="Total">
+                        <img src="{{ asset('uploads/images/workspace/total amount.png') }}" alt="Total" fetchpriority="high" loading="eager" decoding="async">
                         <div class="fees-sum-text">
                             <div class="fees-sum-title">Total Fees</div>
                             <div class="fees-sum-val">20,000</div>
                         </div>
                     </div>
                     <div class="fees-sum-card green">
-                        <img src="{{ asset('uploads/images/workspace/pay.png') }}" alt="Paid">
+                        <img src="{{ asset('uploads/images/workspace/pay.png') }}" alt="Paid" fetchpriority="high" loading="eager" decoding="async">
                         <div class="fees-sum-text">
                             <div class="fees-sum-title">Paid Amount</div>
                             <div class="fees-sum-val">15,000</div>
                         </div>
                     </div>
                     <div class="fees-sum-card red">
-                        <img src="{{ asset('uploads/images/workspace/due.png') }}" alt="Due">
+                        <img src="{{ asset('uploads/images/workspace/due.png') }}" alt="Due" fetchpriority="high" loading="eager" decoding="async">
                         <div class="fees-sum-text">
                             <div class="fees-sum-title">Due Amount</div>
                             <div class="fees-sum-val">5,000</div>

@@ -510,16 +510,16 @@
       <!-- Back & Close buttons row -->
       <div class="ep-top-bar">
         <button type="button" data-bs-dismiss="modal" class="ep-icon-btn" aria-label="Close">
-          <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 48px; object-fit: contain;">
+          <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 48px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
         </button>
         <button type="button" data-bs-dismiss="modal" class="ep-icon-btn" aria-label="Close">
-          <img src="{{ asset('uploads/images/buttons/cross button.png') }}" alt="Close" style="height: 48px; object-fit: contain;">
+          <img src="{{ asset('uploads/images/buttons/cross button.png') }}" alt="Close" style="height: 48px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
         </button>
       </div>
 
       <!-- Your Profile Banner -->
       <div class="ep-banner-wrap">
-        <img src="{{ asset('uploads/images/edit_profile/banner.png') }}" alt="Banner Background" class="ep-banner-img">
+        <img src="{{ asset('uploads/images/edit_profile/banner.png') }}" alt="Banner Background" class="ep-banner-img" fetchpriority="high" loading="eager" decoding="async">
         <h3 class="ep-banner-text">Your Profile</h3>
       </div>
 
@@ -532,7 +532,7 @@
               {{ $user->initials }}
             </div>
           @else
-            <img id="ep-preview-avatar" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Avatar" class="ep-preview-avatar-img d-none">
+            <img id="ep-preview-avatar" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Avatar" class="ep-preview-avatar-img d-none" fetchpriority="high" loading="eager" decoding="async">
             <div id="ep-preview-initials" class="ep-preview-avatar-img d-flex align-items-center justify-content-center" style="background: {{ $user->initials_bg }}; color: #FFFFFF; font-size: 40px; font-weight: bold; z-index: 1; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
               {{ $user->initials }}
             </div>
@@ -566,9 +566,9 @@
               @if($isUnlocked)
                 <input type="radio" name="avatar" value="{{ $path }}" class="d-none ep-radio" data-preview="avatar"
                   {{ ($user->avatar == $path) ? 'checked' : '' }}>
-                <img src="{{ asset($path) }}" alt="Avatar" class="ep-cell-img ep-selectable" onclick="epUpdatePreview('avatar', '{{ asset($path) }}')">
+                <img src="{{ asset($path) }}" alt="Avatar" class="ep-cell-img ep-selectable" onclick="epUpdatePreview('avatar', '{{ asset($path) }}')" fetchpriority="high" loading="eager" decoding="async">
               @else
-                <img src="{{ asset('uploads/images/buttons/lock button.png') }}" alt="Locked" class="ep-lock-img">
+                <img src="{{ asset('uploads/images/buttons/lock button.png') }}" alt="Locked" class="ep-lock-img" fetchpriority="high" loading="eager" decoding="async">
               @endif
             </label>
           @endforeach
@@ -587,9 +587,9 @@
               @if($isUnlocked)
                 <input type="radio" name="banner" value="{{ $fpath }}" class="d-none ep-radio" data-preview="frame"
                   {{ ($user->banner == $fpath) ? 'checked' : '' }}>
-                <img src="{{ asset($fpath) }}" alt="Frame" class="ep-cell-img ep-selectable" onclick="epUpdatePreview('frame', '{{ asset($fpath) }}')">
+                <img src="{{ asset($fpath) }}" alt="Frame" class="ep-cell-img ep-selectable" onclick="epUpdatePreview('frame', '{{ asset($fpath) }}')" fetchpriority="high" loading="eager" decoding="async">
               @else
-                <img src="{{ asset('uploads/images/buttons/lock button.png') }}" alt="Locked" class="ep-lock-img">
+                <img src="{{ asset('uploads/images/buttons/lock button.png') }}" alt="Locked" class="ep-lock-img" fetchpriority="high" loading="eager" decoding="async">
               @endif
             </label>
           @endforeach
@@ -601,7 +601,7 @@
         <!-- Save Button -->
         <div class="ep-save-wrap">
           <button type="submit" class="ep-save-btn">
-            <img src="{{ asset('uploads/images/edit_profile/save.png') }}" alt="Save Changes" class="ep-save-img">
+            <img src="{{ asset('uploads/images/edit_profile/save.png') }}" alt="Save Changes" class="ep-save-img" fetchpriority="high" loading="eager" decoding="async">
           </button>
         </div>
 
