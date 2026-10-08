@@ -224,6 +224,7 @@ class InstituteAuthController extends Controller
             'password'     => Hash::make($request->password),
             'user_type'    => $request->role === 'staff' ? 2 : 3,
             'created_by'   => $authUser->id,
+            'class_id'     => $request->role === 'student' ? $request->class_id : null,
         ]);
 
         if ($request->role === 'student') {
@@ -329,6 +330,7 @@ public function bulkStudents(Request $request)
                 'password'     => Hash::make($row[3]),
                 'user_type'    => 3,
                 'created_by'   => $authUser->id,
+                'class_id'     => $row[4],
             ]);
 
             // ==========================

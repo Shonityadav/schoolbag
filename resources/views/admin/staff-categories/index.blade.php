@@ -14,11 +14,13 @@
             {{ $categories->total() }} total categories found
         </p>
     </div>
+    @if(auth()->user()->hasPermission('staff_categories.create'))
     <a href="{{ route('admin.staff-categories.create') }}"
        class="btn btn-sm text-white d-flex align-items-center gap-2"
        style="font-size:13px;border-radius:7px;background:var(--sb-accent);padding:8px 16px;">
         <i class="bi bi-plus-lg"></i> Add Category
     </a>
+    @endif
 </div>
 
 {{-- Search Filter --}}
@@ -83,6 +85,7 @@
                     </td>
                     <td>
                         <div class="d-flex gap-1 justify-content-end">
+                            @if(auth()->user()->hasPermission('staff_categories.edit'))
                             <a href="{{ route('admin.staff-categories.edit', $category) }}"
                                class="sb-icon-btn" title="Edit"
                                style="width:32px;height:32px;font-size:14px;border-radius:6px;">
@@ -97,6 +100,7 @@
                                     <i class="bi bi-trash3"></i>
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

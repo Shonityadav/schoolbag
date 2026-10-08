@@ -37,6 +37,48 @@
                 <a href="{{ route('admin.student_details.edit', $student) }}" class="btn btn-sm btn-outline-primary" style="font-size:13px;border-radius:6px;">
                     <i class="bi bi-pencil me-1"></i> Edit
                 </a>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#recordPaymentModal" style="font-size:13px;border-radius:6px;">
+                    <i class="bi bi-currency-rupee me-1"></i> Record Payment
+                </button>
+            </div>
+        </div>
+
+        <!-- Record Payment Modal -->
+        <div class="modal fade text-start" id="recordPaymentModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title font-weight-bold">Record Fee Payment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('admin.student_details.fee_payment', $student->id) }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Payment Amount (₹)</label>
+                                <input type="number" step="0.01" class="form-control shadow-sm" name="amount" required min="1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Payment Method</label>
+                                <select class="form-select shadow-sm" name="transaction_method" required>
+                                    <option value="CASH">Cash</option>
+                                    <option value="ONLINE">Online</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="BANK_TRANSFER">Bank Transfer</option>
+                                    <option value="CHEQUE">Cheque</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Remarks (Optional)</label>
+                                <textarea class="form-control shadow-sm" name="remarks" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top-0 pt-0">
+                            <button type="button" class="btn btn-light shadow-sm" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary shadow-sm">Save Payment</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

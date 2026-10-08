@@ -172,14 +172,22 @@
     border-radius: 50%;
     background: rgba(255,255,255,0.9);
     filter: blur(1px);
+}
 </style>
 @endpush
 
 {{-- ── HTML (from map.html) ── --}}
 <div id="chapter-journey-map" style="{{ isset($requestedChapterId) && $requestedChapterId ? 'display: none; opacity: 0;' : '' }}">
-    <a href="{{ route('student.assigned_ebooks.index') }}" style="position: fixed; top: 20px; left: 10px; z-index: 9000; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Subjects">
+    <a href="{{ route('student.assigned_ebooks.details', $course->id) }}" style="position: fixed; top: 20px; left: 10px; z-index: 9000; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Details">
         <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 52px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
     </a>
+    <div id="cjm-back-to-top" style="position: fixed; bottom: 30px; left: 20px; z-index: 9000; display: flex; justify-content: center; align-items: center; cursor: pointer; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: transform 0.2s, opacity 0.3s; opacity: 0; pointer-events: none;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="document.getElementById('cjm-map-container').scrollTo({top: 0, behavior: 'smooth'})" title="Back to Top">
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="#3b82f6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 16V8"></path>
+            <path d="M8 12l4-4 4 4"></path>
+        </svg>
+    </div>
     <div id="cjm-map-container">
         <div class="top-fade"></div>
         <div class="bottom-fade"></div>
@@ -480,6 +488,22 @@ setTimeout(() => {
         scrollEl.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
     }
 }, 800);
+
+// ── Back to Top Button Toggle ─────────────────────────
+const mapContainer = document.getElementById('cjm-map-container');
+const backToTopBtn = document.getElementById('cjm-back-to-top');
+
+if (mapContainer && backToTopBtn) {
+    mapContainer.addEventListener('scroll', () => {
+        if (mapContainer.scrollTop > 300) {
+            backToTopBtn.style.opacity = '1';
+            backToTopBtn.style.pointerEvents = 'auto';
+        } else {
+            backToTopBtn.style.opacity = '0';
+            backToTopBtn.style.pointerEvents = 'none';
+        }
+    });
+}
 
 // ── Close / Open ──────────────────────────────────────
 window.closeCjm = function(callback) {

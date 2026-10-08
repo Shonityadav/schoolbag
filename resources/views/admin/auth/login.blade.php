@@ -7,7 +7,7 @@
     {{-- PWA Setup --}}
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     <meta name="theme-color" content="#2563EB">
-    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('app-icons/icon-192x192-v2.png') }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -120,6 +120,12 @@
             <div class="text-center" style="font-size:13.5px;color:var(--sb-muted);">
                 Don't have an account? <a href="{{ route('admin.register') }}" style="color:var(--sb-accent);text-decoration:none;font-weight:600;">Register your school</a>
             </div>
+
+            <div class="text-center mt-3" style="font-size:13.5px;">
+                <a href="{{ route('student.login') }}" style="color:var(--sb-muted);text-decoration:none;font-weight:500;">
+                    <i class="bi bi-arrow-left"></i> Back to Student Login
+                </a>
+            </div>
         </form>
     </div>
 
@@ -135,5 +141,6 @@
             });
         }
     </script>
+    @include('partials.pwa_popup')
 </body>
 </html>

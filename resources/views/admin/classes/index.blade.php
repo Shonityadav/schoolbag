@@ -14,11 +14,13 @@
             {{ $classes->total() }} total classes found
         </p>
     </div>
+    @if(auth()->user()->hasPermission('classes.create'))
     <a href="{{ route('admin.classes.create') }}"
        class="btn btn-sm text-white d-flex align-items-center gap-2"
        style="font-size:13px;border-radius:7px;background:var(--sb-accent);padding:8px 16px;">
         <i class="bi bi-plus-lg"></i> Add Class
     </a>
+    @endif
 </div>
 
 {{-- Alerts --}}
@@ -120,11 +122,14 @@
                     </td>
                     <td>
                         <div class="d-flex gap-1 justify-content-end">
+                            @if(auth()->user()->hasPermission('ebook_assignments.view'))
                             <a href="{{ route('admin.ebook_assignments.index', ['class_id' => $cls->id]) }}"
                                class="sb-icon-btn" title="Assign Ebooks"
                                style="width:32px;height:32px;font-size:14px;border-radius:6px;color:var(--sb-accent);">
                                 <i class="bi bi-book"></i>
                             </a>
+                            @endif
+                            @if(auth()->user()->hasPermission('classes.edit'))
                             <a href="{{ route('admin.classes.edit', $cls) }}"
                                class="sb-icon-btn" title="Edit"
                                style="width:32px;height:32px;font-size:14px;border-radius:6px;">
@@ -139,6 +144,7 @@
                                     <i class="bi bi-trash3"></i>
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

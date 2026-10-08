@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\Feedback;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -204,5 +205,24 @@ class ProfileController extends Controller
         session()->forget('otp_verified_time');
 
         return response()->json(['success' => true, 'message' => 'Password updated successfully!']);
+    }
+
+    public function feedback()
+    {
+        return view('student.profile.feedback');
+    }
+
+    public function storeFeedback(Request $request)
+    {
+        $request->validate([
+            'details' => 'required|string',
+        ]);
+
+        Feedback::create([
+            'user_id' => Auth::guard('student')->id(),
+            'details' => $request->details,
+        ]);
+
+        return redirect()->back()->with('success', 'Feedback submitted successfully!');
     }
 }

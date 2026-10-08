@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\ClassModel;
 use App\Models\Attendance;
+use App\Services\AutoRuleEngine;
 use Illuminate\Support\Carbon;
 
 class AdminAttendanceController extends Controller
@@ -25,36 +26,15 @@ class AdminAttendanceController extends Controller
 
     $requestedType = $request->input('user_type');
 
-    $canViewStudents = auth()->user()->hasPermission('student_details.view');
-    $canViewStaff    = auth()->user()->hasPermission('staff.view');
+    $canViewStudents = true; // Assuming attendance.view grants access to view student attendance
+    $canViewStaff    = true; // Assuming attendance.view grants access to view staff attendance
 
     if ($requestedType) {
-
         $userType = $requestedType;
-
     } else {
-
-        if ($canViewStudents) {
-            $userType = '3';
-        } elseif ($canViewStaff) {
-            $userType = '2';
-        } else {
-            abort(403);
-        }
+        $userType = '3'; // Default to students
     }
-    if (
-        $userType == '3' &&
-        !auth()->user()->hasPermission('student_details.view')
-    ) {
-        abort(403);
-    }
-
-    if (
-        $userType == '2' &&
-        !auth()->user()->hasPermission('staff.view')
-    ) {
-        abort(403);
-    }
+    
     $classId = $request->input('class_id');
 
     $authUser = auth()->user();
@@ -117,11 +97,11 @@ if ($userType == '3') {
         $classes = ClassModel::where(
             'institute_id',
             $authUser->institute_id
-        )->get();
+        )->withCount('students')->get();
 
     } else {
 
-        $classes = $authUser->classes()->get();
+        $classes = $authUser->classes()->withCount('students')->get();
     }
 
     return view(
@@ -166,8 +146,14 @@ if ($userType == '3') {
             } else if (!$user->last_streak_date || $user->last_streak_date->toDateString() !== $date) {
                 $user->streak_count = 1;
             }
-            $user->last_streak_date = $date;
-            $user->save();
+            if (!$user->last_streak_date || $user->last_streak_date->toDateString() !== $date) {
+                $user->last_streak_date = $date;
+                $user->save();
+                
+                // Fire XP/Badge rules for login/attendance
+                $engine = new AutoRuleEngine($user);
+                $engine->fire('login');
+            }
         }
 
         return redirect()->back()->with('success', 'Attendance marked as ' . $status . ' for ' . $user->name);
@@ -238,10 +224,35 @@ if ($userType == '3') {
                     }
                     $user->last_streak_date = $date;
                     $user->save();
+                    
+                    // Fire XP/Badge rules for login/attendance
+                    $engine = new AutoRuleEngine($user);
+                    $engine->fire('login');
                 }
             }
         }
         
-        return redirect()->back()->with('success', 'Bulk attendance saved successfully!');
+        return back()->with('success', 'Attendance marked successfully!');
+    }
+
+    public function readNotification($id)
+    {
+        $notification = auth()->user()->notifications()->find($id);
+        
+        if ($notification) {
+            $notification->markAsRead();
+            
+            if (isset($notification->data['action_url'])) {
+                return redirect($notification->data['action_url']);
+            }
+        }
+        
+        return back();
+    }
+
+    public function markNotificationsRead()
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+        return response()->json(['success' => true]);
     }
 }

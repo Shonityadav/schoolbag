@@ -425,7 +425,6 @@
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: conic-gradient(#1E88E5 75%, #D0E8FF 0);
         margin: 12px 0;
         display: flex;
         align-items: center;
@@ -491,6 +490,20 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     .fees-timeline-badge img { width: 16px; height: 16px; }
+    
+    .fees-timeline-scroll {
+        max-height: 400px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 8px;
+    }
+    .fees-timeline-scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+    .fees-timeline-scroll::-webkit-scrollbar-thumb {
+        background: #CCC;
+        border-radius: 4px;
+    }
     
     .timeline {
         position: relative;
@@ -621,10 +634,10 @@
                     
                     <div class="id-card-details">
                         <div class="id-card-name">{{ $user->name }}</div>
-                        <div>STUDENT ID: {{ $user->student->admission_no ?? 'STU-'.rand(1000,9999) }}</div>
-                        <div>DOB: {{ $user->student->dob ? \Carbon\Carbon::parse($user->student->dob)->format('d M Y') : 'N/A' }}</div>
-                        <div>CLASS: {{ $user->student->class->name ?? 'N/A' }}</div>
-                        <div>BLOOD GROUP: {{ $user->student->blood_group ?? 'O+' }}</div>
+                        <div>STUDENT ID: {{ $user->student?->admission_no ?? 'STU-'.rand(1000,9999) }}</div>
+                        <div>DOB: {{ $user->student?->dob ? \Carbon\Carbon::parse($user->student->dob)->format('d M Y') : 'N/A' }}</div>
+                        <div>CLASS: {{ isset($user->studentClass) ? $user->studentClass->standard . ' ' . $user->studentClass->section : (isset($user->student?->class) ? $user->student->class->standard . ' ' . $user->student->class->section : 'N/A') }}</div>
+                        <div>BLOOD GROUP: {{ $user->student?->blood_group ?? 'O+' }}</div>
                         <div>CONTACT: {{ $user->phone ?? 'N/A' }}</div>
                     </div>
                 </div>
@@ -658,7 +671,7 @@
                 @endif
                 <div class="att-user-info">
                     <p class="att-name">Hi, {{ explode(' ', $user->name)[0] }}</p>
-                    <p class="att-class">{{ $user->studentClass->standard ?? '3-A' }}</p>
+                    <p class="att-class">{{ $user->studentClass?->standard ?? '3' }}{{ $user->studentClass?->section ? ' - ' . $user->studentClass->section : '' }}</p>
                     <p class="att-school">{{ auth()->user()->institute->name ?? 'Delhi Public School' }}</p>
                 </div>
             </div>
@@ -691,9 +704,9 @@
 
             <div class="att-calendar-box">
                 <div class="calendar-header">
-                    <div class="nav-btn" onclick="prevMonth()">&#10094;</div>
+                    <div class="nav-btn" id="calPrevBtn" onclick="prevMonth()">&#10094;</div>
                     <h5 id="calendarMonthYear">June 2026</h5>
-                    <div class="nav-btn" onclick="nextMonth()">&#10095;</div>
+                    <div class="nav-btn" id="calNextBtn" onclick="nextMonth()">&#10095;</div>
                 </div>
                 <div class="calendar-grid">
                     <div class="cal-day-name sun">Su</div>
@@ -733,7 +746,7 @@
                 @endif
                 <div class="att-user-info">
                     <p class="att-name">Hi, {{ explode(' ', $user->name)[0] }}</p>
-                    <p class="att-class">{{ $user->studentClass->standard ?? '3-A' }}</p>
+                    <p class="att-class">{{ $user->studentClass?->standard ?? '3' }}{{ $user->studentClass?->section ? ' - ' . $user->studentClass->section : '' }}</p>
                     <p class="att-school">{{ auth()->user()->institute->name ?? 'Delhi Public School' }}</p>
                 </div>
             </div>
@@ -741,8 +754,8 @@
             <div class="fees-middle-section">
                 <div class="fees-overall-box">
                     <div class="fees-overall-header">Overall</div>
-                    <div class="fees-progress-ring">
-                        <div class="fees-progress-inner">75%</div>
+                    <div class="fees-progress-ring" style="background: conic-gradient(#1E88E5 {{ $overallPercentage ?? 0 }}%, #D0E8FF 0);">
+                        <div class="fees-progress-inner">{{ $overallPercentage ?? 0 }}%</div>
                     </div>
                 </div>
                 <div class="fees-summary-box">
@@ -750,64 +763,155 @@
                         <img src="{{ asset('uploads/images/workspace/total amount.png') }}" alt="Total" fetchpriority="high" loading="eager" decoding="async">
                         <div class="fees-sum-text">
                             <div class="fees-sum-title">Total Fees</div>
-                            <div class="fees-sum-val">20,000</div>
+                            <div class="fees-sum-val">₹{{ number_format($totalFeesAmount ?? 0, 0) }}</div>
                         </div>
                     </div>
                     <div class="fees-sum-card green">
                         <img src="{{ asset('uploads/images/workspace/pay.png') }}" alt="Paid" fetchpriority="high" loading="eager" decoding="async">
                         <div class="fees-sum-text">
                             <div class="fees-sum-title">Paid Amount</div>
-                            <div class="fees-sum-val">15,000</div>
+                            <div class="fees-sum-val">₹{{ number_format($totalPaidAmount ?? 0, 0) }}</div>
                         </div>
                     </div>
                     <div class="fees-sum-card red">
                         <img src="{{ asset('uploads/images/workspace/due.png') }}" alt="Due" fetchpriority="high" loading="eager" decoding="async">
                         <div class="fees-sum-text">
                             <div class="fees-sum-title">Due Amount</div>
-                            <div class="fees-sum-val">5,000</div>
+                            <div class="fees-sum-val">₹{{ number_format($dueAmount ?? 0, 0) }}</div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+
 
             <div class="fees-timeline-box">
                 <div class="fees-timeline-badge">
-                    🗓️ Fees Payment
+                     Fees Structure
                 </div>
-                <div class="timeline">
-                    <div class="timeline-item paid">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-date">10 Apr</div>
-                        <div class="timeline-card">
-                            <div class="timeline-term">Term-1 <span>(April to June)</span></div>
-                            <div class="timeline-status">Paid</div>
+                @if(isset($studentFees))
+                    @forelse($studentFees as $index => $sFee)
+                        @php
+                            $freq = $sFee->feeStructure->frequency ?? 'yearly';
+                            $amountPerInstallment = $sFee->feeStructure->amount ?? 0;
+                            $paidAmount = $sFee->paid_amount ?? 0;
+                            
+                            if ($freq == 'monthly') {
+                                $periods = ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'];
+                            } elseif ($freq == 'quarterly') {
+                                $periods = ['Q1 (Apr - Jun)', 'Q2 (Jul - Sep)', 'Q3 (Oct - Dec)', 'Q4 (Jan - Mar)'];
+                            } elseif ($freq == 'half_yearly') {
+                                $periods = ['H1 (Apr - Sep)', 'H2 (Oct - Mar)'];
+                            } else {
+                                $periods = ['Annual'];
+                            }
+
+                            // Determine current period index based on current month (Assuming April start)
+                            $currentMonth = (int)date('n'); // 1-12
+                            $currentYear = (int)date('Y');
+                            
+                            // Month offset where April (4) is index 0
+                            $currentMonthIndex = ($currentMonth >= 4) ? ($currentMonth - 4) : ($currentMonth + 8);
+                            
+                            if ($freq == 'monthly') {
+                                $currentPeriodIndex = $currentMonthIndex;
+                            } elseif ($freq == 'quarterly') {
+                                $currentPeriodIndex = floor($currentMonthIndex / 3);
+                            } elseif ($freq == 'half_yearly') {
+                                $currentPeriodIndex = floor($currentMonthIndex / 6);
+                            } else {
+                                $currentPeriodIndex = 0;
+                            }
+                        @endphp
+
+                        <form action="{{ route('student.fees.pay') }}" method="POST" class="fee-structure-group mb-4" onsubmit="return validatePaymentForm(this)">
+                            @csrf
+                            <input type="hidden" name="fee_structure_id" value="{{ $sFee->feeStructure->id }}">
+                            <input type="hidden" name="amount_to_pay" class="total-amount-to-pay" value="0">
+                            
+                            <h5 style="margin-bottom: 12px; font-weight: 800; color: #472C25; font-size: 16px;">{{ $sFee->feeStructure->title ?? 'Fee' }} <span style="font-size: 12px; color: #888; font-weight: 500;">({{ str_replace('_', '-', Str::title($freq)) }})</span></h5>
+                            
+                            <div class="fees-timeline-scroll">
+                                <div class="timeline">
+                                    @foreach($periods as $pIndex => $periodName)
+                                        @php
+                                            $isPaid = $paidAmount >= (($pIndex + 1) * $amountPerInstallment);
+                                            $isDue = false;
+                                            
+                                            if (!$isPaid && $pIndex <= $currentPeriodIndex) {
+                                                $isDue = true;
+                                            }
+                                            
+                                            // Color logic
+                                            if ($isPaid) {
+                                                $statusColor = '#82CB88';
+                                                $statusText = 'Paid';
+                                            } elseif ($isDue) {
+                                                $statusColor = '#F44336';
+                                                $statusText = 'Due';
+                                            } else {
+                                                $statusColor = '#A0A0A0'; // Grey
+                                                $statusText = 'Upcoming';
+                                            }
+                                        @endphp
+                                        
+                                        <div class="timeline-item due">
+                                            <div class="timeline-dot" style="background-color: {{ $isPaid ? '#82CB88' : ($isDue ? 'white' : 'white') }}; border: 2px solid {{ $isPaid ? '#82CB88' : ($isDue ? '#F44336' : '#A0A0A0') }}; width: 14px; height: 14px; left: -22px; display: flex; align-items: center; justify-content: center;">
+                                                @if($isPaid)
+                                                    <i class="bi bi-check" style="color: white; font-size: 14px; -webkit-text-stroke: 1px;"></i>
+                                                @endif
+                                            </div>
+                                            
+                                            <div class="timeline-card {{ !$isPaid ? 'selectable-card' : '' }}" 
+                                                 {{ !$isPaid ? 'onclick=toggleSelection(this,\'fee_'.$sFee->id.'_'.$pIndex.'\')' : '' }}
+                                                 data-default-border="{{ $isPaid ? '#82CB88' : ($isDue ? '#F44336' : '#E0E0E0') }}"
+                                                 style="padding: 12px 16px; border-width: 2px; border-radius: 16px; background-color: #FAFAFA; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-color: {{ $isPaid ? '#82CB88' : ($isDue ? '#F44336' : '#E0E0E0') }}; border-style: solid; display: flex; justify-content: space-between; align-items: center; {{ !$isPaid ? 'cursor: pointer; transition: all 0.2s;' : '' }}">
+                                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                                    <div class="timeline-term" style="font-size: 14px; font-weight: 700; color: #444;">
+                                                        {{ $periodName }}
+                                                    </div>
+                                                    <div style="font-size: 16px; font-weight: 900; color: #1E88E5;">
+                                                        ₹{{ number_format($amountPerInstallment, 0) }}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div>
+                                                    @if($isPaid)
+                                                        <div class="timeline-status" style="background: {{ $statusColor }}; padding: 6px 16px; font-size: 12px; color: white;">{{ $statusText }}</div>
+                                                    @else
+                                                        <div class="selection-circle" style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ccc; display: flex; justify-content: center; align-items: center; background: white; transition: all 0.2s;">
+                                                            <i class="bi bi-check selection-icon d-none" style="color: white; font-size: 14px; -webkit-text-stroke: 1px;"></i>
+                                                        </div>
+                                                        <input class="form-check-input fee-checkbox d-none" type="checkbox" value="{{ $amountPerInstallment }}" id="fee_{{ $sFee->id }}_{{ $pIndex }}">
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            
+                            @if($paidAmount < ($amountPerInstallment * count($periods)))
+                                <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 16px; border-radius: 12px; border: 1px solid #E0E0E0; margin-bottom: 24px;">
+                                    <div style="font-size: 14px; font-weight: 700; color: #444;">Total: <span class="total-display" style="color: #1E88E5; font-size: 18px; display: block;">₹0</span></div>
+                                    <button type="submit" class="btn pay-selected-btn" style="background: #F44336; color: white; border-radius: 12px; font-weight: 800; font-size: 14px; padding: 10px 20px; pointer-events: none; opacity: 0.5;">Pay Selected <i class="bi bi-chevron-right" style="font-size: 12px;"></i></button>
+                                </div>
+                            @endif
+                        </form>
+                    @empty
+                        <div class="fees-timeline-scroll">
+                            <div class="timeline">
+                                <div class="timeline-item pending">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-card" style="padding: 12px 16px; border-width: 2px; border-radius: 16px; background-color: #FAFAFA;">
+                                        <div class="timeline-term" style="color:#999; font-size: 14px;">No Fees Assigned</div>
+                                        <div class="timeline-status" style="padding: 6px 16px; font-size: 12px;">--</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="timeline-item paid">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-date">10 Jul</div>
-                        <div class="timeline-card">
-                            <div class="timeline-term">Term-2 <span>(July to Sept)</span></div>
-                            <div class="timeline-status">Paid</div>
-                        </div>
-                    </div>
-                    <div class="timeline-item due">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-date">10 Oct</div>
-                        <div class="timeline-card">
-                            <div class="timeline-term">Term-3 <span>(Oct to Dec)</span></div>
-                            <div class="timeline-status">Due</div>
-                        </div>
-                    </div>
-                    <div class="timeline-item pending">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-date">10 Jan</div>
-                        <div class="timeline-card">
-                            <div class="timeline-term" style="color:#999;">Term-4 <span>(Jan to Mar)</span></div>
-                            <div class="timeline-status">--</div>
-                        </div>
-                    </div>
-                </div>
+                    @endforelse
+                @endif
             </div>
 
             <div class="fees-footer-msg">
@@ -831,6 +935,13 @@
         document.getElementById('tab-' + tabName).classList.add('tab-active');
         document.getElementById('content-' + tabName).classList.add('active');
 
+        // Update URL hash so mascot reads the correct context
+        if (history.replaceState) {
+            history.replaceState(null, null, '#' + tabName);
+        } else {
+            window.location.hash = tabName;
+        }
+
         const mainHeader = document.getElementById('mainHeader');
         const mainCardBody = document.getElementById('mainCardBody');
 
@@ -853,6 +964,19 @@
     const attendanceData = @json($attendanceData ?? []);
     let currentDate = new Date();
 
+    function getAcademicYearBounds() {
+        const today = new Date();
+        let startYear = today.getFullYear();
+        if (today.getMonth() < 3) { // Jan, Feb, Mar (0, 1, 2)
+            startYear -= 1;
+        }
+        // April 1st of startYear
+        const startDate = new Date(startYear, 3, 1);
+        // March 31st of startYear + 1
+        const endDate = new Date(startYear + 1, 2, 31);
+        return { startDate, endDate };
+    }
+
     function renderCalendar() {
         const monthYear = document.getElementById('calendarMonthYear');
         const daysContainer = document.getElementById('calendarDays');
@@ -862,6 +986,27 @@
         
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         monthYear.innerText = `${monthNames[month]} ${year}`;
+        
+        // Handle navigation button visibility
+        const bounds = getAcademicYearBounds();
+        const prevBtn = document.getElementById('calPrevBtn');
+        const nextBtn = document.getElementById('calNextBtn');
+        
+        if (prevBtn && nextBtn) {
+            const currentMonthStart = new Date(year, month, 1);
+            
+            if (currentMonthStart <= new Date(bounds.startDate.getFullYear(), bounds.startDate.getMonth(), 1)) {
+                prevBtn.style.visibility = 'hidden';
+            } else {
+                prevBtn.style.visibility = 'visible';
+            }
+            
+            if (currentMonthStart >= new Date(bounds.endDate.getFullYear(), bounds.endDate.getMonth(), 1)) {
+                nextBtn.style.visibility = 'hidden';
+            } else {
+                nextBtn.style.visibility = 'visible';
+            }
+        }
         
         daysContainer.innerHTML = '';
         
@@ -932,21 +1077,92 @@
     }
 
     function prevMonth() {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        renderCalendar();
+        const bounds = getAcademicYearBounds();
+        const prev = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+        if (prev >= new Date(bounds.startDate.getFullYear(), bounds.startDate.getMonth(), 1)) {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
     }
 
     function nextMonth() {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        renderCalendar();
+        const bounds = getAcademicYearBounds();
+        const next = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+        if (next <= new Date(bounds.endDate.getFullYear(), bounds.endDate.getMonth(), 1)) {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
     }
 
     // Initialize calendar on load
     document.addEventListener('DOMContentLoaded', () => {
         renderCalendar();
         // Initialize view
-        switchTab('icard');
+        const hash = window.location.hash.substring(1);
+        if (hash === 'attendance' || hash === 'fees' || hash === 'icard') {
+            switchTab(hash);
+        } else {
+            switchTab('icard');
+        }
     });
+
+    function calculateTotal() {
+        const checkboxes = document.querySelectorAll('.fee-checkbox');
+        let total = 0;
+        
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                total += parseFloat(cb.value);
+            }
+        });
+        
+        document.querySelectorAll('.total-amount-to-pay').forEach(input => input.value = total);
+        document.querySelectorAll('.total-display').forEach(display => display.innerText = '₹' + total.toLocaleString('en-IN'));
+        
+        document.querySelectorAll('.pay-selected-btn').forEach(btn => {
+            if (total > 0) {
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+            } else {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.5';
+            }
+        });
+    }
+
+    function toggleSelection(card, checkboxId) {
+        const checkbox = document.getElementById(checkboxId);
+        checkbox.checked = !checkbox.checked;
+        
+        const circle = card.querySelector('.selection-circle');
+        const icon = card.querySelector('.selection-icon');
+        const defaultBorder = card.getAttribute('data-default-border');
+        
+        if(checkbox.checked) {
+            card.style.borderColor = '#1E88E5';
+            card.style.backgroundColor = '#E3F2FD';
+            circle.style.borderColor = '#1E88E5';
+            circle.style.backgroundColor = '#1E88E5';
+            icon.classList.remove('d-none');
+        } else {
+            card.style.borderColor = defaultBorder;
+            card.style.backgroundColor = '#FAFAFA';
+            circle.style.borderColor = '#ccc';
+            circle.style.backgroundColor = 'white';
+            icon.classList.add('d-none');
+        }
+        
+        calculateTotal();
+    }
+    
+    function validatePaymentForm(form) {
+        const total = parseFloat(form.querySelector('.total-amount-to-pay').value);
+        if (total <= 0) {
+            alert('Please select at least one installment to pay.');
+            return false;
+        }
+        return true;
+    }
 </script>
 
 @endsection

@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
+use App\Models\User;
+use App\Models\Worksheet;
+use App\Notifications\Stage4SubmittedNotification;
 use App\Services\AutoRuleEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -150,15 +153,15 @@ class LessonController extends Controller
 
         if ($request->has('answers')) {
             $answersDecoded = json_decode($request->input('answers'), true);
-            $answersJson = $request->input('answers');
+            $answersArray = $answersDecoded; // Use the decoded array for DB saving
             $score = 0;
             
-            // Evaluate MCQs if this is the Hard Words stage (order == 1) or Exercise (order == 3)
-            if ($lesson->order == 1 || $lesson->order == 3) {
+            // Evaluate MCQs if this is the Hard Words stage (order == 1)
+            if ($lesson->order == 1) {
                 $ebookId = $lesson->chapter->course->ebook_id;
                 $ebookChapter = \App\Models\EbookChapter::where('ebook_id', $ebookId)->where('chapter_number', $lesson->chapter->order + 1)->first();
                 if ($ebookChapter) {
-                    $stageNumber = $lesson->order == 1 ? 2 : 4;
+                    $stageNumber = 2;
                     $ebookChapterStage = \App\Models\EbookChapterStage::where('ebook_chapter_id', $ebookChapter->id)->where('stage_number', $stageNumber)->first();
                     if ($ebookChapterStage) {
                         $dbQuestions = \App\Models\EbookQuestion::where('ebook_id', $ebookId)
@@ -168,27 +171,65 @@ class LessonController extends Controller
                             ->get();
                         
                         if ($dbQuestions->isNotEmpty()) {
+                            $totalMCQs = $dbQuestions->count();
+                            $correct = 0;
                             foreach ($dbQuestions as $index => $q) {
                                 if (isset($answersDecoded[$index]) && (string)$answersDecoded[$index] === (string)$q->answer) {
-                                    $score++;
+                                    $correct++;
                                 }
                             }
+                            $score = $totalMCQs > 0 ? (int) round(($correct / $totalMCQs) * 10) : 10;
                         } else {
                             // Fallback to hardcoded logic if no DB questions
                             if ($lesson->order == 1) {
                                 $mcqs = \App\Models\Lesson::getHardWordsMcqs();
+                                $totalMCQs = count($mcqs);
+                                $correct = 0;
                                 foreach ($mcqs as $index => $mcq) {
                                     if (isset($answersDecoded[$index]) && $answersDecoded[$index] == $mcq['correct']) {
-                                        $score++;
+                                        $correct++;
                                     }
                                 }
-                            } else {
-                                // For Exercise Mission (Stage 4) with no DB questions, give full score by default
-                                $score = 10;
+                                $score = $totalMCQs > 0 ? (int) round(($correct / $totalMCQs) * 10) : 10;
                             }
                         }
                     }
                 }
+            } else if ($lesson->order == 3) {
+                // Stage 4: Subjective Questions
+                $subjectiveTexts = [];
+                $subjectiveFiles = [];
+                
+                $texts = $request->input('subjective_text', []);
+                $files = $request->file('subjective_file', []);
+
+                foreach ($texts as $qId => $text) {
+                    $subjectiveTexts[$qId] = $text;
+                }
+
+                if (!empty($files)) {
+                    $ebookId = $lesson->chapter->course->ebook_id ?? 2;
+                    $stageNo = 4;
+                    foreach ($files as $qId => $file) {
+                        if ($file->isValid()) {
+                            $extension = $file->getClientOriginalExtension();
+                            $filename = "ans-{$qId}.{$extension}";
+                            $destinationPath = public_path("uploads/answer-imgs/ebook-{$ebookId}/stage-{$stageNo}");
+                            
+                            if (!file_exists($destinationPath)) {
+                                mkdir($destinationPath, 0755, true);
+                            }
+                            
+                            $file->move($destinationPath, $filename);
+                            
+                            $subjectiveFiles[$qId] = "uploads/answer-imgs/ebook-{$ebookId}/stage-{$stageNo}/{$filename}";
+                        }
+                    }
+                }
+                
+                $answersArray = $subjectiveTexts;
+                $answerImgArray = $subjectiveFiles;
+                $score = null;
             } else if ($lesson->order == 2) {
                 // Activity Mission (Matching)
                 $matchPairs = [];
@@ -270,19 +311,56 @@ class LessonController extends Controller
         $progress->subject = $course->title;
         $progress->standard = $className;
 
-        if ($isFirstAttempt || $score > $progress->score) {
+        if ($isFirstAttempt || $score === null || $score > $progress->score) {
             $progress->completed = true;
             $progress->completed_at = now();
-            $progress->answers = $answersJson;
-            $progress->score = $score;
+            // Do not override answers for non-first attempt unless it's a higher score or subjective (null score)
+            if (isset($answersArray) && !empty($answersArray)) {
+                $casts = $progress->getCasts();
+                $progress->answers = (isset($casts['answers']) && $casts['answers'] === 'array') 
+                    ? $answersArray 
+                    : json_encode($answersArray);
+            }
+            if (isset($answerImgArray) && !empty($answerImgArray)) {
+                $casts = $progress->getCasts();
+                $progress->answer_img = (isset($casts['answer_img']) && $casts['answer_img'] === 'array') 
+                    ? $answerImgArray 
+                    : json_encode($answerImgArray);
+            }
+            if ($score !== null) {
+                $progress->score = $score;
+            } else if ($progress->score === null && $lesson->order == 3) {
+                $progress->score = null;
+            }
             $progress->time_taken = $timeTaken;
         }
 
         $progress->save();
 
+        if ($progress->stage_number == 4 && $isFirstAttempt) {
+            // Find staff assigned to the student's class
+            $staffUsers = User::where('role', 'staff')
+                ->whereHas('classes', function($q) use ($user) {
+                    $q->where('classes.id', $user->class_id);
+                })
+                ->get();
+                
+            if ($staffUsers->isEmpty()) {
+                // Fallback to admin if no staff assigned
+                $staffUsers = User::where('role', 'admin')->get();
+            }
+            
+            $chapterName = $ebookChapter ? $ebookChapter->title : 'Stage 4';
+            foreach ($staffUsers as $staff) {
+                $staff->notify(new Stage4SubmittedNotification($user->name, $chapterName, $progress->id));
+            }
+        }
+
+        $xpAwarded = 0;
         if ($previousAttempts === 0) {
             // Award XP only on the first attempt
-            $user->addXp($lesson->xp_reward, 'lesson', $lesson->id, "Completed: {$lesson->title}");
+            $xpAwarded = $lesson->xp_reward;
+            $user->addXp($xpAwarded, 'lesson', $lesson->id, "Completed: {$lesson->title}");
         }
 
         // Redirect to next lesson
@@ -305,15 +383,30 @@ class LessonController extends Controller
                     'id' => $request->input('course_id'),
                     'stage' => $request->input('stage') + 1,
                     'chapter_id' => $request->input('chapter_id')
-                ])->with('success', '+' . $lesson->xp_reward . ' XP earned! 🌟');
+                ])->with('stage_complete', [
+                    'stage' => $request->input('stage'),
+                    'next_stage' => $request->input('stage') + 1,
+                    'xp' => $xpAwarded
+                ]);
             }
             
             return redirect()->route('student.lessons.show', $nextLesson->id)
-                             ->with('success', '+' . $lesson->xp_reward . ' XP earned! 🌟');
+                             ->with('stage_complete', [
+                                 'stage' => $lesson->order,
+                                 'next_stage' => $nextLesson->order,
+                                 'xp' => $xpAwarded
+                             ]);
         }
 
         $redirect = redirect()->route('student.assigned_ebooks.show', $lesson->chapter->course_id)
-            ->with('success', 'Stage completed! ' . ($score !== null ? 'Your score: ' . $score . '/10' : ''));
+            ->with('stage_complete', [
+                'stage' => $lesson->order,
+                'next_stage' => null,
+                'xp' => $xpAwarded,
+                'score' => $score,
+                'is_level_complete' => true,
+                'level_number' => $lesson->chapter->order + 1
+            ]);
 
         if ($unlockedAvatar) {
             $redirect->with('chest_unlocked', $unlockedAvatar);

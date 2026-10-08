@@ -79,10 +79,12 @@
                         Clear
                     </a>
                 @endif
+                @if(auth()->user()->hasPermission('ebook_assignments.create'))
                 <button type="submit" form="assignEbooksForm" class="btn btn-sm text-white flex-fill"
                         style="font-size:13px;border-radius:7px;background:var(--sb-accent);height:36px;font-weight:600;">
                     <i class="bi bi-check2-circle"></i> Assign Now
                 </button>
+                @endif
             </div>
 
             <div class="col-12 mt-3 pt-2" style="border-top: 1px dashed var(--sb-border);">

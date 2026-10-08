@@ -8,8 +8,12 @@
             <h3>ID Card Templates</h3>
         </div>
         <div class="col-md-6 text-end">
+            @if(auth()->user()->hasPermission('idcard.edit'))
             <a href="{{ route('admin.id_cards.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Create Template</a>
+            @endif
+            @if(auth()->user()->hasPermission('idcard.settings'))
             <a href="{{ route('admin.id_cards.settings') }}" class="btn btn-secondary"><i class="fas fa-cog"></i> Settings</a>
+            @endif
             <a href="{{ route('admin.id_cards.downloads') }}" class="btn btn-info"><i class="fas fa-download"></i> Downloads</a>
         </div>
     </div>
@@ -42,6 +46,7 @@
                         </td>
                         <td>{{ ucfirst($t->orientation) }}</td>
                         <td>
+                            @if(auth()->user()->hasPermission('idcard.edit'))
                             <a href="{{ route('admin.id_cards.designer', $t->uuid) }}" class="btn btn-sm btn-primary" title="Open Designer">
                                 <i class="fas fa-paint-brush"></i> Designer
                             </a>
@@ -60,6 +65,7 @@
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this template permanently?');"><i class="fas fa-trash"></i></button>
                             </form>
+                            @endif
                         </td>
                     </tr>
                     @empty

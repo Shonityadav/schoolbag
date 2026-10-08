@@ -26,10 +26,14 @@ class ClassModel extends Model
         return $this->belongsTo(School::class, 'institute_id');
     }
     
-     
     public function students()
     {
         return $this->hasMany(StudentDetails::class, 'class_id');
+    }
+
+    public function feeStructures()
+    {
+        return $this->hasMany(FeeStructure::class, 'class_id');
     }
 
     public function classEbooks()

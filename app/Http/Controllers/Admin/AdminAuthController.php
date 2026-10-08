@@ -39,11 +39,11 @@ class AdminAuthController extends Controller
         if (Auth::attempt([$fieldType => $login, 'password' => $request->password], $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // Optional: You can check if the user is an admin here
-            // if (Auth::user()->user_type != 1 && Auth::user()->role !== 'admin') {
-            //     Auth::logout();
-            //     return back()->withErrors(['login' => 'Unauthorized access.']);
-            // }
+            // Ensure students cannot access the admin portal
+            if (Auth::user()->user_type == 3 || Auth::user()->role === 'student') {
+                Auth::logout();
+                return back()->withErrors(['login' => 'Unauthorized access. Students cannot log in to the admin portal.']);
+            }
 
             return redirect()->route('admin.dashboard');
         }

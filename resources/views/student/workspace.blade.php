@@ -196,8 +196,23 @@
         font-weight: 900;
         color: #000;
         margin-top: 15px;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
         font-family: 'Quicksand', sans-serif;
+    }
+    
+    /* Scrollbar for notice board */
+    .notice-scroll-wrapper::-webkit-scrollbar {
+        width: 5px;
+    }
+    .notice-scroll-wrapper::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .notice-scroll-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.15);
+        border-radius: 10px;
+    }
+    .notice-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+        background: rgba(0,0,0,0.25);
     }
     .notice-list {
         list-style-type: none;
@@ -265,28 +280,32 @@
     <div class="row g-4 mb-4">
         <!-- Attendance -->
         <div class="col-6">
-            <div class="tab-card card-attendance">
-                <div class="tab-header">Attendance</div>
-                <div class="tab-body">
-                    <div class="date-val">{{ date('d') }}</div>
-                    <div class="date-month">{{ date('F') }}</div>
+            <a href="{{ route('student.workspace.profile') }}#attendance" style="text-decoration: none; display: block;">
+                <div class="tab-card card-attendance">
+                    <div class="tab-header">Attendance</div>
+                    <div class="tab-body">
+                        <div class="date-val">{{ date('d') }}</div>
+                        <div class="date-month">{{ date('F') }}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <!-- Fees -->
         <div class="col-6">
-            <div class="tab-card card-fees">
-                <div class="tab-header">Fees</div>
-                <div class="tab-body">
-                    <div class="fees-ring">
-                        <svg viewBox="0 0 100 100">
-                            <circle class="fees-ring-bg" cx="50" cy="50" r="40"></circle>
-                            <circle class="fees-ring-progress" cx="50" cy="50" r="40"></circle>
-                        </svg>
-                        <div class="fees-ring-text">25%</div>
+            <a href="{{ route('student.workspace.profile') }}#fees" style="text-decoration: none; display: block;">
+                <div class="tab-card card-fees">
+                    <div class="tab-header">Fees</div>
+                    <div class="tab-body">
+                        <div class="fees-ring">
+                            <svg viewBox="0 0 100 100">
+                                <circle class="fees-ring-bg" cx="50" cy="50" r="40"></circle>
+                                <circle class="fees-ring-progress" cx="50" cy="50" r="40" style="stroke-dasharray: 251.2; stroke-dashoffset: {{ 251.2 - (251.2 * ($overallPercentage ?? 0) / 100) }}; transition: stroke-dashoffset 0.5s ease;"></circle>
+                            </svg>
+                            <div class="fees-ring-text">{{ $overallPercentage ?? 0 }}%</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -299,11 +318,23 @@
             <img src="{{ asset('uploads/images/workspace/notice board.png') }}" alt="Notice Board" class="notice-board-bg" fetchpriority="high" loading="eager" decoding="async">
             
             <div class="notice-board-content">
+                <a href="{{ route('student.workspace.homework_history') }}" class="text-decoration-none" style="position: absolute; top: 25px; right: 25px; font-weight: 800; font-size: 11px; color: #62B868; background: rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 8px; transition: all 0.2s;">
+                    View More <i class="bi bi-arrow-right"></i>
+                </a>
+                
                 <div class="notice-date">{{ date('d F Y') }}</div>
-                <ul class="notice-list">
-                    <li>English - Read Chapter-2</li>
-                    <li>Read Chapter-2</li>
-                </ul>
+                
+                <div class="notice-scroll-wrapper" style="max-height: 140px; overflow-y: auto; padding-right: 6px;">
+                    @if(isset($todayHomework) && $todayHomework->content)
+                        <div class="notice-text" style="font-size: 13px; font-weight: 700; color: #1E1E35; line-height: 1.6; margin-top: 5px;">
+                            {!! nl2br(e($todayHomework->content)) !!}
+                        </div>
+                    @else
+                        <div class="notice-text text-center mt-3" style="font-size: 14px; font-weight: 700; color: #64748B;">
+                            No homework assigned for today! 
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

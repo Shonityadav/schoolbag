@@ -1,11 +1,11 @@
-const CACHE_NAME = 'schoolbag-pwa-v2';
-const DYNAMIC_CACHE_NAME = 'schoolbag-dynamic-v2';
+const CACHE_NAME = 'schoolbag-pwa-v4';
+const DYNAMIC_CACHE_NAME = 'schoolbag-dynamic-v4';
 
 const STATIC_ASSETS = [
     '/offline.html',
     '/manifest.json',
-    '/icons/icon-192x192.png',
-    '/icons/icon-512x512.png'
+    '/app-icons/icon-192x192-v2.png',
+    '/app-icons/icon-512x512-v2.png'
 ];
 
 // Install event - cache static assets
@@ -43,6 +43,8 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // We will handle navigation requests explicitly below
+
     // Ignore cross-origin requests, except for known CDNs if needed, but best to stick to same-origin for simplicity
     // If it's a static asset (CSS, JS, Fonts, Images), use Stale-While-Revalidate or Cache-First
     const isStaticAsset = req.destination === 'style' || req.destination === 'script' || req.destination === 'image' || req.destination === 'font';
@@ -69,26 +71,19 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // For HTML (Pages) and other requests, use Network First, fallback to offline.html
+    // For HTML (Pages) and navigation requests, use Network First, fallback to offline.html
+    if (req.mode === 'navigate') {
+        event.respondWith(
+            fetch(req).catch(() => {
+                return caches.match('/offline.html');
+            })
+        );
+        return;
+    }
+
+    // For other requests (like API calls that might request HTML), use standard fetch
     event.respondWith(
-        fetch(req).then(networkRes => {
-            // Check if response is an error (e.g., 500)
-            const acceptHeader = req.headers.get('accept');
-            const isHtml = acceptHeader && acceptHeader.includes('text/html');
-            
-            if (!networkRes.ok && isHtml) {
-                return caches.match('/offline.html');
-            }
-            return networkRes;
-        }).catch(err => {
-            // Network failure (offline)
-            const acceptHeader = req.headers.get('accept');
-            const isHtml = acceptHeader && acceptHeader.includes('text/html');
-            
-            if (isHtml) {
-                return caches.match('/offline.html');
-            }
-            // For other failing requests, returning nothing or a generic 503 is standard
+        fetch(req).catch(() => {
             return new Response('', { status: 503, statusText: 'Service Unavailable' });
         })
     );
@@ -100,8 +95,8 @@ self.addEventListener('push', function(event) {
         const payload = event.data.json();
         const options = {
             body: payload.body || 'You have a new notification.',
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-192x192.png'
+            icon: '/app-icons/icon-192x192-v2.png',
+            badge: '/app-icons/icon-192x192-v2.png'
         };
         event.waitUntil(
             self.registration.showNotification(payload.title || 'Notification', options)

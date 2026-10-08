@@ -9,7 +9,7 @@
     {{-- PWA Setup --}}
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     <meta name="theme-color" content="#2563EB">
-    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('app-icons/icon-192x192-v2.png') }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     {{-- Bootstrap 5 --}}
@@ -405,17 +405,101 @@
             font-size: 18px;
         }
 
+        .sb-sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 250; /* Below sidebar (300) but above topbar (200) */
+        }
+        .sb-sidebar-overlay.show { display: block; }
+
         /* ════════════════════════════
            RESPONSIVE
         ════════════════════════════ */
         @media (max-width: 992px) {
-            :root { --sb-sidebar-w: 0px; }
-            .sb-sidebar { transform: translateX(-256px); width: 256px; }
+            .sb-sidebar { 
+                transform: translateX(-100%); 
+                width: 256px; 
+            }
             .sb-sidebar.open { transform: translateX(0); }
-            .sb-topbar { left: 0; }
-            .sb-main { margin-left: 0; }
+            .sb-topbar { left: 0 !important; width: 100%; z-index: 200; }
+            .sb-main { margin-left: 0 !important; width: 100%; }
             .sb-mobile-toggle { display: flex; }
             .sb-search { display: none; }
+
+            /* Premium Mobile Grid Table View */
+            .sb-table, .sb-table tbody, .sb-table tr, .sb-table td { display: block; width: 100%; }
+            .sb-table thead { display: none; }
+            .sb-table tr {
+                position: relative;
+                margin-bottom: 20px;
+                border: 1px solid #E2E8F0;
+                border-radius: 12px;
+                background: #FFFFFF;
+                padding: 16px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            }
+            .sb-table td {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 0;
+                border-bottom: 1px solid #F1F5F9;
+                text-align: right;
+                gap: 16px;
+                min-height: 44px;
+            }
+            .sb-table td:last-child { border-bottom: none; padding-bottom: 0; }
+            .sb-table td:first-child { padding-top: 0; }
+            
+            .sb-table td[data-label]::before {
+                content: attr(data-label);
+                font-weight: 500;
+                font-size: 13px;
+                color: #64748B;
+                text-align: left;
+                flex-shrink: 0;
+            }
+            
+            /* Position checkbox perfectly at the top right */
+            .sb-table td:has(.form-check-input) {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                width: auto;
+                padding: 0;
+                border: none;
+                min-height: auto;
+            }
+            
+            /* Remove labels and align left for obvious identity columns */
+            .sb-table td[data-label="Photo"]::before,
+            .sb-table td[data-label="Student"]::before,
+            .sb-table td[data-label="Staff"]::before,
+            .sb-table td[data-label="Actions"]::before {
+                display: none;
+            }
+            
+            .sb-table td[data-label="Photo"],
+            .sb-table td[data-label="Student"],
+            .sb-table td[data-label="Staff"] {
+                justify-content: flex-start;
+                border-bottom: none;
+                padding-bottom: 4px;
+                padding-top: 4px;
+                min-height: auto;
+            }
+            
+            /* Make Actions area look like a distinct footer inside the card */
+            .sb-table td[data-label="Actions"], .sb-table td:has(.btn) {
+                justify-content: flex-end;
+                margin-top: 12px;
+                padding-top: 16px;
+                border-top: 1px dashed #E2E8F0;
+                border-bottom: none;
+            }
+            .sb-table td[data-label="Actions"]::before { display: none; }
         }
         @media (max-width: 576px) {
             .sb-content { padding: 16px; }
@@ -427,8 +511,10 @@
 <body>
 
 {{-- ══════════════════════════════════════
-     SIDEBAR
+     SIDEBAR & OVERLAY
 ══════════════════════════════════════ --}}
+<div class="sb-sidebar-overlay" id="sb-overlay" onclick="toggleAdminSidebar()"></div>
+
 <aside class="sb-sidebar" id="sb-sidebar">
     <a href="{{ route('admin.dashboard') }}" class="sb-logo">
         <div class="sb-logo-icon"><i class="bi bi-grid-1x2-fill"></i></div>
@@ -451,47 +537,71 @@
 
         <div class="sb-nav-group">
             <div class="sb-nav-label">People</div>
+            @if(auth()->user()->hasPermission('students.view'))
             <a href="{{ route('admin.student_details.index') }}" class="sb-nav-link @yield('admin_nav_students', '')">
                 <i class="bi bi-people"></i> Students
                 <span class="sb-nav-badge">{{ \App\Models\User::where('user_type', 3)->where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
+            @endif
+            @if(auth()->user()->user_type == 1)
             <a href="{{ route('admin.admins.index') }}" class="sb-nav-link @yield('admin_nav_admins', '')">
                 <i class="bi bi-shield-lock"></i> Admins
                 <span class="sb-nav-badge">{{ \App\Models\User::where('user_type', 1)->where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
+            @endif
+            @if(auth()->user()->hasPermission('staff.view'))
             <a href="{{ route('admin.staff_details.index') }}" class="sb-nav-link @yield('admin_nav_staff', '')">
                 <i class="bi bi-person-badge"></i> Staff
                 <span class="sb-nav-badge">{{ \App\Models\User::where('user_type', 2)->where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
+            @endif
+            @if(auth()->user()->hasPermission('classes.view'))
             <a href="{{ route('admin.classes.index') }}" class="sb-nav-link @yield('admin_nav_classes', '')">
                 <i class="bi bi-building"></i> Classes
                 <span class="sb-nav-badge">{{ \App\Models\ClassModel::where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
+            @endif
+            @if(auth()->user()->hasPermission('staff_categories.view'))
             <a href="{{ route('admin.staff-categories.index') }}" class="sb-nav-link @yield('admin_nav_staff_categories', '')">
                 <i class="bi bi-tags"></i> Staff Categories
                 <span class="sb-nav-badge">{{ \App\Models\StaffCategory::where('institute_id', auth()->user()->institute_id)->count() }}</span>
             </a>
+            @endif
         </div>
 
         <div class="sb-nav-group">
             <div class="sb-nav-label">Academic</div>
-            <a href="#" class="sb-nav-link @yield('admin_nav_courses', '')">
-                <i class="bi bi-journal-bookmark"></i> Courses
+            @if(auth()->user()->hasPermission('courses.view'))
+            <a href="{{ route('admin.homework.index') }}" class="sb-nav-link @yield('admin_nav_homework', '')">
+                <i class="bi bi-journal-text"></i> Homework Assignment
             </a>
+            @endif
+            @if(auth()->user()->hasPermission('ebook_assignments.view'))
             <a href="{{ route('admin.ebook_assignments.index') }}" class="sb-nav-link @yield('admin_nav_ebooks', '')">
                 <i class="bi bi-book"></i> Ebook Assignments
             </a>
+            @endif
+            @if(auth()->user()->hasPermission('attendance.view'))
             <a href="{{ route('admin.attendance.index') }}" class="sb-nav-link @yield('admin_nav_attendance', '')">
                 <i class="bi bi-calendar3"></i> Attendance
             </a>
+            @endif
+            @if(auth()->user()->hasPermission('courses.view'))
+            <a href="{{ route('admin.question_reviews.index') }}" class="sb-nav-link @yield('admin_nav_question_reviews', '')">
+                <i class="bi bi-clipboard-check"></i> Question Reviews
+            </a>
+            @endif
+            @if(auth()->user()->hasPermission('results.view'))
             <a href="#" class="sb-nav-link">
                 <i class="bi bi-clipboard-data"></i> Results
             </a>
+            @endif
         </div>
 
         <div class="sb-nav-group">
             <div class="sb-nav-label">Finance</div>
-            <a href="#" class="sb-nav-link @yield('admin_nav_fees', '')">
+            @if(auth()->user()->hasPermission('finance.view'))
+            <a href="{{ route('admin.fees.index') }}" class="sb-nav-link @yield('admin_nav_fees', '')">
                 <i class="bi bi-credit-card"></i> Fee Collection
             </a>
             <a href="#" class="sb-nav-link @yield('admin_nav_transactions', '')">
@@ -500,9 +610,11 @@
             <a href="#" class="sb-nav-link @yield('admin_nav_reports', '')">
                 <i class="bi bi-bar-chart-line"></i> Reports
             </a>
+            @endif
         </div>
         <div class="sb-nav-group">
             <div class="sb-nav-label">ID Cards</div>
+            @if(auth()->user()->hasPermission('idcard.view'))
             <a href="{{ route('admin.id_cards.index') }}" class="sb-nav-link @yield('admin_nav_idcards', '')">
                 <i class="bi bi-person-badge"></i> ID Card Studio
             </a>
@@ -512,13 +624,16 @@
             <a href="{{ route('admin.id_cards.settings') }}" class="sb-nav-link @yield('admin_nav_idcards_settings', '')">
                 <i class="bi bi-sliders"></i> Card Settings
             </a>
+            @endif
         </div>
 
         <div class="sb-nav-group">
             <div class="sb-nav-label">System</div>
+            @if(auth()->user()->hasPermission('settings.view'))
             <a href="#" class="sb-nav-link">
                 <i class="bi bi-gear"></i> Settings
             </a>
+            @endif
             <a href="#" onclick="event.preventDefault(); document.getElementById('admin-logout-form').submit();" class="sb-nav-link" style="color:rgba(220,38,38,0.6);">
                 <i class="bi bi-box-arrow-left"></i> Sign Out
             </a>
@@ -533,7 +648,19 @@
             <div class="sb-user-avatar"><i class="bi bi-person-fill"></i></div>
             <div>
                 <div class="sb-user-name">{{ Auth::user() ? Auth::user()->name : 'Administrator' }}</div>
-                <div class="sb-user-role">{{ Auth::user() && Auth::user()->user_type == 1 ? 'Institute Admin' : 'Admin' }}</div>
+                <div class="sb-user-role">
+                    @if(Auth::check())
+                        @if(Auth::user()->user_type == 1)
+                            Institute Admin
+                        @elseif(Auth::user()->user_type == 2)
+                            {{ Auth::user()->staff?->category?->name ?? 'Staff' }}
+                        @else
+                            Admin
+                        @endif
+                    @else
+                        Admin
+                    @endif
+                </div>
             </div>
         </div>
     </div>
@@ -545,7 +672,7 @@
 ══════════════════════════════════════ --}}
 <div class="sb-topbar">
     <div class="d-flex align-items-center gap-3">
-        <button class="sb-mobile-toggle" id="sb-toggle" onclick="document.getElementById('sb-sidebar').classList.toggle('open')">
+        <button class="sb-mobile-toggle" id="sb-toggle" onclick="toggleAdminSidebar()">
             <i class="bi bi-list"></i>
         </button>
         <div>
@@ -564,10 +691,45 @@
             <input type="text" placeholder="Search students, classes…">
         </div>
         <div class="sb-divider-v d-none d-md-block"></div>
-        <button class="sb-icon-btn" title="Notifications">
-            <i class="bi bi-bell"></i>
-            <div class="sb-notif-dot"></div>
-        </button>
+        @php
+            $unreadCount = auth()->check() ? auth()->user()->unreadNotifications->count() : 0;
+            $allNotifications = auth()->check() ? auth()->user()->notifications()->take(20)->get() : collect([]);
+        @endphp
+        <div class="dropdown" style="position: relative;">
+            <button class="sb-icon-btn" title="Notifications" id="notifDropdown" onclick="document.getElementById('notifMenu').classList.toggle('d-none')">
+                <i class="bi bi-bell"></i>
+                @if($unreadCount > 0)
+                    <div class="sb-notif-dot"></div>
+                @endif
+            </button>
+            <div id="notifMenu" class="d-none" style="position: absolute; right: 0; top: 100%; background: white; border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 320px; z-index: 1000; padding: 0;">
+                <div style="padding: 12px 16px; border-bottom: 1px solid #E2E8F0; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Notifications</span>
+                    @if($unreadCount > 0)
+                    <form id="adminMarkAllReadForm" action="{{ route('admin.notifications.markAllRead') ?? '#' }}" method="POST" style="margin: 0;" onsubmit="handleAdminMarkAllRead(event)">
+                        @csrf
+                        <button type="submit" style="background: none; border: none; font-size: 11px; color: var(--sb-accent); cursor: pointer; padding: 0; font-weight: 600;">Mark all as read</button>
+                    </form>
+                    @endif
+                </div>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    @forelse($allNotifications as $notification)
+                        @php
+                            $isUnread = is_null($notification->read_at);
+                            $bgColor = $isUnread ? '#F0F9FF' : 'white';
+                            $fontWeight = $isUnread ? '600' : '400';
+                            $hoverColor = $isUnread ? '#E0F2FE' : '#F8FAFC';
+                        @endphp
+                        <a href="{{ route('admin.notifications.read', $notification->id) }}" style="display: block; padding: 12px 16px; border-bottom: 1px solid #F1F5F9; text-decoration: none; color: #0F172A; background: {{ $bgColor }}; transition: background 0.15s;" onmouseover="this.style.background='{{ $hoverColor }}'" onmouseout="this.style.background='{{ $bgColor }}'">
+                            <div style="font-size: 13px; margin-bottom: 4px; font-weight: {{ $fontWeight }};">{!! $notification->data['message'] ?? 'New Notification' !!}</div>
+                            <div style="font-size: 11px; color: #64748B;">{{ $notification->created_at->diffForHumans() }}</div>
+                        </a>
+                    @empty
+                        <div style="padding: 20px; text-align: center; color: #64748B; font-size: 13px;">No notifications</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
         <a href="#" class="sb-icon-btn" title="Help">
             <i class="bi bi-question-circle"></i>
         </a>
@@ -680,6 +842,71 @@
         });
     });
 </script>
+
+<script>
+    document.addEventListener('click', function(e) {
+        const notifMenu = document.getElementById('notifMenu');
+        const notifDropdown = document.getElementById('notifDropdown');
+        if (notifMenu && !notifMenu.contains(e.target) && !notifDropdown.contains(e.target)) {
+            notifMenu.classList.add('d-none');
+        }
+    });
+</script>
+
+<script>
+    function toggleAdminSidebar() {
+        document.getElementById('sb-sidebar').classList.toggle('open');
+        document.getElementById('sb-overlay').classList.toggle('show');
+    }
+
+    async function handleAdminMarkAllRead(e) {
+        e.preventDefault();
+        const form = e.target;
+        try {
+            const res = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json'
+                }
+            });
+            if (res.ok) {
+                const dot = document.querySelector('.sb-notif-dot');
+                if (dot) dot.style.display = 'none';
+
+                const unreadLinks = document.querySelectorAll('#notifMenu a[style*="background: #F0F9FF"]');
+                unreadLinks.forEach(a => {
+                    a.style.background = 'white';
+                    a.style.fontWeight = '400';
+                    a.onmouseout = function() { this.style.background='white' };
+                    a.onmouseover = function() { this.style.background='#F8FAFC' };
+                });
+
+                form.style.display = 'none';
+            }
+        } catch(err) {
+            console.error('Error marking notifications as read:', err);
+        }
+    }
+
+    // Automatically inject data-labels for responsive grid tables
+    document.addEventListener('DOMContentLoaded', function() {
+        const tables = document.querySelectorAll('.sb-table');
+        tables.forEach(table => {
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                cells.forEach((cell, index) => {
+                    if (headers[index] && headers[index] !== '') {
+                        cell.setAttribute('data-label', headers[index]);
+                    }
+                });
+            });
+        });
+    });
+</script>
+
 @stack('admin-scripts')
 
 {{-- PWA Service Worker Registration --}}
@@ -694,5 +921,6 @@
         });
     }
 </script>
+    @include('partials.pwa_popup')
 </body>
 </html>

@@ -15,6 +15,7 @@
         </p>
     </div>
     <div class="d-flex align-items-center gap-2">
+        @if(auth()->user()->hasPermission('staff.create'))
         <a href="{{ route('admin.staff_details.upload-photos') }}"
            class="btn btn-sm text-white d-flex align-items-center gap-2"
            style="font-size:13px;border-radius:7px;background:var(--sb-accent);padding:8px 16px;">
@@ -25,6 +26,7 @@
            style="font-size:13px;border-radius:7px;background:var(--sb-accent);padding:8px 16px;">
             <i class="bi bi-plus-lg"></i> Add Staff
         </a>
+        @endif
     </div>
 </div>
 
@@ -159,6 +161,7 @@
                                style="width:32px;height:32px;font-size:14px;border-radius:6px;background:#F0FDF4;color:#16A34A;border:1px solid #BBF7D0;">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            @if(auth()->user()->hasPermission('staff.edit'))
                             <a href="{{ route('admin.staff_details.edit', $member) }}"
                                class="sb-icon-btn" title="Edit"
                                style="width:32px;height:32px;font-size:14px;border-radius:6px;">
@@ -173,6 +176,7 @@
                                     <i class="bi bi-trash3"></i>
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -230,10 +234,10 @@
 </div>
 
 {{-- Bulk Action Bar --}}
-<div id="bulkActionBar" class="position-fixed bottom-0 start-50 translate-middle-x mb-4 bg-white shadow-lg rounded-pill px-4 py-3 d-none align-items-center gap-3" style="z-index: 1050; border: 1px solid var(--sb-border);">
+<div id="bulkActionBar" class="position-fixed bottom-0 start-50 translate-middle-x mb-4 bg-white shadow-lg rounded-3 px-4 py-3 d-none align-items-center gap-3" style="z-index: 1050; border: 1px solid var(--sb-border);">
     <span class="fw-semibold text-dark"><span id="selectedCount">0</span> selected</span>
     <div style="width: 1px; height: 20px; background: var(--sb-border);"></div>
-    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" onclick="openGenerateModal()">
+    <button type="button" class="btn btn-sm btn-primary rounded-3 px-3" onclick="openGenerateModal()">
         <i class="bi bi-person-badge"></i> Generate ID Cards
     </button>
 </div>

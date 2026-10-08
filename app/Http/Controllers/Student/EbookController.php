@@ -15,48 +15,47 @@ class EbookController extends Controller
 
     public function index(Request $request)
     {
-        // Distinct filter options from the ebooks table
-        $publications = Ebook::whereNotNull('publication')
-            ->where('publication', '!=', '')
-            ->distinct()
-            ->orderBy('publication')
-            ->pluck('publication');
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // Get assigned courses for this student's class or user ID
+        $assignedCourses = \App\Models\AssignedEbook::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get();
 
-        $standards = Ebook::whereNotNull('standard')
-            ->where('standard', '!=', '')
-            ->distinct()
-            ->orderByRaw('CAST(standard AS UNSIGNED)')   // numeric sort: 1,2,3... not 1,10,2
-            ->pluck('standard');
+        $ebookIds = [];
+        $externalEbooks = collect();
+        foreach ($assignedCourses as $course) {
+            if (!empty($course->ebook_url)) {
+                $hasChapters = $course->chapters()->count() > 0;
+                $externalEbooks->push((object)[
+                    'id' => $course->ebook_id,
+                    'course_id' => $course->id,
+                    'has_chapters' => $hasChapters,
+                    'name' => $course->title ?: ("Ebook - " . strtoupper($course->ebook_id)),
+                    'publication' => $course->publication ?: 'MyEbook',
+                    'subject' => $course->subject ?: '',
+                    'standard' => $course->standard ?: '',
+                    'series' => $course->series ?: '',
+                    'external_url' => $course->ebook_url,
+                ]);
+            } else {
+                $resolvedId = $course->getResolvedEbookId();
+                if ($resolvedId && is_numeric($resolvedId)) {
+                    $ebookIds[] = $resolvedId;
+                }
+            }
+        }
 
-        $subjects = Ebook::whereNotNull('subject')
-            ->where('subject', '!=', '')
-            ->distinct()
-            ->orderBy('subject')
-            ->pluck('subject');
-
-        // Active filter values from URL
-        $activePub = $request->get('publisher', '');
-        $activeCls = $request->get('class', '');      // maps to `standard` column
-        $activeSub = $request->get('subject', '');
-
-        // Build filtered ebook query
-        $ebooks = Ebook::query()
-            ->when($activePub, fn($q) => $q->where('publication', $activePub))
-            ->when($activeCls, fn($q) => $q->where('standard',    $activeCls))
-            ->when($activeSub, fn($q) => $q->where('subject',     $activeSub))
+        // Only fetch the ebooks that are unlocked/assigned to this student
+        $internalEbooks = Ebook::whereIn('id', array_unique($ebookIds))
             ->orderBy('standard')
             ->orderBy('name')
             ->get();
 
-        $user = \Illuminate\Support\Facades\Auth::user();
-        $assignedEbookIds = \App\Models\AssignedEbook::where('user_id', $user->id)
-            ->whereNotNull('ebook_id')
-            ->pluck('ebook_id')
-            ->toArray();
+        $ebooks = $externalEbooks->merge($internalEbooks);
+        $assignedEbookIds = $internalEbooks->pluck('id')->toArray();
 
-        return view('student.worksheets.index', compact(
-            'publications', 'standards', 'subjects', 'ebooks', 'assignedEbookIds'
-        ));
+        return view('student.worksheets.index', compact('ebooks', 'assignedEbookIds'));
     }
 
     public function show(int $id)
@@ -200,6 +199,191 @@ class EbookController extends Controller
         return response()->json(['chapters' => $savedChapters]);
     }
 
+    public function scanQr(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+        ]);
+
+        $code = trim($request->input('code'));
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        // Step 1: Check if the scanned text is a URL (using the initial scanned URL directly without redirect tracing)
+        $actualUrl = $code;
+        $isUrl = (bool) preg_match('/^https?:\/\//i', $code);
+
+        // Save URL in assigned_ebooks ONLY if the URL contains 'myebook'
+        $isMyEbook = (stripos($code, 'myebook') !== false);
+        if ($isMyEbook) {
+            $apiUrl = rtrim($code, '/') . '/schoolbag';
+            
+            try {
+                $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(10)->get($apiUrl);
+                $apiData = $response->json();
+                
+                if ($response->successful() && isset($apiData['success']) && $apiData['success'] && isset($apiData['url'])) {
+                    $flipbookUrl = $apiData['url'];
+                    $extractedId = $apiData['uid'] ?? basename(rtrim(parse_url($code, PHP_URL_PATH) ?? $code, '/'));
+                    
+                    // If the received URL has 'myebook/' followed by a number, use that number as ebook_id
+                    if (preg_match('/myebook\/(\d+)/i', $flipbookUrl, $matches)) {
+                        $extractedId = $matches[1];
+                    }
+
+                    // Fetch metadata from flipbook API by appending /schoolbag
+                    $title = "Ebook - " . strtoupper($extractedId);
+                    $metaStandard = null;
+                    $metaSubject = null;
+                    $metaPublication = null;
+                    $metaSeries = null;
+                    
+                    try {
+                        $metaApiUrl = rtrim($flipbookUrl, '/') . '/schoolbag';
+                        $metaResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(8)->get($metaApiUrl);
+                        if ($metaResponse->successful()) {
+                            $metaData = $metaResponse->json();
+                            if (!empty($metaData['name'])) $title = $metaData['name'];
+                            if (!empty($metaData['standard'])) $metaStandard = $metaData['standard'];
+                            if (!empty($metaData['subject'])) $metaSubject = $metaData['subject'];
+                            if (!empty($metaData['publication'])) $metaPublication = $metaData['publication'];
+                            if (!empty($metaData['series'])) $metaSeries = $metaData['series'];
+                        }
+                    } catch (\Exception $e) {
+                        // Silently fallback to defaults if meta fetch fails
+                    }
+                    
+                    $existingAssigned = \App\Models\AssignedEbook::where('user_id', $user->id)
+                        ->where('ebook_id', $extractedId)
+                        ->first();
+
+                    if ($existingAssigned) {
+                        return response()->json([
+                            'success' => true,
+                            'already_assigned' => true,
+                            'message' => " '{$title}' is already in your library!",
+                            'redirect_url' => $flipbookUrl
+                        ]);
+                    }
+
+                    $parsedUrl = parse_url($flipbookUrl);
+                    $baseUrl = (isset($parsedUrl['scheme']) && isset($parsedUrl['host'])) ? ($parsedUrl['scheme'] . '://' . $parsedUrl['host']) : '';
+                    $coverImageUrl = $baseUrl ? ($baseUrl . '/uploads/ebook/ebook-' . $extractedId . '/1.jpg') : '';
+
+                    return response()->json([
+                        'success' => true,
+                        'requires_confirmation' => true,
+                        'message' => "Preview Ebook",
+                        'ebook' => [
+                            'id' => $extractedId,
+                            'name' => $title,
+                            'publication' => $metaPublication ?? 'MyEbook',
+                            'subject' => $metaSubject ?? '',
+                            'standard' => $metaStandard ?? '',
+                            'series' => $metaSeries ?? '',
+                            'url' => $flipbookUrl,
+                            'cover_image' => $coverImageUrl
+                        ]
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Ignore and fall through to default error message if API fails
+            }
+            
+            return response()->json([
+                'success' => false,
+                'is_url' => true,
+                'initial_url' => $code,
+                'actual_url' => $code,
+                'message' => '⚠️ Could not resolve Ebook URL from the scanned QR code.'
+            ]);
+        }
+
+        // Step 2: Collect all string variations (original code & resolved actual URL) to match against internal DB
+        $candidates = array_unique([$code, $actualUrl]);
+        $ebook = null;
+
+        foreach ($candidates as $val) {
+            if (is_numeric($val) && !$ebook) {
+                $ebook = Ebook::find($val);
+            }
+            if (!$ebook) {
+                $ebook = Ebook::where('key_code', $val)
+                    ->orWhere('uid', $val)
+                    ->orWhere('ref_id', $val)
+                    ->orWhere('key_link', $val)
+                    ->orWhere('name', 'like', '%' . $val . '%')
+                    ->first();
+            }
+            // Extract slug or ID from end of URL path
+            if (!$ebook && preg_match('/\/([^\/?#]+)(?:[\?#].*)?$/', parse_url($val, PHP_URL_PATH) ?? $val, $matches)) {
+                $slug = trim($matches[1]);
+                if (is_numeric($slug)) {
+                    $ebook = Ebook::find($slug);
+                }
+                if (!$ebook && !empty($slug)) {
+                    $ebook = Ebook::where('key_code', $slug)
+                        ->orWhere('uid', $slug)
+                        ->orWhere('ref_id', $slug)
+                        ->orWhere('key_link', 'like', '%' . $slug . '%')
+                        ->orWhere('name', 'like', '%' . $slug . '%')
+                        ->first();
+                }
+            }
+            if ($ebook) break;
+        }
+
+        // If no matching internal ebook was found in database
+        if (!$ebook) {
+            return response()->json([
+                'success' => false,
+                'is_url' => $isUrl,
+                'initial_url' => $code,
+                'actual_url' => $actualUrl,
+                'message' => $isUrl 
+                    ? 'Resolved final URL from cover redirect successfully.' 
+                    : 'Invalid or unrecognized QR Code. No matching ebook found in the library.'
+            ]);
+        }
+
+        // If an internal ebook matched, check if already assigned
+        $existing = \App\Models\AssignedEbook::where(function($query) use ($user) {
+                $query->where('class_id', $user->class_id)
+                      ->orWhere('user_id', $user->id);
+            })
+            ->where(function($query) use ($ebook) {
+                $query->where('ebook_id', $ebook->id)
+                      ->orWhere('title', $ebook->name)
+                      ->orWhere('title', $ebook->subject);
+            })
+            ->first();
+
+        if (!$existing) {
+            $this->performAssign($user, $ebook);
+            $msg = " '{$ebook->name}' has been successfully unlocked and added to your ebooks!";
+        } else {
+            $msg = " '{$ebook->name}' is already unlocked! Ready to view.";
+        }
+
+        return response()->json([
+            'success' => true,
+            'is_url' => $isUrl,
+            'initial_url' => $code,
+            'actual_url' => $actualUrl,
+            'message' => $msg,
+            'redirect_url' => route('student.ebooks.show', $ebook->id),
+            'ebook' => [
+                'id' => $ebook->id,
+                'name' => $ebook->name,
+                'publication' => $ebook->publication,
+                'subject' => $ebook->subject,
+                'standard' => $ebook->standard,
+                'url' => route('student.ebooks.show', $ebook->id)
+            ]
+        ]);
+    }
+
+
+
     public function assign(int $id)
     {
         $user = \Illuminate\Support\Facades\Auth::user();
@@ -215,6 +399,14 @@ class EbookController extends Controller
                 ->with('success', 'Ebook is already assigned to your subjects.');
         }
 
+        $this->performAssign($user, $ebook);
+
+        return redirect()->route('student.assigned_ebooks.index')
+            ->with('success', 'Ebook assigned successfully! You can now view it here.');
+    }
+
+    private function performAssign($user, $ebook)
+    {
         // Get max order
         $maxOrder = \App\Models\AssignedEbook::where('class_id', $user->class_id)->max('order') ?? 0;
 
@@ -293,8 +485,56 @@ class EbookController extends Controller
             }
 
         }
+    }
 
-        return redirect()->route('student.assigned_ebooks.index')
-            ->with('success', 'Ebook assigned successfully! You can now view it here.');
+    public function confirmAssignQr(Request $request)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        $request->validate([
+            'ebook.id' => 'required|string',
+            'ebook.url' => 'required|string',
+            'ebook.name' => 'required|string',
+        ]);
+
+        $eb = $request->input('ebook');
+
+        $existingAssigned = \App\Models\AssignedEbook::where(function($query) use ($user) {
+                $query->where('class_id', $user->class_id)
+                      ->orWhere('user_id', $user->id);
+            })
+            ->where('ebook_id', $eb['id'])
+            ->first();
+
+        if (!$existingAssigned) {
+            \App\Models\AssignedEbook::create([
+                'user_id' => $user->id,
+                'class_id' => $user->class_id,
+                'ebook_id' => $eb['id'],
+                'ebook_url' => $eb['url'],
+                'title' => $eb['name'],
+                'standard' => $eb['standard'] ?? null,
+                'subject' => $eb['subject'] ?? null,
+                'publication' => $eb['publication'] ?? null,
+                'series' => $eb['series'] ?? null,
+                'is_active' => true,
+            ]);
+            $msg = " '{$eb['name']}' unlocked and saved to your library!";
+        } else {
+            $existingAssigned->update([
+                'ebook_url' => $eb['url'],
+                'title' => $eb['name'],
+                'standard' => $eb['standard'] ?? null,
+                'subject' => $eb['subject'] ?? null,
+                'publication' => $eb['publication'] ?? null,
+                'series' => $eb['series'] ?? null,
+            ]);
+            $msg = " '{$eb['name']}' is ready to view!";
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $msg
+        ]);
     }
 }

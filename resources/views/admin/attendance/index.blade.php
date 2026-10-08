@@ -15,17 +15,12 @@
     <div class="d-flex align-items-center gap-3">
         <form action="{{ route('admin.attendance.index') }}" method="GET" class="d-flex align-items-center gap-2">
             <select name="user_type" class="form-select form-select-sm" style="width: auto; cursor: pointer; box-shadow: none;" onchange="this.form.submit()">
-                @if(auth()->user()->hasPermission('student_details.view'))
-                    <option value="3" {{ $userType == '3' ? 'selected' : '' }}>
-                        Students
-                    </option>
-                @endif
-
-                @if(auth()->user()->hasPermission('staff.view'))
-                    <option value="2" {{ $userType == '2' ? 'selected' : '' }}>
-                        Staff
-                    </option>
-                @endif
+                <option value="3" {{ $userType == '3' ? 'selected' : '' }}>
+                    Students
+                </option>
+                <option value="2" {{ $userType == '2' ? 'selected' : '' }}>
+                    Staff
+                </option>
             </select>
             
             @if($userType == '3')
@@ -33,7 +28,7 @@
                 <select name="class_id" id="classFilterSelect" class="form-select form-select-sm {{ !empty($classId) ? 'pe-5' : '' }}" style="width: auto; cursor: pointer; box-shadow: none;" onchange="this.form.submit()">
                     <option value="">Select Class</option>
                     @foreach($classes as $c)
-                        <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Class {{ $c->standard }} - {{ $c->section }}</option>
+                        <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Class {{ $c->standard }} - {{ $c->section }} ({{ $c->students_count }} Students)</option>
                     @endforeach
                 </select>
                 @if(!empty($classId))
@@ -46,9 +41,11 @@
         </form>
         
         @if($users->count() > 0)
+            @if(auth()->user()->hasPermission('attendance.mark'))
             <button type="submit" form="bulkAttendanceForm" id="saveAttendanceBtn" class="btn btn-sm btn-primary px-3 d-flex align-items-center gap-1" style="background-color: #1B74F3; border: none; font-weight: 500; box-shadow: none;" disabled>
                 <i class="bi bi-save"></i> Save
             </button>
+            @endif
         @endif
     </div>
 </div>
@@ -91,8 +88,8 @@
                         </td>
                         
                         @if($userType == '3')
-                        <td>{{ $user->studentClass ? $user->studentClass->standard : 'N/A' }}</td>
-                        <td>{{ $user->studentClass ? $user->studentClass->section : 'N/A' }}</td>
+                        <td>{{ $user->student && $user->student->class ? $user->student->class->standard : 'N/A' }}</td>
+                        <td>{{ $user->student && $user->student->class ? $user->student->class->section : 'N/A' }}</td>
                         @endif
 
                         <td>
@@ -107,6 +104,7 @@
                         <td class="text-end">
                             <input type="hidden" name="records[{{ $loop->index }}][created_for]" value="{{ $user->id }}">
                             <div class="d-flex gap-3 justify-content-end align-items-center">
+                                @if(auth()->user()->hasPermission('attendance.mark'))
                                 <div class="form-check form-check-inline mb-0">
                                     <input class="form-check-input attendance-radio" type="radio" name="records[{{ $loop->index }}][status]" id="status_present_{{ $user->id }}" value="Present" {{ $status === 'Present' ? 'checked' : '' }} style="cursor: pointer;">
                                     <label class="form-check-label" style="color: var(--sb-green); font-weight: 700; cursor: pointer;" for="status_present_{{ $user->id }}">Present</label>
@@ -119,6 +117,9 @@
                                     <input class="form-check-input attendance-radio" type="radio" name="records[{{ $loop->index }}][status]" id="status_clear_{{ $user->id }}" value="Clear" {{ $status === 'Unmarked' ? 'checked' : '' }} style="cursor: pointer;">
                                     <label class="form-check-label text-muted fw-bold" style="cursor: pointer;" for="status_clear_{{ $user->id }}">Unmarked</label>
                                 </div>
+                                @else
+                                <div class="text-muted" style="font-size: 13px;">Cannot modify</div>
+                                @endif
                             </div>
                         </td>
                     </tr>

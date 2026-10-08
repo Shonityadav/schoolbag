@@ -11,10 +11,12 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('staff_details', function (Blueprint $table) {
-            $table->decimal('salary', 10, 2)->nullable()->after('department');
+            if (!Schema::hasColumn('staff_details', 'salary')) {
+                $table->decimal('salary', 10, 2)->nullable()->after('department');
+            }
         });
     }
 

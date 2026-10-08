@@ -7,7 +7,7 @@
     {{-- PWA Setup --}}
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     <meta name="theme-color" content="#2563EB">
-    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('app-icons/icon-192x192-v2.png') }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -252,6 +252,106 @@
         @media (max-width: 600px) {
             .auth-btns .btn-login { display: none; }
         }
+
+        /* ── Memory Match Minigame ── */
+        .memory-game-wrap {
+            background: linear-gradient(160deg, #FFFFFF 0%, #F5FAFF 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 0 #D4E1F9, 0 14px 28px rgba(0,0,0,0.05), inset 0 1px 0 #FFF;
+            transform: translateY(-4px);
+            margin-bottom: 24px;
+        }
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            perspective: 1000px;
+        }
+        .m-card {
+            aspect-ratio: 3/4;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .m-card.flip { transform: rotateY(180deg); }
+        .m-card-face {
+            position: absolute;
+            width: 100%; height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .m-card-front {
+            background: linear-gradient(135deg, #FFB37C, #FFD561);
+            color: #fff; font-size: clamp(20px, 4vw, 32px); font-weight: 900;
+        }
+        .m-card-back {
+            background: #fff;
+            transform: rotateY(180deg);
+            border: 3px solid #E2E8F0;
+        }
+        .m-card-back svg { width: 60%; height: 60%; }
+        .m-card.matched .m-card-back { border-color: #9DE182; background: #EAFFEA; }
+        .win-msg {
+            display: none;
+            text-align: center; font-family: 'Bubblegum Sans', cursive;
+            font-size: clamp(20px, 4vw, 28px); color: #4AADCC; margin-top: 16px;
+            animation: popIn 0.5s ease-out;
+        }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* ── Word Scramble Minigame ── */
+        .scramble-game-wrap {
+            background: linear-gradient(160deg, #FFFFFF 0%, #F5FAFF 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 0 #D4E1F9, 0 14px 28px rgba(0,0,0,0.05), inset 0 1px 0 #FFF;
+            transform: translateY(-4px);
+            margin-bottom: 24px;
+        }
+        .scramble-title-area {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-family: 'Bubblegum Sans', cursive; font-size: clamp(20px, 5vw, 28px);
+            color: var(--text); margin-bottom: 16px;
+        }
+        .scramble-icon { width: 32px; height: 32px; }
+        .scramble-answer-row {
+            display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;
+            min-height: 50px;
+        }
+        .scramble-slot {
+            width: clamp(40px, 10vw, 50px);
+            height: clamp(40px, 10vw, 50px);
+            border: 2px dashed #B5C9DF;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .scramble-letters-row {
+            display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+        }
+        .s-tile {
+            width: clamp(40px, 10vw, 50px);
+            height: clamp(40px, 10vw, 50px);
+            background: linear-gradient(135deg, #FFB37C, #FFD561);
+            color: #fff; font-size: clamp(20px, 5vw, 26px); font-weight: 900;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 0 #D89839, 0 4px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.1s;
+            user-select: none;
+        }
+        .s-tile:active { transform: translateY(4px); box-shadow: 0 0px 0 #D89839; }
+        .s-tile.in-answer {
+            background: linear-gradient(135deg, #8BDDFF, #5CC3FF);
+            box-shadow: 0 4px 0 #4A9CCC, 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .s-tile.in-answer:active { box-shadow: 0 0px 0 #4A9CCC; }
+
     </style>
 </head>
 <body>
@@ -260,8 +360,9 @@
     <div class="guest-topbar">
         <img src="{{ asset('images/logo.png') }}" alt="Little Learner Logo" class="logo" fetchpriority="high" loading="eager" decoding="async">
         <div class="auth-btns">
-            <a href="{{ route('student.login') }}" class="btn-login">Login</a>
-            <a href="{{ route('student.register') }}" class="btn-signup">🚀 Sign Up Free</a>
+            <a href="{{ route('student.login') }}" class="btn-login">🔑 Login</a>
+            <!-- <a href="{{ route('student.register') }}" class="btn-signup">🚀 Sign Up Free</a> -->
+            <a href="{{ route('admin.login') }}" class="btn-login" style="background:#5E4D3B; color:#fff; border-color:#5E4D3B; margin-left:8px;">⚙️ Admin</a>
         </div>
     </div>
 
@@ -274,7 +375,7 @@
         </div>
         <div class="hero-title">Hi, Little Learner! 🎒</div>
         <div class="hero-subtitle">Join thousands of students on the most fun learning adventure ever!</div>
-        <a href="{{ route('student.register') }}" class="hero-cta">✨ Start Learning for Free!</a>
+        <!-- <a href="{{ route('student.register') }}" class="hero-cta">✨ Start Learning for Free!</a> -->
     </div>
 
     <!-- Main Content -->
@@ -323,6 +424,19 @@
             </div>
         </div>
 
+        <!-- Memory Match Minigame -->
+        <div class="section-title mt-2">🎮 Minigame: Memory Match</div>
+        <div class="memory-game-wrap">
+            <div style="font-family:'Bubblegum Sans',cursive; font-size:clamp(16px,4vw,20px); color:#5E4D3B; text-align:center; margin-bottom:16px;">Flip the cards and find all the matching pairs!</div>
+            <div class="memory-grid" id="memory-board">
+                <!-- Cards injected via JS -->
+            </div>
+            <div class="win-msg" id="win-msg">🎉 You matched them all! Awesome job! 🎉</div>
+            <div class="text-center mt-4">
+                <button class="btn" style="background:#FFD561; color:#5E4D3B; font-weight:900; border-radius:999px; box-shadow:0 4px 0 #C9A300; padding: 8px 24px;" onclick="initMemoryGame()">🔄 Play Again</button>
+            </div>
+        </div>
+
         <!-- Daily Quest Preview -->
         <div class="section-title mt-2">🗺️ Daily Quest</div>
         <div class="quest-preview d-flex align-items-center gap-3 mb-4">
@@ -344,7 +458,27 @@
                         <div class="dq-bar-wrap"><div class="dq-bar-fill" style="width:0%; background:#8BDDFF;"></div></div>
                     </div>
                 </div>
-                <a href="{{ route('student.register') }}" style="display:inline-block; margin-top:10px; background:#FFD561; color:#5E4D3B; border-radius:999px; padding:6px 18px; font-size:12px; font-weight:900; text-decoration:none; box-shadow:0 4px 0 #C9A300;">🔓 Sign up to start quests!</a>
+                <!-- <a href="{{ route('student.register') }}" style="display:inline-block; margin-top:10px; background:#FFD561; color:#5E4D3B; border-radius:999px; padding:6px 18px; font-size:12px; font-weight:900; text-decoration:none; box-shadow:0 4px 0 #C9A300;">🔓 Sign up to start quests!</a> -->
+            </div>
+        </div>
+
+        <!-- Word Scramble Minigame -->
+        <div class="scramble-title-area mt-2">
+            <svg class="scramble-icon" viewBox="0 0 24 24" fill="none" stroke="#FF7C7C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                <line x1="4" y1="22" x2="4" y2="15"></line>
+            </svg>
+            Minigame: Word Scramble
+        </div>
+        <div class="scramble-game-wrap">
+            <div style="font-family:'Bubblegum Sans',cursive; font-size:clamp(16px,4vw,20px); color:#5E4D3B; text-align:center; margin-bottom:16px;" id="scramble-hint">Unscramble the letters to make a word!</div>
+            
+            <div class="scramble-answer-row" id="scramble-answer"></div>
+            <div class="scramble-letters-row" id="scramble-letters"></div>
+            
+            <div class="win-msg" id="scramble-win-msg">🎉 Correct! Amazing! 🎉</div>
+            <div class="text-center mt-4">
+                <button class="btn" id="scramble-next-btn" style="display:none; background:#FFD561; color:#5E4D3B; font-weight:900; border-radius:999px; box-shadow:0 4px 0 #C9A300; padding: 8px 24px; margin:0 auto;" onclick="initScrambleGame()">➡️ Next Word</button>
             </div>
         </div>
 
@@ -387,6 +521,206 @@
         </a>
     </nav>
 
+    <!-- Memory Match Script -->
+    <script>
+        const svgs = [
+            '<svg viewBox="0 0 24 24" fill="#FFD561"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+            '<svg viewBox="0 0 24 24" fill="#FF7C7C"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
+            '<svg viewBox="0 0 24 24" fill="#9DE182"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66l.95-2.3c.48.17 1.04.3 1.71.3 4.7 0 11.53-2.9 14.67-11.08C23.59 7.6 23.36 4.78 22 2c-3.17 1.4-4.8 4.67-5 6z"/></svg>',
+            '<svg viewBox="0 0 24 24" fill="#8BDDFF"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>'
+        ];
+        
+        let hasFlippedCard = false;
+        let lockBoard = false;
+        let firstCard, secondCard;
+        let matches = 0;
+
+        function initMemoryGame() {
+            const board = document.getElementById('memory-board');
+            const winMsg = document.getElementById('win-msg');
+            board.innerHTML = '';
+            winMsg.style.display = 'none';
+            matches = 0;
+            hasFlippedCard = false;
+            lockBoard = false;
+            firstCard = null;
+            secondCard = null;
+
+            let cards = [...svgs, ...svgs];
+            cards.sort(() => Math.random() - 0.5);
+
+            cards.forEach((svg, index) => {
+                const card = document.createElement('div');
+                card.classList.add('m-card');
+                card.dataset.val = svg;
+
+                card.innerHTML = `
+                    <div class="m-card-face m-card-front">?</div>
+                    <div class="m-card-face m-card-back">${svg}</div>
+                `;
+
+                card.addEventListener('click', flipCard);
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flip');
+
+            if (!hasFlippedCard) {
+                hasFlippedCard = true;
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.val === secondCard.dataset.val;
+
+            if (isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+            resetBoard();
+            
+            matches++;
+            if(matches === svgs.length) {
+                setTimeout(() => {
+                    document.getElementById('win-msg').style.display = 'block';
+                }, 500);
+            }
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+            setTimeout(() => {
+                firstCard.classList.remove('flip');
+                secondCard.classList.remove('flip');
+                resetBoard();
+            }, 1000);
+        }
+
+        function resetBoard() {
+            [hasFlippedCard, lockBoard] = [false, false];
+            [firstCard, secondCard] = [null, null];
+        }
+
+        document.addEventListener('DOMContentLoaded', initMemoryGame);
+    </script>
+
+    <!-- Word Scramble Script -->
+    <script>
+        const scrambleWords = [
+            { word: 'APPLE', hint: 'A red or green sweet fruit' },
+            { word: 'TIGER', hint: 'A big wild cat with orange and black stripes' },
+            { word: 'HOUSE', hint: 'A building where a family lives' },
+            { word: 'WATER', hint: 'A clear liquid we drink when thirsty' },
+            { word: 'HAPPY', hint: 'How you feel when you smile and laugh' },
+            { word: 'LEARN', hint: 'To gain new knowledge or skill' }
+        ];
+        
+        let currentWordObj;
+        let answerTiles = [];
+        let scrambledLetters = [];
+
+        function initScrambleGame() {
+            document.getElementById('scramble-win-msg').style.display = 'none';
+            document.getElementById('scramble-next-btn').style.display = 'none';
+            
+            currentWordObj = scrambleWords[Math.floor(Math.random() * scrambleWords.length)];
+            document.getElementById('scramble-hint').innerText = "Hint: " + currentWordObj.hint;
+            
+            let letters = currentWordObj.word.split('');
+            // Ensure it is actually scrambled
+            let scrambled = [...letters];
+            while (scrambled.join('') === currentWordObj.word) {
+                scrambled.sort(() => Math.random() - 0.5);
+            }
+            
+            scrambledLetters = scrambled.map((char, index) => ({ id: index, char: char }));
+            answerTiles = new Array(currentWordObj.word.length).fill(null);
+            
+            renderScramble();
+        }
+
+        function renderScramble() {
+            const answerRow = document.getElementById('scramble-answer');
+            const lettersRow = document.getElementById('scramble-letters');
+            
+            answerRow.innerHTML = '';
+            lettersRow.innerHTML = '';
+            
+            // Render answer slots
+            answerTiles.forEach((tileObj, slotIndex) => {
+                const slot = document.createElement('div');
+                slot.className = 'scramble-slot';
+                if (tileObj) {
+                    const tile = createTile(tileObj, true, slotIndex);
+                    slot.appendChild(tile);
+                }
+                answerRow.appendChild(slot);
+            });
+            
+            // Render available letters
+            scrambledLetters.forEach(tileObj => {
+                const tile = createTile(tileObj, false);
+                lettersRow.appendChild(tile);
+            });
+            
+            checkScrambleWin();
+        }
+        
+        function createTile(tileObj, inAnswer, slotIndex = null) {
+            const tile = document.createElement('div');
+            tile.className = 's-tile' + (inAnswer ? ' in-answer' : '');
+            tile.innerText = tileObj.char;
+            
+            tile.addEventListener('click', () => {
+                if (inAnswer) {
+                    // Move back to letters row
+                    scrambledLetters.push(tileObj);
+                    answerTiles[slotIndex] = null;
+                    renderScramble();
+                } else {
+                    // Move to first empty slot
+                    const emptyIndex = answerTiles.indexOf(null);
+                    if (emptyIndex !== -1) {
+                        scrambledLetters = scrambledLetters.filter(t => t.id !== tileObj.id);
+                        answerTiles[emptyIndex] = tileObj;
+                        renderScramble();
+                    }
+                }
+            });
+            return tile;
+        }
+        
+        function checkScrambleWin() {
+            if (answerTiles.includes(null)) return; // not full
+            
+            const currentWord = answerTiles.map(t => t.char).join('');
+            if (currentWord === currentWordObj.word) {
+                document.getElementById('scramble-win-msg').style.display = 'block';
+                document.getElementById('scramble-next-btn').style.display = 'block';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', initScrambleGame);
+    </script>
+
     {{-- PWA Service Worker Registration --}}
     <script>
         if ('serviceWorker' in navigator) {
@@ -399,5 +733,6 @@
             });
         }
     </script>
+    @include('partials.pwa_popup')
 </body>
 </html>

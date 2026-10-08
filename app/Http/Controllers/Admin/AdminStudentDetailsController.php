@@ -39,7 +39,7 @@ class AdminStudentDetailsController extends Controller
     public function index(Request $request)
     {
         abort_unless(
-            auth()->user()->hasPermission('student_details.view'),
+            auth()->user()->hasPermission('students.view'),
             403
         );
 
@@ -156,6 +156,7 @@ class AdminStudentDetailsController extends Controller
                 'password'     => Hash::make($data['password']),
                 'role'         => 'student',
                 'user_type'    => 3,
+                'class_id'     => $data['class_id'],
             ]);
 
             StudentDetails::create([
@@ -242,6 +243,7 @@ class AdminStudentDetailsController extends Controller
         if (!empty($data['password'])) {
             $student->password = Hash::make($data['password']);
         }
+        $student->class_id = $data['class_id'];
 
         if ($request->hasFile('user_img')) {
             $instituteId = auth()->user()->institute_id;
@@ -303,6 +305,35 @@ class AdminStudentDetailsController extends Controller
 
         return redirect()->route('admin.student_details.index')
             ->with('success', 'Student deleted successfully.');
+    }
+
+    public function storeFeePayment(Request $request, $id)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'transaction_method' => 'required|string',
+            'remarks' => 'nullable|string',
+        ]);
+
+        $student = User::where('institute_id', auth()->user()->institute_id)
+                       ->where('id', $id)
+                       ->firstOrFail();
+
+        \App\Models\Transaction::create([
+            'institute_id' => auth()->user()->institute_id,
+            'created_for' => $student->id,
+            'created_by' => auth()->id(),
+            'transaction_type' => 'Fee Payment',
+            'transaction_amount' => $request->amount,
+            'transaction_method' => $request->transaction_method,
+            'transaction_date' => now(),
+            'transaction_duration' => 'One Time',
+            'remarks' => $request->remarks,
+            'status' => 'paid',
+        ]);
+
+        return redirect()->route('admin.student_details.show', $student->id)
+                         ->with('success', 'Fee payment recorded successfully.');
     }
 
     /**
@@ -378,6 +409,7 @@ class AdminStudentDetailsController extends Controller
                 'password'     => Hash::make($password),
                 'role'         => 'student',
                 'user_type'    => 3,
+                'class_id'     => $request->class_id,
             ]);
 
             StudentDetails::create([

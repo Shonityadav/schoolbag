@@ -430,7 +430,15 @@
     <div class="profile-info">
         <h2 class="profile-name">{{ $user->name }}</h2>
         <div class="profile-email">{{ $user->email }}</div>
-        <div class="profile-class-level">Class {{ $user->studentClass->standard ?? '4' }} &bull; Level {{ $user->level ?? 1 }}</div>
+        <div class="profile-class-level">
+            @if($user->user_type == 1)
+                Admin &bull; Level {{ $user->level ?? 1 }}
+            @elseif($user->user_type == 2)
+                Staff &bull; Level {{ $user->level ?? 1 }}
+            @else
+                Class {{ $user->studentClass?->standard ?? 'N/A' }} &bull; Level {{ $user->level ?? 1 }}
+            @endif
+        </div>
     </div>
 
     <div class="stats-container">
@@ -453,19 +461,19 @@
     <div class="profile-menu-section" style="padding: 0 30px; max-width: 500px; margin: 0 auto; margin-top: 30px; position: relative; z-index: 2;">
         
         <div class="pic-container" id="personalInfoCard">
-            <a href="#personalInfoCollapse" data-bs-toggle="collapse" class="pic-header collapsed">
-                <span class="pic-title">Personal Information</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="pic-icon">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-            </a>
+            <a href="javascript:void(0);" id="personalInfoToggle" class="pic-header collapsed">
+              <span class="pic-title">Personal Information</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="pic-icon">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+          </a>
             <div id="personalInfoCollapse" class="collapse">
                 <div class="px-4 pb-4 pt-3">
                     <div class="d-flex gap-3 mb-3">
                         <div style="width: 100px; height: 120px; background: #FFC145; border-radius: 12px; flex-shrink: 0;"></div>
                         <div style="flex-grow: 1; font-weight: 800; color: #1E1E35; font-size: 14px; line-height: 2; display: flex; flex-direction: column; justify-content: space-between;">
                             <div class="d-flex align-items-end"><span style="width: 65px;">Name -</span> <span class="flex-grow-1 ms-1 text-center" style="border-bottom: 1.5px dashed #1E1E35; padding-bottom: 2px;">{{ $user->name ?? '' }}</span></div>
-                            <div class="d-flex align-items-end"><span style="width: 65px;">Class -</span> <span class="flex-grow-1 ms-1 text-center" style="border-bottom: 1.5px dashed #1E1E35; padding-bottom: 2px;">{{ $user->studentClass->standard ?? '' }}</span></div>
+                            <div class="d-flex align-items-end"><span style="width: 65px;">Class -</span> <span class="flex-grow-1 ms-1 text-center" style="border-bottom: 1.5px dashed #1E1E35; padding-bottom: 2px;">{{ $user->studentClass?->standard ?? '' }}</span></div>
                             <div class="d-flex align-items-end"><span style="width: 65px;">Roll No. -</span> <span class="flex-grow-1 ms-1 text-center" style="border-bottom: 1.5px dashed #1E1E35; padding-bottom: 2px;">{{ $user->roll_no ?? '' }}</span></div>
                             <div class="d-flex align-items-end"><span style="width: 65px;">D.O.B. -</span> <span class="flex-grow-1 ms-1 text-center" style="border-bottom: 1.5px dashed #1E1E35; padding-bottom: 2px;">{{ $user->dob ?? '' }}</span></div>
                         </div>
@@ -485,19 +493,39 @@
             </svg>
         </a>
 
-        <a href="{{ route('student.terms') }}" target="_blank" class="profile-dropdown-btn">
+        <a href="{{ route('student.terms') }}" target="_self" class="profile-dropdown-btn">
             <span>Terms and conditions</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
         </a>
+
+        <a href="{{ route('student.privacy') }}" target="_self" class="profile-dropdown-btn">
+            <span>Privacy Policy</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </a>
+
+        <a href="{{ route('student.profile.feedback') }}" class="profile-dropdown-btn">
+            <span>Feedback</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </a>
+
+        <a href="#" id="dataDeletionBtn" class="profile-dropdown-btn text-danger">
+            <span>Data Deletion Request</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </a>
         
-        <form action="{{ route('student.logout') }}" method="POST" class="mt-4 pb-4 px-4 text-center">
-            @csrf
-            <button type="submit" class="profile-logout-btn">
+        <div class="mt-4 pb-4 px-4 text-center">
+            <button type="button" class="profile-logout-btn" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
                 Log out
             </button>
-        </form>
+        </div>
     </div>
 
 </div>
@@ -609,6 +637,172 @@
     </div>
   </div>
 </div>
+
+<!-- Logout Confirmation Modal -->
+<div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 360px; width: 90%; margin: auto;">
+    <div class="modal-content" style="border-radius: 36px; border: none; box-shadow: 0 16px 48px rgba(0,0,0,0.2); overflow: visible; background: transparent;">
+      
+      <!-- Mascot sticking out of the top right -->
+      <img src="{{ asset('uploads/images/log out/5.png') }}" style="position: absolute; top: -60px; right: -40px; width: 140px; height: 140px; z-index: 10; object-fit: contain; pointer-events: none; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));" alt="Sad Mascot">
+
+      <!-- Modal Body -->
+      <div style="background: linear-gradient(to bottom, #FA6A7E 0%, #FA6A7E 50%, #FBF1DC 50%, #FBF1DC 100%); border-radius: 36px; position: relative; overflow: hidden; display: flex; flex-direction: column;">
+        
+        <!-- Top Half (Pink) -->
+        <div style="padding: 35px 20px 20px; text-align: center; color: white;">
+          <!-- Blue Arrow Icon Image -->
+          <img src="{{ asset('uploads/images/log out/3.png') }}" style="width: 72px; height: 72px; object-fit: contain; margin: 0 auto 12px; display: block; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));" alt="Log Out Arrow">
+          <h4 style="font-family: 'Bubblegum Sans', cursive; margin: 0; font-size: 34px; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Log Out</h4>
+        </div>
+        
+        <!-- Bottom Half (Cream) -->
+        <div style="padding: 10px 24px 28px; text-align: center; position: relative;">
+          <!-- Stars decoration (3D Faceted) -->
+          <svg style="position: absolute; left: -12px; top: 12px; width: 44px; height: 44px; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25)); z-index: 1;" viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="yellowStar3D" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFF394" />
+                <stop offset="40%" stop-color="#FFD52E" />
+                <stop offset="100%" stop-color="#DF8F00" />
+              </linearGradient>
+            </defs>
+            <polygon points="50,5 61,39 97,39 68,60 79,94 50,73 21,94 32,60 3,39 39,39" fill="url(#yellowStar3D)" stroke="#FFE76B" stroke-width="2" stroke-linejoin="round"></polygon>
+            <path d="M50,5 L50,53 M97,39 L50,53 M79,94 L50,53 M21,94 L50,53 M3,39 L50,53" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" fill="none" />
+            <path d="M61,39 L50,53 M68,60 L50,53 M32,60 L50,53 M39,39 L50,53 M50,73 L50,53" stroke="rgba(200,120,0,0.35)" stroke-width="2" stroke-linecap="round" fill="none" />
+          </svg>
+          
+          <svg style="position: absolute; left: -2px; top: 50px; width: 34px; height: 34px; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25)); z-index: 2;" viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="blueStar3D" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8FE0FF" />
+                <stop offset="40%" stop-color="#2DA5FF" />
+                <stop offset="100%" stop-color="#005BB5" />
+              </linearGradient>
+            </defs>
+            <polygon points="50,5 61,39 97,39 68,60 79,94 50,73 21,94 32,60 3,39 39,39" fill="url(#blueStar3D)" stroke="#BEEBFF" stroke-width="2" stroke-linejoin="round"></polygon>
+            <path d="M50,5 L50,53 M97,39 L50,53 M79,94 L50,53 M21,94 L50,53 M3,39 L50,53" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" fill="none" />
+            <path d="M61,39 L50,53 M68,60 L50,53 M32,60 L50,53 M39,39 L50,53 M50,73 L50,53" stroke="rgba(0,60,150,0.35)" stroke-width="2" stroke-linecap="round" fill="none" />
+          </svg>
+
+          <!-- Text Box -->
+          <div style="background: #FFF9EF; border-radius: 18px; padding: 22px 16px; margin-bottom: 24px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.03); border: 2px solid #EAE0CD;">
+            <p style="color: #1A365D; font-weight: 800; margin: 0; font-size: 16px; line-height: 1.5;">Are you sure you want to<br>log out of your account?</p>
+          </div>
+          
+          <form action="{{ route('student.logout') }}" method="POST" class="m-0 p-0">
+              @csrf
+              <div style="display: flex; gap: 16px; justify-content: center;">
+                  <button type="button" class="btn btn-ghost" data-bs-dismiss="modal" style="flex: 1; border: 2px solid #EAE0CD; color: #1A365D; border-radius: 24px; font-weight: 800; font-size: 16px; padding: 12px 0; display: flex; align-items: center; justify-content: center; text-align: center; m-0">Cancel</button>
+                  <button type="submit" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #FF6B80, #F35368); border: none; border-radius: 24px; font-weight: 800; font-size: 16px; padding: 12px 0; box-shadow: 0 6px 16px rgba(243,83,104,0.3); color: white; display: flex; align-items: center; justify-content: center; text-align: center; m-0">Log Out</button>
+              </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const logoutModal = document.getElementById('logoutConfirmModal');
+        let logoutThoughtInterval;
+        let isLogoutModalOpen = false;
+
+        if(logoutModal) {
+            const stopLogoutThoughts = () => {
+                isLogoutModalOpen = false;
+                if(logoutThoughtInterval) {
+                    clearInterval(logoutThoughtInterval);
+                    logoutThoughtInterval = null;
+                }
+                if(window.mascotRestore) window.mascotRestore();
+            };
+
+            logoutModal.addEventListener('show.bs.modal', function () {
+                isLogoutModalOpen = true;
+                const sadSvg = "<svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='vertical-align: sub; margin-left: 2px;'><circle cx='12' cy='12' r='10'></circle><path d='M16 16s-1.5-2-4-2-4 2-4 2'></path><line x1='9' y1='9' x2='9.01' y2='9'></line><line x1='15' y1='9' x2='15.01' y2='9'></line></svg>";
+                const thoughts = [
+                    "Are you leaving? Please don't go!",
+                    "We were having so much fun...",
+                    "Aww, leaving so soon?",
+                    "I'll miss you! Come back soon!",
+                    "Wait! Are you sure?"
+                ];
+                
+                let lastIndex = -1;
+                const showNextThought = () => {
+                    if (!isLogoutModalOpen) return; // Safety check!
+                    let nextIndex = Math.floor(Math.random() * thoughts.length);
+                    // Prevent showing the exact same thought twice in a row
+                    if (nextIndex === lastIndex) {
+                        nextIndex = (nextIndex + 1) % thoughts.length;
+                    }
+                    lastIndex = nextIndex;
+                    const randomThought = thoughts[nextIndex] + " " + sadSvg;
+                    if(window.mascotSad) window.mascotSad(randomThought);
+                };
+                
+                // Clear any existing interval just in case
+                if(logoutThoughtInterval) clearInterval(logoutThoughtInterval);
+                
+                showNextThought(); // Initial thought
+                logoutThoughtInterval = setInterval(showNextThought, 4000); // Switch every 4 seconds
+            });
+            
+            logoutModal.addEventListener('hide.bs.modal', stopLogoutThoughts);
+            logoutModal.addEventListener('hidden.bs.modal', stopLogoutThoughts);
+            
+            // Also bind explicitly to the Cancel button to guarantee it fires immediately!
+            const cancelBtn = logoutModal.querySelector('.btn-ghost[data-bs-dismiss="modal"]');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', stopLogoutThoughts);
+            }
+        }
+        
+        // Add thoughts for the profile menu buttons
+        const profileLinks = [
+            { selector: 'a[href*="change_password"]', text: "Keep your account secure! 🗝️", celebrate: false },
+            { selector: 'a[href*="terms"]', text: "Reading the rules is smart! 📜", celebrate: false },
+            { selector: 'a[href*="privacy"]', text: "We keep your data super safe! 🛡️", celebrate: false },
+            { selector: 'a[href*="feedback"]', text: "We'd love to hear your thoughts! 💭", celebrate: true },
+            { selector: '#dataDeletionBtn', text: "Oh no! Deleting data is forever! ⚠️", sad: true, isAlert: true }
+        ];
+
+
+        profileLinks.forEach(item => {
+            const el = document.querySelector(item.selector);
+            if (el) {
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    if (item.sad && window.mascotSad) {
+                        window.mascotSad(item.text);
+                    } else if (item.celebrate && window.mascotCelebrate) {
+                        window.mascotCelebrate(item.text);
+                    } else if (window.mascotSay) {
+                        window.mascotSay(item.text);
+                    }
+                    
+                    if (item.isAlert) {
+                        setTimeout(() => {
+                            alert('To request data deletion, please contact your school administrator or email support@schoolbag.in');
+                            if(window.mascotRestore) window.mascotRestore();
+                        }, 2000);
+                    } else {
+                        const href = el.getAttribute('href');
+                        setTimeout(() => {
+                            window.location.href = href;
+                        }, 1800); // Wait 1.8s then navigate
+                    }
+                });
+            }
+        });
+    });
+</script>
+@endpush
 
 <style>
 /* Override Bootstrap's modal-content white bg */
@@ -815,15 +1009,73 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var personalInfoCollapse = document.getElementById('personalInfoCollapse');
-    if (personalInfoCollapse) {
-        personalInfoCollapse.addEventListener('show.bs.collapse', function () {
-            document.getElementById('personalInfoCard').classList.add('is-expanded');
-        });
-        personalInfoCollapse.addEventListener('hide.bs.collapse', function () {
-            document.getElementById('personalInfoCard').classList.remove('is-expanded');
-        });
+
+    const personalInfoCard = document.getElementById('personalInfoCard');
+    const personalInfoToggle = document.getElementById('personalInfoToggle');
+    const personalInfoCollapse = document.getElementById('personalInfoCollapse');
+
+    if (!personalInfoCard || !personalInfoToggle || !personalInfoCollapse) {
+        return;
     }
+
+    /*
+     * Create one Bootstrap Collapse instance.
+     * We control the toggle manually so Bootstrap's
+     * automatic click handling cannot conflict with
+     * the mascot.
+     */
+    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(
+        personalInfoCollapse,
+        {
+            toggle: false
+        }
+    );
+
+    /*
+     * Arrow / header click
+     */
+    personalInfoToggle.addEventListener('click', function (e) {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        /*
+         * If currently open -> CLOSE
+         * If currently closed -> OPEN
+         */
+        if (personalInfoCollapse.classList.contains('show')) {
+            collapseInstance.hide();
+        } else {
+            collapseInstance.show();
+        }
+    });
+
+
+    /*
+     * AFTER the accordion has actually opened.
+     * Mascot speaks ONLY here.
+     */
+    personalInfoCollapse.addEventListener('shown.bs.collapse', function () {
+
+        personalInfoCard.classList.add('is-expanded');
+        personalInfoToggle.classList.remove('collapsed');
+
+        if (window.mascotCelebrate) {
+            window.mascotCelebrate("Let's check out your profile!");
+        }
+    });
+
+
+    /*
+     * AFTER the accordion has actually closed.
+     * Absolutely no mascot thought here.
+     */
+    personalInfoCollapse.addEventListener('hidden.bs.collapse', function () {
+
+        personalInfoCard.classList.remove('is-expanded');
+        personalInfoToggle.classList.add('collapsed');
+    });
+
 });
 
 function epSwitchTab(tab) {

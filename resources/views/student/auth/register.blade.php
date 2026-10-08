@@ -283,5 +283,6 @@
 
     <a href="{{ route('student.welcome') }}" class="back-link">← Back to home</a>
 
+    @include('partials.pwa_popup')
 </body>
 </html>

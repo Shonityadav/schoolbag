@@ -12,7 +12,7 @@ class AssignedEbook extends Model
     protected $table = 'assigned_ebooks';
 
     protected $fillable = [
-        'class_id', 'user_id', 'ebook_id', 'title', 'description', 'icon', 'color', 'order', 'is_active'
+        'class_id', 'user_id', 'ebook_id', 'ebook_url', 'title', 'description', 'icon', 'color', 'order', 'is_active', 'standard', 'subject', 'publication', 'series'
     ];
 
     public function studentClass()

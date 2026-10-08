@@ -179,42 +179,78 @@
 </head>
 <body>
 
-    <!-- Mascot & Title -->
-    <div class="mascot-wrap">
-        <div class="mascot-inner">
-            <img src="{{ asset('uploads/images/lion.png') }}" alt="Little Learner Lion" fetchpriority="high" loading="eager" decoding="async">
-        </div>
-    </div>
     <div class="page-title">Welcome Back! 🎒</div>
     <div class="page-subtitle">Log in to continue your adventure</div>
 
     <!-- Card -->
     <div class="card">
-        <!-- Tabs -->
+        <h3 id="form-title" style="text-align: center; font-weight: 900; color: #5E4D3B; margin-bottom: 24px; font-size: 22px;">🔓 Login</h3>
+        
         <div class="tab-row">
-            <a href="{{ route('student.login') }}" class="tab active">🔓 Login</a>
-            <a href="{{ route('student.register') }}" class="tab">✨ Register</a>
+            <a href="#" class="tab active" id="tab-email">Email</a>
+            <a href="#" class="tab" id="tab-whatsapp">WhatsApp</a>
         </div>
 
         @if($errors->any())
-        <div class="error-box">⚠️ {{ $errors->first() }}</div>
+        <div class="error-box" id="global-error">⚠️ {{ $errors->first() }}</div>
         @endif
+        
+        <div id="error-message" class="error-box" style="display:none;"></div>
 
-        <form method="POST" action="{{ route('student.login.submit') }}">
+        <!-- Email Form -->
+        <form id="form-email" method="POST" action="{{ route('student.login.submit') }}">
             @csrf
             <div class="field">
-                <label>📧 Email Address</label>
+                <label> Email Address</label>
                 <input type="email" name="email" value="{{ old('email') }}" placeholder="your@email.com" required>
             </div>
-            <div class="field">
-                <label>🔑 Password</label>
-                <input type="password" name="password" placeholder="Enter your password" required>
+            <div class="field" style="position: relative;">
+                <label> Password</label>
+                <input type="password" name="password" id="login-password" data-is-password="true" placeholder="Enter your password" required style="padding-right: 40px;">
+                <span class="password-toggle" onmousedown="event.preventDefault()" onclick="togglePassword()" style="position: absolute; right: 14px; top: 38px; cursor: pointer; color: #8D7E6A; transition: color 0.2s;" onmouseover="this.style.color='#5E4D3B'" onmouseout="this.style.color='#8D7E6A'">
+                    <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </span>
             </div>
-            <button type="submit" class="btn">Let's Go! 🚀</button>
+            <button type="submit" class="btn">Let's Go! </button>
+        </form>
+
+        <!-- WhatsApp Forms -->
+        <!-- Step 1: Phone -->
+        <form id="form-wa-phone" style="display: none;" onsubmit="sendOtp(event)">
+            @csrf
+            <div class="field">
+                <label>📱 WhatsApp Number</label>
+                <input type="text" id="wa-phone" name="phone" placeholder="e.g. 9876543210" required>
+            </div>
+            <button type="submit" class="btn" id="btn-send-otp">Send OTP 💬</button>
+        </form>
+
+        <!-- Step 2: OTP -->
+        <form id="form-wa-otp" style="display: none;" onsubmit="verifyOtp(event)">
+            @csrf
+            <div class="field">
+                <label>🔢 Enter OTP</label>
+                <input type="text" id="wa-otp" name="otp" placeholder="6-digit code" required maxlength="6">
+            </div>
+            <button type="submit" class="btn" id="btn-verify-otp">Verify OTP ✅</button>
+        </form>
+
+        <!-- Step 3: Name (New User) -->
+        <form id="form-wa-name" style="display: none;" onsubmit="registerName(event)">
+            @csrf
+            <div class="field">
+                <label>👤 What's your name?</label>
+                <input type="text" id="wa-name" name="name" placeholder="Enter your full name" required>
+            </div>
+            <button type="submit" class="btn" id="btn-register-name">Complete Login ✨</button>
         </form>
     </div>
 
-    <a href="{{ route('student.welcome') }}" class="back-link">← Back to home</a>
+    <a href="{{ route('student.register') }}" class="back-link">New User? Register here ✨</a>
+    <a href="{{ route('admin.login') }}" class="back-link" style="margin-top:5px; color:#1a4f66;">⚙️ Admin Login</a>
 
     {{-- PWA Service Worker Registration --}}
     <script>
@@ -226,6 +262,175 @@
                     console.log('ServiceWorker registration failed: ', err);
                 });
             });
+        }
+        
+        // WhatsApp Login UI Logic
+        const tabEmail = document.getElementById('tab-email');
+        const tabWa = document.getElementById('tab-whatsapp');
+        const formEmail = document.getElementById('form-email');
+        const formWaPhone = document.getElementById('form-wa-phone');
+        const formWaOtp = document.getElementById('form-wa-otp');
+        const formWaName = document.getElementById('form-wa-name');
+        const errorBox = document.getElementById('error-message');
+        const globalError = document.getElementById('global-error');
+
+        tabEmail.addEventListener('click', (e) => {
+            e.preventDefault();
+            tabEmail.classList.add('active');
+            tabWa.classList.remove('active');
+            formEmail.style.display = 'block';
+            formWaPhone.style.display = 'none';
+            formWaOtp.style.display = 'none';
+            formWaName.style.display = 'none';
+            errorBox.style.display = 'none';
+            if(globalError) globalError.style.display = 'block';
+        });
+
+        tabWa.addEventListener('click', (e) => {
+            e.preventDefault();
+            tabWa.classList.add('active');
+            tabEmail.classList.remove('active');
+            formEmail.style.display = 'none';
+            formWaPhone.style.display = 'block';
+            formWaOtp.style.display = 'none';
+            formWaName.style.display = 'none';
+            errorBox.style.display = 'none';
+            if(globalError) globalError.style.display = 'none';
+        });
+
+        function showError(msg) {
+            errorBox.textContent = '⚠️ ' + msg;
+            errorBox.style.display = 'block';
+        }
+
+        async function sendOtp(e) {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+            const btn = document.getElementById('btn-send-otp');
+            const phone = document.getElementById('wa-phone').value;
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                let formData = new FormData();
+                formData.append('phone', phone);
+                formData.append('_token', '{{ csrf_token() }}');
+
+                let res = await fetch('{{ route("student.whatsapp.send_otp") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                let data = await res.json();
+                
+                if (data.success) {
+                    formWaPhone.style.display = 'none';
+                    formWaOtp.style.display = 'block';
+                } else {
+                    showError(data.message || 'Failed to send OTP');
+                }
+            } catch (err) {
+                showError('Network error occurred.');
+            }
+            btn.disabled = false;
+            btn.textContent = 'Send OTP 💬';
+        }
+
+        async function verifyOtp(e) {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+            const btn = document.getElementById('btn-verify-otp');
+            const phone = document.getElementById('wa-phone').value;
+            const otp = document.getElementById('wa-otp').value;
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                let formData = new FormData();
+                formData.append('phone', phone);
+                formData.append('otp', otp);
+                formData.append('_token', '{{ csrf_token() }}');
+
+                let res = await fetch('{{ route("student.whatsapp.verify_otp") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                let data = await res.json();
+                
+                if (data.success) {
+                    if (data.is_new_user) {
+                        formWaOtp.style.display = 'none';
+                        formWaName.style.display = 'block';
+                    } else {
+                        window.location.href = data.redirect;
+                    }
+                } else {
+                    showError(data.message || 'Invalid OTP');
+                }
+            } catch (err) {
+                showError('Network error occurred.');
+            }
+            btn.disabled = false;
+            btn.textContent = 'Verify OTP ✅';
+        }
+
+        async function registerName(e) {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+            const btn = document.getElementById('btn-register-name');
+            const name = document.getElementById('wa-name').value;
+            btn.disabled = true;
+            btn.textContent = 'Completing...';
+
+            try {
+                let formData = new FormData();
+                formData.append('name', name);
+                formData.append('_token', '{{ csrf_token() }}');
+
+                let res = await fetch('{{ route("student.whatsapp.register") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                let data = await res.json();
+                
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    showError(data.message || 'Registration failed');
+                }
+            } catch (err) {
+                showError('Network error occurred.');
+            }
+            btn.disabled = false;
+            btn.textContent = 'Complete Login ✨';
+        }
+    </script>
+    <script src="{{ asset('js/mascot-engine.js') }}"></script>
+    @include('partials.pwa_popup')
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('login-password');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                // Eye-off icon
+                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+                input.focus();
+                
+                // Explicitly tell the engine to peek, because focus never actually dropped!
+                if (document.activeElement === input && window.togglePrivacyGuard) {
+                    window.togglePrivacyGuard('peek');
+                }
+            } else {
+                input.type = 'password';
+                // Eye icon
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+                input.focus();
+                
+                // Explicitly tell the engine to hide
+                if (document.activeElement === input && window.togglePrivacyGuard) {
+                    window.togglePrivacyGuard('hide');
+                }
+            }
         }
     </script>
 </body>

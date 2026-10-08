@@ -11,9 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::rename('courses', 'assigned_ebooks');
-        Schema::rename('students', 'student_details');
-        Schema::rename('staffs', 'staff_details');
+        if (Schema::hasTable('courses') && !Schema::hasTable('assigned_ebooks')) {
+            Schema::rename('courses', 'assigned_ebooks');
+        }
+        if (Schema::hasTable('students') && !Schema::hasTable('student_details')) {
+            Schema::rename('students', 'student_details');
+        }
+        if (Schema::hasTable('staffs') && !Schema::hasTable('staff_details')) {
+            Schema::rename('staffs', 'staff_details');
+        }
     }
 
     /**

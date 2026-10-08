@@ -217,8 +217,8 @@ body::before {
 
 .submit-container {
     text-align: center;
-    margin-top: 30px;
-    padding-bottom: 50px;
+    margin-top: 10px;
+    padding-bottom: 10px;
 }
 
 .submit-btn-img {
@@ -419,7 +419,7 @@ body::before {
             </div>
             <div style="position: relative; display: inline-block; width: 100%;">
                 <img src="{{ asset('uploads/images/stage1/banner-2.png') }}" class="beige-banner-img" alt="Beige Banner" fetchpriority="high" loading="eager" decoding="async">
-                <div class="lesson-title-overlay" style="top: 25%;">{{ $lesson->chapter->title }}</div>
+                <div class="lesson-title-overlay" style="top: 2%;">{{ $lesson->chapter->title }}</div>
             </div>
         </div>
 
@@ -431,8 +431,8 @@ body::before {
                 <div class="note-content-overlay" id="note-content">
                     @if(isset($mcqs) && count($mcqs) > 0)
                         <div class="page-image-wrapper" id="mcq-container" style="z-index: 10; padding: 10px 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; overflow-y: hidden; background-color: #FFFDF5;" data-mcqs="{{ json_encode($mcqs) }}">
-                            <div style="font-family: 'Quicksand', sans-serif; font-weight: 800; font-size: 0.85rem; text-align: left; margin-bottom: 10px; color: #000; line-height: 1.2;">
-                                Tick(✓) the correct option to answer the following questions:
+                            <div id="mcq-progress-text" style="font-family: 'Quicksand', sans-serif; font-weight: 800; font-size: 0.95rem; text-align: left; margin-bottom: 12px; color: #5D1A1A; line-height: 1.2;">
+                                Question 1 of {{ count($mcqs) }}:
                             </div>
                             <div class="mcq-scroll" style="background-color: #81D2A4; border-radius: 12px; padding: 15px 15px; margin-bottom: 15px; display: flex; align-items: flex-start; justify-content: center; min-height: 80px; max-height: 110px; overflow-y: auto; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1);">
                                 <h3 id="mcq-question-text" style="font-family: 'Quicksand', sans-serif; color: #FFF; font-weight: 800; font-size: 1.25rem; text-align: center; margin: auto; line-height: 1.2; text-shadow: 0px 2px 3px rgba(0,0,0,0.2); width: 100%;">
@@ -486,6 +486,36 @@ body::before {
                                 </div>
                             </div>
                         </div>
+                    @elseif(isset($shortQuestions) && count($shortQuestions) > 0)
+                        @foreach($shortQuestions as $index => $sq)
+                            <div class="page-image-wrapper" id="subjective-page-{{ $index }}" style="z-index: {{ count($shortQuestions) - $index }}; padding: 15px 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; overflow-y: hidden; background-color: #FFFDF5;">
+                                <div style="font-family: 'Quicksand', sans-serif; font-weight: 800; font-size: 0.95rem; text-align: left; margin-bottom: 12px; color: #5D1A1A; line-height: 1.2;">
+                                    Question {{ $index + 1 }} of {{ count($shortQuestions) }}:
+                                </div>
+                                <div class="mcq-scroll" style="background-color: #F8D888; border-radius: 12px; padding: 15px; margin-bottom: 15px; display: flex; align-items: flex-start; justify-content: center; min-height: 70px; max-height: 100px; overflow-y: auto; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1);">
+                                    <h3 style="font-family: 'Quicksand', sans-serif; color: #5D1A1A; font-weight: 800; font-size: 1.2rem; text-align: center; margin: auto; line-height: 1.3; width: 100%;">
+                                        {{ $sq['question'] }}
+                                    </h3>
+                                </div>
+                                
+                                <textarea name="subjective_text[{{ $sq['id'] }}]" form="complete-form" placeholder="Type your answer here..." style="width: 100%; height: 110px; border-radius: 10px; border: 2px solid #E8C07A; padding: 12px; font-family: 'Quicksand', sans-serif; font-size: 1rem; color: #333; resize: none; margin-bottom: 15px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);"></textarea>
+
+                                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: auto;">
+                                    <label for="upload-{{ $sq['id'] }}" style="display: block; width: 100%; padding: 20px; border: 2px dashed #D6A848; border-radius: 12px; background: #FFF8E7; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.background='#FFFDF5'; this.style.borderColor='#C49A3D';" onmouseout="this.style.background='#FFF8E7'; this.style.borderColor='#D6A848';">
+                                        <div style="margin-bottom: 8px;">
+                                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D6A848" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                                <polyline points="21 15 16 10 5 21"></polyline>
+                                            </svg>
+                                        </div>
+                                        <div style="font-family: 'Quicksand', sans-serif; font-weight: 800; font-size: 0.95rem; color: #8C6A21; margin-bottom: 4px;">Tap to upload photo of answer</div>
+                                        <div style="font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 0.75rem; color: #B39245;" id="file-name-{{ $sq['id'] }}">No file chosen</div>
+                                    </label>
+                                    <input type="file" id="upload-{{ $sq['id'] }}" name="subjective_file[{{ $sq['id'] }}]" form="complete-form" accept="image/*" style="display: none;" onchange="document.getElementById('file-name-{{ $sq['id'] }}').textContent = this.files[0] ? this.files[0].name : 'No file chosen'">
+                                </div>
+                            </div>
+                        @endforeach
                     @elseif(isset($ebookPages) && count($ebookPages) > 0)
                         @foreach($ebookPages as $index => $page)
                             <div class="page-image-wrapper" id="page-{{ $index }}" style="z-index: {{ count($ebookPages) - $index }}; background-color: #FFFDF5;">
@@ -519,7 +549,7 @@ body::before {
         </div>
 
         <!-- SUBMIT + RETRY BUTTONS (last page only) -->
-        <div class="submit-container" id="submit-container" style="display: none; position: relative; margin-top: 20px;">
+        <div class="submit-container" id="submit-container" style="display: none; position: relative; margin-top: 10px; padding-bottom: 10px;">
             <div style="display: flex; align-items: center; justify-content: center; gap: 24px;">
                 @if(isset($matchPairs) && count($matchPairs) > 0)
                     {{-- Retry button for match game --}}
@@ -529,7 +559,7 @@ body::before {
                     </a>
                 @endif
 
-                <form id="complete-form" method="POST" action="{{ route('student.lessons.complete', $lesson->id) }}" class="m-0" style="display: inline-block; width: 140px;">
+                <form id="complete-form" method="POST" action="{{ route('student.lessons.complete', $lesson->id) }}" class="m-0" style="display: inline-block; width: 140px;" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="answers" id="answers-input" value="{}">
                     <input type="hidden" name="time_taken" id="time_taken_input" value="0">
@@ -577,10 +607,14 @@ body::before {
                             <h3 style="font-family: 'Quicksand', sans-serif; color: #FF6B6B; font-weight: 800; font-size: 1.2rem; margin-bottom: 15px;">You Got {{ $lesson->xp_reward ?? 3 }} XP</h3>
                             
                             <div id="modal-stars-container" class="d-flex justify-content-center gap-2">
-                                <!-- Three Stars -->
-                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star" fetchpriority="high" loading="eager" decoding="async">
-                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 60px; height: 60px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15)); transform: translateY(-10px);" alt="Star" fetchpriority="high" loading="eager" decoding="async">
-                                <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star" fetchpriority="high" loading="eager" decoding="async">
+                                @if(isset($stage) && $stage == 4)
+                                    <p style="font-family: 'Quicksand', sans-serif; color: #9A8A73; font-weight: 800; font-size: 0.85rem; width: 68%; text-align: center; line-height: 1.4; margin: 0 auto;">Your answers will be graded by your teacher after review.</p>
+                                @else
+                                    <!-- Three Stars -->
+                                    <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star" fetchpriority="high" loading="eager" decoding="async">
+                                    <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 60px; height: 60px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15)); transform: translateY(-10px);" alt="Star" fetchpriority="high" loading="eager" decoding="async">
+                                    <img src="{{ asset('uploads/images/stage/star.png') }}" style="width: 50px; height: 50px; object-fit: contain; filter: grayscale(100%) opacity(0.4) drop-shadow(0 4px 6px rgba(0,0,0,0.15));" alt="Star" fetchpriority="high" loading="eager" decoding="async">
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -597,6 +631,39 @@ body::before {
     </div>
 </div>
 @push('scripts')
+@if(isset($isGenerating) && $isGenerating)
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const globalLoader = document.getElementById('global-page-loader');
+        if (globalLoader) {
+            // Change the text
+            const textEl = globalLoader.querySelector('.global-loader-text');
+            if (textEl) {
+                textEl.innerHTML = 'Our AI is preparing your questions<span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span>';
+            }
+            
+            // Force it to stay visible even after window.onload hides it
+            setInterval(() => {
+                globalLoader.style.display = 'flex';
+                globalLoader.style.opacity = '1';
+            }, 100);
+
+            // Poll the status endpoint every 3 seconds
+            const checkInterval = setInterval(() => {
+                fetch('{{ route("assigned_ebooks.check_generation_status", ["id" => $course->id ?? 0, "chapter_id" => $chapter_id ?? 0, "stage_number" => $stage ?? 0]) }}')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.ready) {
+                            clearInterval(checkInterval);
+                            window.location.reload();
+                        }
+                    })
+                    .catch(err => console.error(err));
+            }, 3000);
+        }
+    });
+</script>
+@endif
 <script>
 // Hide loader when all images and assets are fully loaded
 window.addEventListener('load', function() {
@@ -620,6 +687,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let totalPages = 1;
     let colWidth = 0;
     let isSubmitting = false;
+    let isSubjective = false;
     
     const storageKey = 'lesson_answers_' + {{ $lesson->id }} + '_stage_' + {{ $stage ?? 0 }};
     
@@ -647,11 +715,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.fonts.ready.then(() => {
             setTimeout(() => {
-                totalPages = {{ (isset($mcqs) && count($mcqs) > 0) ? count($mcqs) : (isset($ebookPages) && count($ebookPages) > 0 ? count($ebookPages) : 1) }};
+                isSubjective = {{ isset($shortQuestions) && count($shortQuestions) > 0 ? 'true' : 'false' }};
+                totalPages = {{ (isset($mcqs) && count($mcqs) > 0) ? count($mcqs) : (isset($shortQuestions) && count($shortQuestions) > 0 ? count($shortQuestions) : (isset($ebookPages) && count($ebookPages) > 0 ? count($ebookPages) : 1)) }};
                 updateButtons();
             }, 100);
         });
     }
+
+
 
     function updateButtons() {
         // Hide previous button if on the first page
@@ -686,6 +757,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const qText = document.getElementById('mcq-question-text');
         const optsContainer = document.getElementById('mcq-options-container');
+        const progressText = document.getElementById('mcq-progress-text');
+        
+        if (progressText) {
+            progressText.innerText = 'Question ' + (index + 1) + ' of ' + mcqData.length + ':';
+        }
         
         qText.innerText = mcqData[index].question;
         
@@ -709,6 +785,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (mcqData) {
                 currentPage++;
                 renderMCQ(currentPage);
+            } else if (isSubjective) {
+                const currentPgElement = document.getElementById('subjective-page-' + currentPage);
+                if (currentPgElement) {
+                    currentPgElement.classList.add('flipped');
+                }
+                currentPage++;
             } else {
                 const currentPgElement = document.getElementById('page-' + currentPage);
                 if (currentPgElement) {
@@ -725,6 +807,11 @@ document.addEventListener('DOMContentLoaded', function() {
             currentPage--;
             if (mcqData) {
                 renderMCQ(currentPage);
+            } else if (isSubjective) {
+                const prevPgElement = document.getElementById('subjective-page-' + currentPage);
+                if (prevPgElement) {
+                    prevPgElement.classList.remove('flipped');
+                }
             } else {
                 const prevPgElement = document.getElementById('page-' + currentPage);
                 if (prevPgElement) {
@@ -742,6 +829,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         localStorage.removeItem(storageKey);
         sessionStorage.removeItem(storageKey + '_timer');
+        if (typeof showGlobalLoader === 'function') {
+            showGlobalLoader();
+        }
         document.getElementById('complete-form').submit();
     };
 
@@ -752,9 +842,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let score = 0;
         const matchColumns = document.getElementById('match-columns');
         if (typeof mcqData !== 'undefined' && mcqData && mcqData.length > 0) {
+            let correctCount = 0;
             mcqData.forEach((mcq, idx) => {
-                if (userAnswers[idx] == mcq.correct) score++;
+                if (userAnswers[idx] == mcq.correct) correctCount++;
             });
+            score = Math.round((correctCount / mcqData.length) * 10);
         } else if (matchColumns) {
             const pairsData = JSON.parse(matchColumns.getAttribute('data-pairs'));
             let correctMatches = 0;
@@ -764,6 +856,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             score = pairsData.length > 0 ? Math.round((correctMatches / pairsData.length) * 10) : 10;
+        } else if (isSubjective) {
+            // No automatic score calculation, teacher will grade
+            score = null;
         } else {
             // For stages without MCQs or Matching like Reading Mission, automatically award full score (10 points = 3 stars)
             score = 10;
@@ -806,11 +901,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize layout
     initPagination();
 
-    // Re-calculate on resize
+    // Re-calculate on resize (only if width changes to ignore mobile scroll-bar hiding)
+    let lastWidth = window.innerWidth;
     window.addEventListener('resize', () => {
-        currentPage = 0;
-        content.style.transform = `translateX(0px)`;
-        initPagination();
+        if (window.innerWidth !== lastWidth) {
+            lastWidth = window.innerWidth;
+            initPagination();
+        }
     });
 
     // Timer Logic
@@ -932,14 +1029,14 @@ document.addEventListener('DOMContentLoaded', function() {
             matchAnswers = userAnswers['match'];
             for (const lw in matchAnswers) {
                 const rw = matchAnswers[lw];
-                usedRight.add(rw);
                 const isCorrect = answerKey[lw] === rw;
                 const color     = isCorrect ? '#3AAA5B' : '#E04444';
                 
                 // Delay drawing slightly so layout can calculate centers
                 setTimeout(() => {
                     const lItem = document.querySelector(`.match-item[data-side="left"][data-word="${lw}"]`);
-                    const rItem = document.querySelector(`.match-item[data-side="right"][data-word="${rw}"]`);
+                    const rItem = Array.from(document.querySelectorAll(`.match-item[data-side="right"][data-word="${rw}"]`))
+                                       .find(el => !el.classList.contains('matched') && !el.classList.contains('wrong'));
                     if (lItem && rItem) {
                         const c1 = getCenter(lItem);
                         const c2 = getCenter(rItem);
@@ -973,8 +1070,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!selectedLeft) return;
                 // Block if right item is already locked
                 if (this.classList.contains('matched') || this.classList.contains('wrong')) return;
-                // Block if right word is already used
-                if (usedRight.has(this.dataset.word)) return;
 
                 const leftWord  = selectedLeft.dataset.word;
                 const rightWord = this.dataset.word;
@@ -986,7 +1081,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const c2 = getCenter(this);
                 drawnPaths[leftWord] = drawPath(c1.x, c1.y, c2.x, c2.y, color);
                 matchAnswers[leftWord] = rightWord;
-                usedRight.add(rightWord);
 
                 // Lock BOTH items permanently (correct = green, wrong = red)
                 selectedLeft.classList.remove('selected');

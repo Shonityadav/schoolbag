@@ -140,7 +140,8 @@ body {
 .header-chapter { font-size: 13px; font-weight: 900; color: #5E4D3B; letter-spacing: 0.5px; }
 .header-title {
     font-family: 'Bubblegum Sans', cursive;
-    font-size: 21px; font-weight: bold; color: #8B4F1D;
+    font-size: 17px; font-weight: bold; color: #8B4F1D;
+    line-height: 1.3; padding-bottom: 2px;
     overflow: hidden; text-overflow: ellipsis;
     display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
 }
@@ -520,10 +521,10 @@ body {
     $stage3Completed = $stage3 ? $stage3->isCompletedBy($user) : false;
     $stage4Completed = $stage4 ? $stage4->isCompletedBy($user) : false;
 
-    $s1Unlocked = $chapterUnlocked;
-    $s2Unlocked = $chapterUnlocked && ($stage1 ? $stage1Completed : true);
-    $s3Unlocked = $s2Unlocked && ($stage2 ? $stage2Completed : true);
-    $s4Unlocked = $s3Unlocked && ($stage3 ? $stage3Completed : true);
+    $s1Unlocked = true;
+    $s2Unlocked = true;
+    $s3Unlocked = true;
+    $s4Unlocked = true;
 
     $stage2EarnedStars = 0;
     $stage3EarnedStars = 0;
@@ -538,9 +539,11 @@ body {
                 ->first();
             if ($stage2Progress) {
                 $stage2Score = $stage2Progress->score ?? 0;
-                if ($stage2Score == 10) $stage2EarnedStars = 3;
-                elseif ($stage2Score >= 8) $stage2EarnedStars = 2;
-                elseif ($stage2Score >= 4) $stage2EarnedStars = 1;
+                $pct = $stage2Score / 10;
+                
+                if ($pct >= 1.0) $stage2EarnedStars = 3;
+                elseif ($pct >= 0.8) $stage2EarnedStars = 2;
+                elseif ($pct >= 0.4) $stage2EarnedStars = 1;
             }
 
             $stage3Progress = \App\Models\LessonProgress::where('user_id', $user->id)
@@ -549,9 +552,11 @@ body {
                 ->first();
             if ($stage3Progress) {
                 $stage3Score = $stage3Progress->score ?? 0;
-                if ($stage3Score == 10) $stage3EarnedStars = 3;
-                elseif ($stage3Score >= 8) $stage3EarnedStars = 2;
-                elseif ($stage3Score >= 4) $stage3EarnedStars = 1;
+                $pct = $stage3Score / 10;
+                
+                if ($pct >= 1.0) $stage3EarnedStars = 3;
+                elseif ($pct >= 0.8) $stage3EarnedStars = 2;
+                elseif ($pct >= 0.4) $stage3EarnedStars = 1;
             }
 
             $stage4Progress = \App\Models\LessonProgress::where('user_id', $user->id)
@@ -560,10 +565,13 @@ body {
                 ->first();
             if ($stage4Progress) {
                 $stage4Score = $stage4Progress->score ?? 0;
-                if ($stage4Score == 10) $stage4EarnedStars = 4;
-                elseif ($stage4Score >= 8) $stage4EarnedStars = 3;
-                elseif ($stage4Score >= 5) $stage4EarnedStars = 2;
-                elseif ($stage4Score >= 2) $stage4EarnedStars = 1;
+                $max4 = $stage4 ? $stage4->xp_reward : 10;
+                $pct = $max4 > 0 ? ($stage4Score / $max4) : 0;
+                
+                if ($pct >= 1.0) $stage4EarnedStars = 4;
+                elseif ($pct >= 0.8) $stage4EarnedStars = 3;
+                elseif ($pct >= 0.5) $stage4EarnedStars = 2;
+                elseif ($pct >= 0.2) $stage4EarnedStars = 1;
             }
         }
     }
@@ -605,7 +613,7 @@ body {
         <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 52px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
     </button>
     @else
-    <a href="{{ route('student.assigned_ebooks.index') }}" style="position: absolute; top: 20px; left: 10px; z-index: 100; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Subjects">
+    <a href="{{ route('student.assigned_ebooks.details', $course->id) }}" style="position: absolute; top: 20px; left: 10px; z-index: 100; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Back to Details">
         <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="height: 52px; object-fit: contain;" fetchpriority="high" loading="eager" decoding="async">
     </a>
     @endif
@@ -742,7 +750,7 @@ body {
             @foreach($stageMap as $s)
             <div class="stage-card-wrapper {{ $s['wrapper'] }} {{ $s['is_current'] ? 'current-stage' : '' }}">
                 @if($s['model'] && $s['unlocked'])
-                    <a href="{{ isset($s['route_params']) ? route($s['route'], $s['route_params']) : route($s['route'], $s['model']->id) }}" class="stage-card">
+                    <a href="{{ isset($s['route_params']) ? route($s['route'], $s['route_params']) : route($s['route'], $s['model']->id) }}" class="stage-card" onclick="if(typeof showGlobalLoader === 'function') showGlobalLoader(event, this.href)">
                 @else
                     <div class="stage-card {{ !$s['model'] ? 'disabled-completed' : 'locked' }}"
                          @if($s['model']) onclick="playLockedSound()" @endif>
@@ -779,18 +787,7 @@ body {
 
         </div>
 
-        {{-- Bottom Scroll Banner --}}
-        <div class="w-100 mt-3 d-flex justify-content-center position-relative" style="z-index:15;">
-            <div class="scroll-banner d-flex align-items-center justify-content-center position-relative" style="padding: 0 45px;">
-                @if($chapterCompleted)
-                    <span class="scroll-text text-center pe-3" style="color:#27AE60;">Chapter completed! Great job! 🎉</span>
-                    <img src="{{ asset('uploads/images/stage/tick icon.png') }}" class="scroll-icon" alt="Tick" fetchpriority="high" loading="eager" decoding="async">
-                @else
-                    <span class="scroll-text text-center pe-3">Complete all missions to unlock the next chapter!</span>
-                    <img src="{{ asset('uploads/images/buttons/lock button.png') }}" class="scroll-icon" alt="Lock" fetchpriority="high" loading="eager" decoding="async">
-                @endif
-            </div>
-        </div>
+
 
     </div>{{-- /map-board --}}
 </div>{{-- /map-container --}}
@@ -832,7 +829,15 @@ body {
 <div class="text-center py-5" style="color: #FFF9E5;">
     <div style="font-size: 64px;">📭</div>
     <h3 style="font-family: 'Bubblegum Sans', cursive; font-size: 28px; margin-top: 15px;">No chapters found</h3>
-    <a href="{{ route('student.assigned_ebooks.index') }}" class="btn btn-primary mt-3">Back to Subjects</a>
+    
+    @if(isset($course->ebook_url) && !empty($course->ebook_url))
+        <p class="mt-2" style="font-size: 16px;">This book doesn't have a game map yet. Our AI can automatically build one for you!</p>
+        <button id="btn-generate-map" class="btn btn-warning mt-2 fw-bold px-4 py-2 rounded-pill shadow" onclick="generateMap({{ $course->id }})" style="background: #FFD561; color: #8B4F1D; border: none; font-size: 18px; transition: transform 0.2s;">
+            ✨ Generate Chapter Map
+        </button>
+    @endif
+    
+    <a href="{{ route('student.assigned_ebooks.details', $course->id) }}" class="btn btn-primary mt-3 d-block mx-auto" style="width:fit-content; background:#3B9EE8; border:none; border-radius: 12px; font-weight: bold;">Back to Details</a>
 </div>
 @endif
 
@@ -858,6 +863,47 @@ body {
 
 @push('scripts')
 <script>
+    // ── AI Map Generation Logic ──
+    function generateMap(courseId) {
+        const btn = document.getElementById('btn-generate-map');
+        if (!btn) return;
+        btn.disabled = true;
+        btn.innerHTML = '✨ AI is reading the book (this may take 30s)...';
+        
+        const loader = document.getElementById('page-loader');
+        if (loader) {
+            loader.classList.remove('hidden');
+            const loaderText = loader.querySelector('.loader-text');
+            if (loaderText) loaderText.innerText = 'AI is reading the book...';
+        }
+
+        fetch(`/student/assigned-ebooks/${courseId}/generate-map`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Oops: ' + (data.error || 'Something went wrong.'));
+                if (loader) loader.classList.add('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '✨ Generate Chapter Map';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Failed to connect to the server.');
+            if (loader) loader.classList.add('hidden');
+            btn.disabled = false;
+            btn.innerHTML = '✨ Generate Chapter Map';
+        });
+    }
+
     // ── Page Loader Logic ──
     (function() {
         const loader = document.getElementById('page-loader');
@@ -943,6 +989,21 @@ body {
             }, 1500); 
         }
     });
+    @endif
+
+    @if(isset($course) && isset($activeChapter))
+    // Trigger background generation for all stages immediately when the level map is opened
+    setTimeout(() => {
+        fetch("{{ route('student.assigned_ebooks.generate_remaining_stages', ['id' => $course->id, 'chapter_id' => $activeChapter->id]) }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        }).then(res => res.json()).then(data => {
+            if(data.success) console.log("Stages pre-generated in background from map");
+        }).catch(err => console.error("Error pre-generating from map:", err));
+    }, 500); // Small delay so it doesn't block initial map rendering
     @endif
 </script>
 @endpush

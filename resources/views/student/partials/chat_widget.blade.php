@@ -67,7 +67,7 @@
 
     #student-chat-widget {
         position: fixed;
-        bottom: 95px;
+        bottom: 115px;
         right: 24px;
         z-index: 10000;
         font-family: 'Inter', system-ui, sans-serif;

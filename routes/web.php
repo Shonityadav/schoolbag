@@ -12,6 +12,9 @@ use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 
 use App\Http\Controllers\Student\WorkspaceController;
 use App\Http\Controllers\Student\StudentChatController;
+use App\Http\Controllers\Student\ChatController;
+use App\Http\Controllers\Student\PaymentController;
+use App\Http\Controllers\Student\AiTestPaperController;
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 
@@ -44,6 +47,11 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::post('/login',    [StudentAuthController::class, 'login'])->name('login.submit');
         Route::get('/register',  [StudentAuthController::class, 'showRegister'])->name('register');
         Route::post('/register', [StudentAuthController::class, 'register'])->name('register.submit');
+        
+        // WhatsApp Login Routes
+        Route::post('/whatsapp/send-otp', [StudentAuthController::class, 'sendWhatsappOtp'])->name('whatsapp.send_otp');
+        Route::post('/whatsapp/verify-otp', [StudentAuthController::class, 'verifyWhatsappOtp'])->name('whatsapp.verify_otp');
+        Route::post('/whatsapp/register', [StudentAuthController::class, 'registerWhatsappUser'])->name('whatsapp.register');
     });
 
     Route::post('/logout', [StudentAuthController::class, 'logout'])->name('logout');
@@ -54,22 +62,36 @@ Route::prefix('student')->name('student.')->group(function () {
         
         // Workspace
         Route::get('/workspace', [WorkspaceController::class, 'index'])->name('workspace');
+        Route::get('/workspace/homework-history', [WorkspaceController::class, 'homeworkHistory'])->name('workspace.homework_history');
         Route::get('/workspace/profile', [WorkspaceController::class, 'profile'])->name('workspace.profile');
 
         Route::get('/assigned-ebooks',          [AssignedEbookController::class, 'index'])->name('assigned_ebooks.index');
+        Route::get('/assigned-ebooks/{id}/details', [AssignedEbookController::class, 'details'])->name('assigned_ebooks.details');
         Route::get('/assigned-ebooks/{id}',     [AssignedEbookController::class, 'show'])->name('assigned_ebooks.show');
+        Route::post('/assigned-ebooks/{id}/generate-map', [AssignedEbookController::class, 'generateChaptersMap'])->name('assigned_ebooks.generate_map');
         Route::get('/assigned-ebooks/{id}/chapter/{chapter_id}/stage{stage}', [AssignedEbookController::class, 'stage'])->name('assigned_ebooks.stage');
+        Route::post('/assigned-ebooks/{id}/chapter/{chapter_id}/generate-remaining-stages', [AssignedEbookController::class, 'generateRemainingStages'])->name('assigned_ebooks.generate_remaining_stages');
+        Route::get('/assigned-ebooks/{id}/chapter/{chapter_id}/stage/{stage_number}/check-generation-status', [AssignedEbookController::class, 'checkGenerationStatus'])->name('assigned_ebooks.check_generation_status');
 
         Route::get('/lessons/{id}',      [LessonController::class, 'show'])->name('lessons.show');
         Route::post('/lessons/{id}/done',[LessonController::class, 'complete'])->name('lessons.complete');
 
+        // AI Test Paper Routes
+        Route::get('/aitest/create', [AiTestPaperController::class, 'create'])->name('aitest.create');
+        Route::post('/aitest/save', [AiTestPaperController::class, 'store'])->name('aitest.store');
+        Route::get('/aitest/{id}', [AiTestPaperController::class, 'home'])->name('aitest');
+        Route::get('/ai-testpaper', [AiTestPaperController::class, 'showPaper'])->name('aitest.showPaper');
 
+        Route::get('/notifications/{id}/read', [\App\Http\Controllers\Student\DashboardController::class, 'readNotification'])->name('notifications.read');
+        Route::post('/notifications/mark-read', [\App\Http\Controllers\Student\DashboardController::class, 'markNotificationsRead'])->name('notifications.markAllRead');
 
         Route::get('/ebooks',                [EbookController::class, 'index'])->name('ebooks');
         Route::get('/ebooks/{id}',           [EbookController::class, 'show'])->name('ebooks.show');
         Route::get('/ebooks/{id}/toc',       [EbookController::class, 'toc'])->name('ebooks.toc');
         Route::post('/ebooks/{id}/download', [EbookController::class, 'download'])->name('ebooks.download');
         Route::post('/ebooks/{id}/assign',   [EbookController::class, 'assign'])->name('ebooks.assign');
+        Route::post('/ebooks/scan-qr',       [EbookController::class, 'scanQr'])->name('ebooks.scan_qr');
+        Route::post('/ebooks/confirm-qr-assign', [EbookController::class, 'confirmAssignQr'])->name('ebooks.confirm_qr_assign');
 
         Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile');
         Route::get('/profile/change-password', [StudentProfileController::class, 'changePassword'])->name('profile.change_password');
@@ -77,10 +99,23 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::post('/profile/resend-otp', [StudentProfileController::class, 'resendOtp'])->name('profile.resend_otp');
         Route::post('/profile/update-password', [StudentProfileController::class, 'updatePassword'])->name('profile.update_password');
         Route::post('/profile/avatar', [StudentProfileController::class, 'updateAvatar'])->name('profile.update_avatar');
+        Route::get('/profile/feedback', [StudentProfileController::class, 'feedback'])->name('profile.feedback');
+        Route::post('/profile/feedback', [StudentProfileController::class, 'storeFeedback'])->name('profile.store_feedback');
+        
+        // Fee Payments
+        Route::post('/fees/pay', [PaymentController::class, 'initiatePayment'])->name('fees.pay');
+        Route::post('/fees/callback', [PaymentController::class, 'verifyPayment'])->name('fees.callback');
+        Route::get('/fees/cancel', [PaymentController::class, 'cancelPayment'])->name('fees.cancel');
 
-        Route::get('/terms-and-conditions', function () { return view('student.terms'); })->name('terms');
+        Route::get('/app-rules', function () { return view('student.terms'); })->name('terms');
+        Route::get('/app-privacy', function () { return view('student.privacy'); })->name('privacy');
 
         Route::post('/attendance/mark', [DashboardController::class, 'markAttendance'])->name('attendance.mark');
+
+        // Chat with Ebook Routes
+        Route::get('chat_with_paper', [ChatController::class, 'index'])->name('chat_with_paper');
+        Route::post('/chat_with_paper/save-index', [ChatController::class,'saveIndexPage'])->name('chat.saveIndex');
+        Route::post('chat/save-chapters', [ChatController::class, 'saveChapters'])->name('chat.saveChapters');
 
         // Chat Widget Routes
         Route::get('/chat/rooms', [StudentChatController::class, 'fetchRooms'])->name('chat.rooms');
@@ -106,6 +141,8 @@ use App\Http\Controllers\Admin\AdminEbookAssignmentController;
 use App\Http\Controllers\Admin\AdminStaffCategoryController;
 use App\Http\Controllers\Admin\AdminChatController;
 use App\Http\Controllers\Admin\AdminIdCardController;
+use App\Http\Controllers\Admin\AdminHomeworkController;
+use App\Http\Controllers\Admin\AdminQuestionReviewController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
@@ -124,18 +161,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Students CRUD
-        Route::get('/student-details',                [AdminStudentDetailsController::class, 'index'])->middleware('permission:student_details.view')->name('student_details.index');
-        Route::get('/student-details/create',         [AdminStudentDetailsController::class, 'create'])->middleware('permission:student_details.create')->name('student_details.create');
-        Route::get('/student-details/upload-photos',  [AdminStudentDetailsController::class, 'uploadPhotosForm'])->middleware('permission:student_details.create')->name('student_details.upload-photos');
-        Route::post('/student-details/upload-photos', [AdminStudentDetailsController::class, 'processUploadPhotos'])->middleware('permission:student_details.create')->name('student_details.upload-photos.submit');
-        Route::post('/student-details/upload-photos/preview', [AdminStudentDetailsController::class, 'previewZipUpload'])->middleware('permission:student_details.create')->name('student_details.upload-photos.preview');
-        Route::post('/student-details',               [AdminStudentDetailsController::class, 'store'])->middleware('permission:student_details.create')->name('student_details.store');
-        Route::get('/student-details/{student}/edit', [AdminStudentDetailsController::class, 'edit'])->middleware('permission:student_details.edit')->name('student_details.edit');
-        Route::get('/student-details/{student}',      [AdminStudentDetailsController::class, 'show'])->middleware('permission:student_details.view')->name('student_details.show');
-        Route::put('/student-details/{student}',      [AdminStudentDetailsController::class, 'update'])->middleware('permission:student_details.edit')->name('student_details.update');
-        Route::delete('/student-details/{student}',   [AdminStudentDetailsController::class, 'destroy'])->middleware('permission:student_details.delete')->name('student_details.destroy');
-        Route::get('/student-details/sample-csv',     [AdminStudentDetailsController::class, 'sampleCsv'])->middleware('permission:student_details.edit')->name('student_details.sample-csv');
-        Route::post('/student-details/import',        [AdminStudentDetailsController::class, 'importCsv'])->middleware('permission:student_details.edit')->name('student_details.import');
+        Route::get('/student-details',                [AdminStudentDetailsController::class, 'index'])->middleware('permission:students.view')->name('student_details.index');
+        Route::get('/student-details/create',         [AdminStudentDetailsController::class, 'create'])->middleware('permission:students.create')->name('student_details.create');
+        Route::get('/student-details/upload-photos',  [AdminStudentDetailsController::class, 'uploadPhotosForm'])->middleware('permission:students.create')->name('student_details.upload-photos');
+        Route::post('/student-details/upload-photos', [AdminStudentDetailsController::class, 'processUploadPhotos'])->middleware('permission:students.create')->name('student_details.upload-photos.submit');
+        Route::post('/student-details/upload-photos/preview', [AdminStudentDetailsController::class, 'previewZipUpload'])->middleware('permission:students.create')->name('student_details.upload-photos.preview');
+        Route::post('/student-details',               [AdminStudentDetailsController::class, 'store'])->middleware('permission:students.create')->name('student_details.store');
+        Route::get('/student-details/sample-csv',     [AdminStudentDetailsController::class, 'sampleCsv'])->middleware('permission:students.edit')->name('student_details.sample-csv');
+        Route::post('/student-details/import',        [AdminStudentDetailsController::class, 'importCsv'])->middleware('permission:students.edit')->name('student_details.import');
+        Route::get('/student-details/{student}/edit', [AdminStudentDetailsController::class, 'edit'])->middleware('permission:students.edit')->name('student_details.edit');
+        Route::get('/student-details/{student}',      [AdminStudentDetailsController::class, 'show'])->middleware('permission:students.view')->name('student_details.show');
+        Route::post('/student-details/{student}/fee-payment', [AdminStudentDetailsController::class, 'storeFeePayment'])->middleware('permission:students.edit')->name('student_details.fee_payment');
+        Route::put('/student-details/{student}',      [AdminStudentDetailsController::class, 'update'])->middleware('permission:students.edit')->name('student_details.update');
+        Route::delete('/student-details/{student}',   [AdminStudentDetailsController::class, 'destroy'])->middleware('permission:students.edit')->name('student_details.destroy');
 
         // Staff CRUD
         Route::get('/staff-details',                  [AdminStaffDetailsController::class, 'index'])->middleware('permission:staff.view')->name('staff_details.index');
@@ -144,12 +182,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/staff-details/upload-photos',   [AdminStaffDetailsController::class, 'processUploadPhotos'])->middleware('permission:staff.create')->name('staff_details.upload-photos.submit');
         Route::post('/staff-details/upload-photos/preview', [AdminStaffDetailsController::class, 'previewZipUpload'])->middleware('permission:staff.create')->name('staff_details.upload-photos.preview');
         Route::post('/staff-details',                 [AdminStaffDetailsController::class, 'store'])->middleware('permission:staff.create')->name('staff_details.store');
+        Route::get('/staff-details/sample-csv',        [AdminStaffDetailsController::class, 'sampleCsv'])->middleware('permission:staff.edit')->name('staff_details.sample-csv');
+        Route::post('/staff-details/import',           [AdminStaffDetailsController::class, 'importCsv'])->middleware('permission:staff.edit')->name('staff_details.import');
         Route::get('/staff-details/{staff}/edit',      [AdminStaffDetailsController::class, 'edit'])->middleware('permission:staff.edit')->name('staff_details.edit');
         Route::get('/staff-details/{staff}',           [AdminStaffDetailsController::class, 'show'])->middleware('permission:staff.view')->name('staff_details.show');
         Route::put('/staff-details/{staff}',           [AdminStaffDetailsController::class, 'update'])->middleware('permission:staff.edit')->name('staff_details.update');
         Route::delete('/staff-details/{staff}',        [AdminStaffDetailsController::class, 'destroy'])->middleware('permission:staff.delete')->name('staff_details.destroy');
-        Route::get('/staff-details/sample-csv',        [AdminStaffDetailsController::class, 'sampleCsv'])->middleware('permission:staff.edit')->name('staff_details.sample-csv');
-        Route::post('/staff-details/import',           [AdminStaffDetailsController::class, 'importCsv'])->middleware('permission:staff.edit')->name('staff_details.import');
 
         // Staff Categories
         Route::resource('staff-categories', AdminStaffCategoryController::class)->except(['show']);
@@ -172,9 +210,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/classes/{class}',       [AdminClassController::class, 'update'])->name('classes.update');
         Route::delete('/classes/{class}',    [AdminClassController::class, 'destroy'])->name('classes.destroy');
 
+        // Notifications
+        Route::get('/notifications/{id}/read', [\App\Http\Controllers\Admin\AdminAttendanceController::class, 'readNotification'])->name('notifications.read');
+        Route::post('/notifications/mark-read', [\App\Http\Controllers\Admin\AdminAttendanceController::class, 'markNotificationsRead'])->name('notifications.markAllRead');
+
+        // Fees
+        Route::get('/fees',                   [\App\Http\Controllers\Admin\AdminFeeStructureController::class, 'index'])->name('fees.index');
+        Route::post('/fees',                  [\App\Http\Controllers\Admin\AdminFeeStructureController::class, 'store'])->name('fees.store');
+        Route::put('/fees/{fee}',             [\App\Http\Controllers\Admin\AdminFeeStructureController::class, 'update'])->name('fees.update');
+        Route::delete('/fees/{fee}',          [\App\Http\Controllers\Admin\AdminFeeStructureController::class, 'destroy'])->name('fees.destroy');
+
         // Attendance
         Route::get('/attendance',             [AdminAttendanceController::class, 'index'])->name('attendance.index');
         Route::post('/attendance/bulk-mark',  [AdminAttendanceController::class, 'markBulk'])->name('attendance.markBulk');
+
+        // Homework
+        Route::get('/homework',               [AdminHomeworkController::class, 'index'])->name('homework.index');
+        Route::post('/homework',              [AdminHomeworkController::class, 'store'])->name('homework.store');
+        Route::delete('/homework/{homework}', [AdminHomeworkController::class, 'destroy'])->name('homework.destroy');
         Route::post('/attendance/{id}/mark',  [AdminAttendanceController::class, 'mark'])->name('attendance.mark');
         Route::post('/attendance/{id}/unmark',[AdminAttendanceController::class, 'unmark'])->name('attendance.unmark');
 
@@ -223,5 +276,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Revoke Card
             Route::post('/revoke/{card}', [AdminIdCardController::class, 'revokeCard'])->middleware('permission:idcard.edit')->name('revoke');
         });
+        
+        // Question Reviews
+        Route::get('/question-reviews', [AdminQuestionReviewController::class, 'index'])->name('question_reviews.index');
+        Route::put('/question-reviews/{id}', [AdminQuestionReviewController::class, 'update'])->name('question_reviews.update');
     });
 });

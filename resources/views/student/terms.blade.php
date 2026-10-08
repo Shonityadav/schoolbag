@@ -1,33 +1,28 @@
-@extends('layouts.student')
-@section('title', 'Terms & Conditions')
-
-@push('styles')
-<style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms & Conditions - School Bag</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
 html, body {
     background-color: #FFF9E5;
-    background-image: none;
     font-family: 'Quicksand', sans-serif;
     color: #1E1E35;
-    overflow: hidden;
-    height: 100%;
     margin: 0;
     padding: 0;
 }
-
-/* Hide layout navigation */
-.sidebar, .topbar { display: none !important; }
-.main { padding-bottom: 0 !important; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-.content{ padding: 0px;}
 .tc-container {
-    height: 100vh;
+    min-height: 100vh;
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
-    z-index: 1;
     padding: 1rem;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .wave-top {
@@ -127,10 +122,12 @@ html, body {
 }
 
 </style>
-@endpush
-
-@section('content')
+</head>
+<body>
 <div class="tc-container">
+    <a href="{{ route('student.profile') }}" style="position: absolute; top: 20px; left: 20px; z-index: 10; transition: transform 0.2s;">
+        <img src="{{ asset('uploads/images/buttons/Previous button.png') }}" alt="Back" style="width: 45px; height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));">
+    </a>
     <img src="{{ asset('uploads/images/banners/shapes.png') }}" class="wave-top" alt="Wave Top" fetchpriority="high" loading="eager" decoding="async">
     <img src="{{ asset('uploads/images/banners/shapes.png') }}" class="wave-bottom" alt="Wave Bottom" fetchpriority="high" loading="eager" decoding="async">
 
@@ -193,4 +190,5 @@ html, body {
         </div>
     </div>
 </div>
-@endsection
+</body>
+</html>
